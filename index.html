@@ -1,0 +1,1816 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kontrol Paneli — Umut</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0F141B">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg: oklch(21.5% 0.017 264);
+  --surface: oklch(26% 0.018 264);
+  --surface2: oklch(30% 0.019 264);
+  --border: oklch(37% 0.02 264);
+  --border-soft: oklch(32.5% 0.018 264);
+  --text: oklch(93% 0.008 264);
+  --muted: oklch(69% 0.02 264);
+  --accent: oklch(80% 0.16 78);
+  --accent-ink: oklch(22% 0.035 78);
+  --teal: oklch(77% 0.11 195);
+  --teal-ink: oklch(20% 0.035 195);
+  --danger: oklch(68% 0.16 25);
+  --radius:16px;
+  --shadow-sm: 0 1px 2px oklch(0% 0 0 / 0.22), 0 1px 0 oklch(100% 0 0 / 0.03) inset;
+  --shadow-md: 0 10px 28px oklch(0% 0 0 / 0.24);
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+body{background:
+    radial-gradient(1100px 700px at 12% -8%, oklch(80% 0.16 78 / .09), transparent 60%),
+    radial-gradient(900px 650px at 100% 4%, oklch(77% 0.11 195 / .08), transparent 58%),
+    var(--bg);
+  background-attachment:fixed; color:var(--text); font-family:'Inter',system-ui,sans-serif; font-size:15px; line-height:1.5; min-height:100vh; -webkit-font-smoothing:antialiased;}
+.wrap{max-width:980px; margin:0 auto; padding:28px 20px 90px;}
+
+/* Header */
+header{display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-bottom:6px;}
+h1{font-family:'Space Grotesk',sans-serif; font-size:21px; font-weight:700; letter-spacing:-0.02em;}
+h1 span{color:var(--accent); font-weight:500;}
+#clock{font-family:'JetBrains Mono',monospace; font-size:22px; font-weight:700; color:var(--accent); font-variant-numeric:tabular-nums;}
+#dateline{color:var(--muted); font-size:13px; margin-bottom:22px; text-transform:capitalize;}
+
+/* Day gauge (signature) */
+.gauge{background:linear-gradient(180deg, var(--surface), var(--surface) 60%, var(--surface2)); border:1px solid var(--border); border-radius:16px; padding:18px 20px 20px; margin-bottom:24px; box-shadow:var(--shadow-md); position:relative;}
+.gauge::before{content:''; position:absolute; top:0; left:16px; right:16px; height:2px; background:linear-gradient(90deg, var(--accent), var(--teal)); border-radius:0 0 3px 3px; opacity:.6;}
+.gauge-label{display:flex; justify-content:space-between; font-size:10.5px; color:var(--muted); font-family:'JetBrains Mono',monospace; letter-spacing:.08em; margin-bottom:8px;}
+.gauge-label span{white-space:nowrap; flex:none;}
+.gauge-track{position:relative; height:30px; background:var(--surface2); border-radius:8px; overflow:hidden; box-shadow:inset 0 1px 3px oklch(0% 0 0 / 0.3);}
+.gauge-fill{position:absolute; top:0; left:0; bottom:0; background:linear-gradient(90deg, oklch(80% 0.16 78 / .14), oklch(80% 0.16 78 / .34)); border-right:2px solid var(--accent);}
+.gauge-block{position:absolute; top:4px; bottom:4px; background:var(--teal); opacity:.85; border-radius:5px; min-width:3px;}
+.gauge-block[data-past="1"]{opacity:.3;}
+.gauge-ticks{position:relative; height:14px; margin-top:5px;}
+.gauge-ticks span{position:absolute; transform:translateX(-50%); font-size:10px; color:var(--muted); font-family:'JetBrains Mono',monospace;}
+.gauge-now{position:absolute; top:0; bottom:0; width:2px; background:var(--accent); box-shadow:0 0 6px var(--accent); z-index:2;}
+.gauge-hint{font-size:12px; color:var(--muted); margin-top:10px;}
+
+/* Tabs */
+nav{display:flex; gap:3px; margin-bottom:22px; flex-wrap:wrap; background:var(--surface); border:1px solid var(--border); padding:4px; border-radius:12px;}
+nav button{background:transparent; border:none; color:var(--muted); padding:9px 15px; border-radius:9px; cursor:pointer; font-family:'Space Grotesk',sans-serif; font-weight:500; font-size:13.5px; white-space:nowrap; transition:background .15s ease, color .15s ease;}
+nav button:hover:not(.active){background:var(--surface2); color:var(--text);}
+nav button.active{background:var(--accent); color:var(--accent-ink); font-weight:700; box-shadow:var(--shadow-sm);}
+nav button:focus-visible{outline:2px solid var(--teal); outline-offset:2px;}
+section{display:none;}
+section.active{display:block;}
+
+h2{font-family:'Space Grotesk',sans-serif; font-size:16.5px; font-weight:700; letter-spacing:-0.01em; margin:22px 0 12px;}
+.card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px 18px; margin-bottom:12px; box-shadow:var(--shadow-sm);}
+.muted{color:var(--muted); font-size:13px;}
+.row{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+.spacer{flex:1;}
+
+/* Forms */
+input,select,textarea{background:var(--surface2); border:1px solid var(--border); color:var(--text); border-radius:9px; padding:9px 11px; font-family:inherit; font-size:14px; transition:border-color .15s ease;}
+input:focus,select:focus,textarea:focus{outline:none; border-color:var(--teal); box-shadow:0 0 0 3px oklch(77% 0.11 195 / .2);}
+button.btn{background:var(--teal); color:var(--teal-ink); border:none; padding:9px 16px; border-radius:9px; font-weight:600; cursor:pointer; font-size:14px; box-shadow:var(--shadow-sm); transition:filter .15s ease;}
+button.btn:hover{filter:brightness(1.08);}
+button.btn.warn{background:var(--danger); color:oklch(97% 0.01 25);}
+button.btn.ghost{background:transparent; color:var(--muted); border:1px solid var(--border); box-shadow:none;}
+button.btn.ghost:hover{border-color:var(--teal); color:var(--text);}
+button.btn:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+
+/* Lists */
+.item{display:flex; align-items:center; gap:10px; padding:11px 14px; background:var(--surface2); border:1px solid var(--border); border-radius:11px; margin-bottom:8px;}
+.item .tag{font-family:'JetBrains Mono',monospace; font-size:11px; padding:2px 8px; border-radius:20px; background:var(--surface); border:1px solid var(--border); color:var(--muted); white-space:nowrap;}
+.item .tag.exam{color:var(--danger); border-color:var(--danger);}
+.item .tag.hw{color:var(--accent); border-color:var(--accent);}
+.item .tag.lab{color:var(--teal); border-color:var(--teal);}
+.countdown{font-family:'JetBrains Mono',monospace; font-weight:700; font-size:15px; min-width:64px; text-align:right; font-variant-numeric:tabular-nums;}
+.countdown.urgent{color:var(--danger);}
+.countdown.soon{color:var(--accent);}
+.countdown.ok{color:var(--teal);}
+.done{opacity:.4; text-decoration:line-through;}
+.del{background:none; border:none; color:var(--muted); cursor:pointer; font-size:16px; padding:2px 6px;}
+.del:hover{color:var(--danger);}
+
+/* Timer */
+.timer-box{text-align:center; padding:34px 18px;}
+.timer-controls{display:flex; gap:10px; justify-content:center; margin-top:20px; flex-wrap:wrap;}
+
+/* Schedule table */
+.sched-day{margin-bottom:14px;}
+.sched-day h3{font-family:'Space Grotesk',sans-serif; font-size:14px; color:var(--accent); margin-bottom:6px;}
+.sched-entry{display:flex; gap:10px; align-items:center; padding:9px 14px; background:var(--surface2); border:1px solid var(--border); border-radius:9px; margin-bottom:7px; font-size:14px;}
+.sched-entry .time{font-family:'JetBrains Mono',monospace; color:var(--teal); font-weight:700; white-space:nowrap; font-variant-numeric:tabular-nums;}
+
+/* Bugünün 3 önceliği */
+.prio-row{display:flex; align-items:center; gap:10px; padding:7px 0 2px;}
+.prio-row input[type=checkbox]{width:18px; height:18px; accent-color:var(--teal); cursor:pointer; flex:none;}
+.prio-row input[type=text]{flex:1; background:transparent; border:none; padding:4px 0; font-size:15px;}
+.prio-row input[type=text]:focus{outline:none; border-bottom:1px solid var(--teal); box-shadow:none;}
+.prio-row.on input[type=text]{opacity:.4; text-decoration:line-through;}
+.prio-num{font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--muted); width:12px; flex:none;}
+/* [ÖZELLİK 6] if-then tetikleyici satırı */
+.prio-when{display:flex; align-items:center; gap:8px; padding:0 0 7px 28px; border-bottom:1px solid var(--border-soft);}
+.prio-when:last-child{border-bottom:none;}
+.prio-when.on{opacity:.35;}
+.prio-if{font-size:11px; color:var(--teal); font-family:'JetBrains Mono',monospace; flex:none;}
+.prio-when input[type=text]{flex:1; background:transparent; border:none; padding:2px 0; font-size:12.5px; color:var(--muted);}
+.prio-when input[type=text]:focus{outline:none; border-bottom:1px solid var(--teal); color:var(--text); box-shadow:none;}
+
+/* Review */
+.check{display:flex; gap:10px; align-items:flex-start; padding:8px 0; border-bottom:1px solid var(--border-soft);}
+.check:last-child{border-bottom:none;}
+.check input[type=checkbox]{width:18px; height:18px; accent-color:var(--teal); margin-top:2px; cursor:pointer;}
+textarea{width:100%; min-height:90px; resize:vertical;}
+
+footer{margin-top:34px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
+@media (prefers-reduced-motion:reduce){ *{transition:none!important; animation:none!important;} }
+@media (max-width:600px){ #chClock{font-size:50px;} h1{font-size:18px;} #clock{font-size:18px;} nav button{padding:8px 12px; font-size:13px;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Kontrol Paneli <span>/ Umut</span></h1>
+  <div id="clock">--:--</div>
+</header>
+<div id="dateline"></div>
+
+<div class="gauge">
+  <div class="gauge-label"><span>07:00</span><span>GÜNÜN AKIŞI</span><span>02:00</span></div>
+  <div class="gauge-track" id="gaugeTrack"><div class="gauge-fill" id="gaugeFill"></div></div>
+  <div class="gauge-ticks" id="gaugeTicks"></div>
+  <div class="gauge-hint" id="gaugeHint">Turkuaz bloklar bugünkü derslerin. Amber çizgi şu anki saatin.</div>
+</div>
+
+<nav id="tabs">
+  <button data-tab="today" class="active">Bugün</button>
+  <button data-tab="deadlines">Deadlineler</button>
+  <button data-tab="tekrar">Tekrar</button>
+  <button data-tab="hatadefteri">Hata Defteri</button>
+  <button data-tab="kronometre">Kronometre</button>
+  <button data-tab="review">Review</button>
+  <button data-tab="kurulum">Kurulum</button>
+</nav>
+
+<div id="sleepWarn" class="card" style="display:none; border-color:var(--danger); color:var(--danger); font-size:13px;"></div>
+<div id="lateWarn" class="card" style="display:none; border-color:var(--accent); color:var(--accent); font-size:13px;"></div>
+<div id="backupWarn" class="card" style="display:none; border-color:var(--danger); color:var(--danger); font-size:13px;"></div>
+
+<!-- BUGÜN -->
+<section id="today" class="active">
+  <div class="card" id="prioBox"></div>
+  <div id="todayExam"></div>
+  <div id="todaySuggest"></div>
+  <div id="todayWindow"></div>
+  <div id="todayPlans"></div>
+  <h2>Bugünkü dersler</h2>
+  <div id="todayClasses"></div>
+  <h2>Yaklaşan 5 deadline</h2>
+  <div id="todayDeadlines"></div>
+  <h2>Bugünkü odak istatistiği</h2>
+  <div class="card" id="todayStats"></div>
+  <div class="card" id="weekChart"></div>
+
+  <!-- [ÖZELLİK 4] Uyku takibi -->
+  <h2>Uyku</h2>
+  <div class="card">
+    <div class="row">
+      <input type="number" id="slHours" step="0.5" min="0" max="14" placeholder="Saat" style="width:76px;">
+      <span class="muted" style="font-size:12px;">yattım</span><input type="time" id="slBed" style="width:104px;">
+      <span class="muted" style="font-size:12px;">kalktım</span><input type="time" id="slWake" style="width:104px;">
+      <button class="btn" onclick="saveSleep()">Kaydet</button>
+    </div>
+    <div class="muted" style="margin-top:6px; font-size:12px;">Dün gece kaç saat uyudun? Saatleri girersen süreyi kendi hesaplar — tutarlılık ölçümü için kalkış saati en değerlisi.</div>
+    <div id="sleepStats" style="margin-top:10px;"></div>
+  </div>
+</section>
+
+<!-- DEADLINELER -->
+<section id="deadlines">
+  <div class="card">
+    <div class="row">
+      <input type="text" id="dlTitle" placeholder="Başlık (örn. MATH 219 MT1)" style="flex:2; min-width:160px;">
+      <input type="date" id="dlDate">
+      <select id="dlType">
+        <option value="exam">Sınav</option>
+        <option value="hw">Ödev</option>
+        <option value="lab">Lab</option>
+        <option value="other">Diğer</option>
+      </select>
+      <button class="btn ghost" id="dlPlanToggle" onclick="togglePlanFields()" style="padding:8px 12px;" title="Çok günlük soru planı">+ plan</button>
+      <button class="btn" onclick="addDeadline()">Ekle</button>
+    </div>
+    <div class="row" id="dlPlanFields" style="display:none; margin-top:8px;">
+      <span class="muted" style="font-size:12px;">Çalışma planı:</span>
+      <input type="number" id="dlTotal" placeholder="Soru" min="1" style="width:78px;">
+      <input type="number" id="dlDays" placeholder="Gün" min="1" style="width:70px;">
+      <span class="muted" style="font-size:12px;">toplam soruyu kaç güne yayacaksın</span>
+    </div>
+  </div>
+  <div id="dlList"></div>
+</section>
+
+<!-- TEKRAR (aralıklı tekrar) -->
+<section id="tekrar">
+  <div class="card">
+    <div class="row">
+      <input type="text" id="rvTopic" placeholder="Konu (örn. seri yakınsaklık testleri)" style="flex:2; min-width:160px;">
+      <input type="text" id="rvCourse" placeholder="Ders" style="width:100px;">
+      <button class="btn" onclick="addReview()">Ekle</button>
+    </div>
+    <div class="muted" style="margin-top:8px;">Konu eklenince ilk tekrar yarın düşer. Her tekrarda önce <b>tahmin</b> ver (deftere bakmadan: ne kadarını hatırlıyorum?), sonra boş kağıda dök ve gerçeği işaretle. Aralık ona göre uzar veya kısalır (1 → 3 → 7 → 14 → 30 → 60 gün). Zor = merdivende geri, Kolay = ileri (ilk iki tekrarda tek basamak, sonra iki).</div>
+  </div>
+  <h2>Kalibrasyon</h2>
+  <div id="calibBox"></div>
+  <h2>Bugün tekrar edilecekler</h2>
+  <div id="rvDue"></div>
+  <h2>Sırada</h2>
+  <div id="rvUpcoming"></div>
+</section>
+
+<!-- HATA DEFTERİ -->
+<section id="hatadefteri">
+  <div class="card">
+    <div class="row">
+      <input id="mCourse" placeholder="Ders" style="width:90px;">
+      <input id="mNote" placeholder="Hata neydi, doğrusu ne? (tek cümle)" style="flex:1; min-width:200px;">
+    </div>
+    <div class="row" style="margin-top:8px;">
+      <span class="prio-if" style="flex:none;">neden</span>
+      <input id="mWhy" placeholder="Doğrusu neden bu? hangi prensip/kural devrede? (opsiyonel)" style="flex:1; min-width:200px; font-size:13px;">
+      <button class="btn" onclick="addMistake()">Ekle</button>
+    </div>
+    <div class="muted" style="margin-top:8px;">Skill'lerin ürettiği 📓 satırlarını buraya gir. "Neden" alanını doldurmak en çok işe yarayan kısım — hatayı not etmek değil, doğrusunun <b>nedenini kendi cümlenle</b> yazmak kalıcılığı artırıyor. Sınavdan önce dersin filtresini aç ve baştan sona oku. Kronikleşen hatayı ↻ ile Tekrar merdivenine at.</div>
+  </div>
+  <div class="row" style="margin-bottom:8px;"><span class="muted">Filtre:</span><select id="mFilter" onchange="renderMistakes()"><option value="">Tümü</option></select><span class="muted spacer" style="text-align:right;" id="mCount"></span></div>
+  <div id="mList"></div>
+
+  <!-- [ÖZELLİK 9] Problem çözüm kalibrasyonu — problem-cozum-rehberi skill'inin Step 0/Step 7 çıktısı -->
+  <h2>Problem Kalibrasyonu</h2>
+  <div class="card">
+    <div class="row">
+      <input id="pcCourse" placeholder="Ders" style="width:90px;">
+      <input id="pcTip" placeholder="Soru tipi (örn. Gauss yüzeyi seçimi)" style="flex:1; min-width:160px;">
+    </div>
+    <div class="row" style="margin-top:8px;">
+      <span class="muted" style="font-size:12px;">Tahmin (Step 0, roadmap görmeden):</span>
+      <button class="btn ghost" style="padding:5px 8px;font-size:11px;" onclick="pcSetConf(0)">%0</button>
+      <button class="btn ghost" style="padding:5px 8px;font-size:11px;" onclick="pcSetConf(35)">%35</button>
+      <button class="btn ghost" style="padding:5px 8px;font-size:11px;" onclick="pcSetConf(70)">%70</button>
+      <button class="btn ghost" style="padding:5px 8px;font-size:11px;" onclick="pcSetConf(100)">%100</button>
+      <span id="pcConfShow" class="tag" style="display:none;"></span>
+    </div>
+    <div class="row" style="margin-top:8px;">
+      <span class="muted" style="font-size:12px;">Sonuç:</span>
+      <button class="btn" style="padding:5px 9px;font-size:12px;" onclick="addProblemCalib(true)">Doğru</button>
+      <button class="btn warn" style="padding:5px 9px;font-size:12px;" onclick="addProblemCalib(false)">Yanlış</button>
+    </div>
+    <div class="muted" style="margin-top:8px; font-size:12px;">Skill oturumu bitince buraya gir: ders+tip yaz, tahmini işaretle, sonucu gir. Kademe otomatik güncellenir (5 art arda doğru → bir kademe yukarı, 2 art arda yanlış → bir kademe aşağı — ceza değil, kalibrasyon).</div>
+  </div>
+  <div id="tierBox"></div>
+</section>
+
+<!-- KRONOMETRE (serbest sayaç) -->
+<section id="kronometre">
+  <div class="card timer-box" style="padding:22px 16px;">
+    <div id="chBadge" class="tag" style="font-size:12px; margin-bottom:10px; display:inline-block;">Hazır</div>
+    <div id="chClock" style="font-family:'JetBrains Mono',monospace; font-size:56px; font-weight:700; letter-spacing:-0.03em;">00:00</div>
+    <div id="chLabel" class="muted" style="margin-top:4px; min-height:20px;">Başlamak için düğmeye bas</div>
+    <div class="timer-controls">
+      <button class="btn" id="chMainBtn" onclick="chMain()">▶ Çalışmaya Başla</button>
+      <button class="btn ghost" id="chFinishBtn" onclick="chFinish()" style="display:none;">■ Bitir</button>
+      <button class="btn ghost" id="chMealBtn" onclick="chMeal()" style="display:none;">🍽 Yemek</button>
+      <button class="btn ghost" id="chUrgeBtn" onclick="chUrge()" style="display:none;">📱 Dürtü geldi</button>
+    </div>
+
+    <!-- [ÖZELLİK 1] Dürtü sebebi chip'leri -->
+    <div id="chUrgeChips" style="display:none; margin-top:12px;">
+      <div class="muted" style="font-size:12px; margin-bottom:6px;">Neden? (opsiyonel, tek dokunuş)</div>
+      <div class="row" style="justify-content:center; gap:6px;">
+        <button class="btn ghost" style="font-size:13px; padding:9px 16px;" onclick="chUrgeReason('kacis')">Kaçış</button>
+        <button class="btn ghost" style="font-size:13px; padding:9px 16px;" onclick="chUrgeReason('yorgun')">Yorgunluk</button>
+        <button class="btn ghost" style="font-size:13px; padding:9px 16px;" onclick="chUrgeReason('anlamadim')">Anlamıyorum</button>
+      </div>
+    </div>
+
+    <!-- [ÖZELLİK 3] Mola aşım sebebi chip'leri -->
+    <div id="chOverChips" style="display:none; margin-top:12px;">
+      <div style="font-size:12px; margin-bottom:6px; color:var(--danger);">Mola neden uzadı?</div>
+      <div class="row" style="justify-content:center; gap:6px;">
+        <button class="btn ghost" style="font-size:13px; padding:9px 16px;" onclick="chOverReason('telefon')">Telefon</button>
+        <button class="btn ghost" style="font-size:13px; padding:9px 16px;" onclick="chOverReason('ihtiyac')">Yemek/ihtiyaç</button>
+        <button class="btn ghost" style="font-size:13px; padding:9px 16px;" onclick="chOverReason('farketmedim')">Fark etmedim</button>
+      </div>
+    </div>
+    <!-- [ÖZELLİK 5] Aktif / pasif çalışma modu -->
+    <div class="row" style="justify-content:center; margin-top:14px; gap:6px;">
+      <button class="btn ghost" id="chModeA" onclick="chSetMode('aktif')" style="font-size:13px; padding:8px 14px;" title="Soru çözme, tekrar, boş kağıda dökme">✍ Aktif</button>
+      <button class="btn ghost" id="chModeP" onclick="chSetMode('pasif')" style="font-size:13px; padding:8px 14px;" title="Okuma, video izleme, not alma">📖 Pasif</button>
+    </div>
+    <div class="muted" style="font-size:11px; margin-top:5px;">Aktif = soru çözme, tekrar, boş kağıda dökme · Pasif = okuma, izleme, not alma. Çalışırken moda basarsan blok orada kapanır.</div>
+    <div class="row" style="justify-content:center; margin-top:10px; gap:10px;">
+      <input id="chTag" list="chTagList" placeholder="Ders / konu" style="width:132px; font-size:13px;" onchange="chSetTag()">
+      <datalist id="chTagList"></datalist>
+      <label class="muted" style="font-size:12px;">Mola limiti <input type="number" id="chBrkLimit" min="1" max="120" style="width:54px; font-size:13px;" onchange="chSetLimit()"> dk</label>
+      <label class="muted" style="font-size:12px;" title="Çalışma süresine göre mola limitini otomatik ayarla"><input type="checkbox" id="chAuto" onchange="chToggleAuto()" style="width:14px; height:14px; accent-color:var(--teal); vertical-align:-2px;"> oto</label>
+    </div>
+  </div>
+  <div class="row" style="gap:10px; align-items:stretch;">
+    <div class="card" style="flex:1;"><div class="muted" style="font-size:12px;">Çalışma</div><div id="chS" style="font-family:'JetBrains Mono',monospace; font-size:20px; font-weight:700; color:var(--teal);">00:00</div></div>
+    <div class="card" style="flex:1;"><div class="muted" style="font-size:12px;">Mola</div><div id="chB" style="font-family:'JetBrains Mono',monospace; font-size:20px; font-weight:700; color:var(--accent);">00:00</div></div>
+    <div class="card" style="flex:1;"><div class="muted" style="font-size:12px;">Yemek</div><div id="chM" style="font-family:'JetBrains Mono',monospace; font-size:20px; font-weight:700; color:var(--muted);">00:00</div></div>
+  </div>
+  <div class="card muted" id="chRatio" style="display:none;"></div>
+  <div class="card muted" id="chUrgeSum" style="display:none;"></div>
+  <div class="row" style="gap:8px; margin-bottom:10px;">
+    <button class="btn ghost" onclick="chManual('study')" style="flex:1; font-size:13px;">+ çalışma dk</button>
+    <button class="btn ghost" onclick="chManual('break')" style="flex:1; font-size:13px;">+ mola dk</button>
+    <button class="btn ghost" onclick="chReset()" style="flex:1; font-size:13px;">Günü sıfırla</button>
+  </div>
+  <h2>Bugünkü oturumlar</h2>
+  <div id="chHist"></div>
+</section>
+
+<!-- REVIEW -->
+<section id="review">
+  <div class="card">
+    <div class="muted" id="reviewWeekLabel"></div>
+    <div id="reviewPatterns"></div>
+    <h2 style="margin-top:6px;">Pazar akşamı kontrol listesi</h2>
+    <div id="reviewChecks"></div>
+    <h2>Haftanın notu</h2>
+    <textarea id="reviewNote" placeholder="Bu hafta ne iyi gitti, ne gitmedi? Gelecek haftanın 3 önceliği ne?" onchange="saveReview()"></textarea>
+  </div>
+</section>
+
+<!-- KURULUM -->
+<section id="kurulum">
+  <h2 style="margin-top:0;">Ders programı</h2>
+  <div class="card">
+    <div class="row">
+      <select id="scDay">
+        <option value="1">Pazartesi</option><option value="2">Salı</option><option value="3">Çarşamba</option>
+        <option value="4">Perşembe</option><option value="5">Cuma</option><option value="6">Cumartesi</option><option value="0">Pazar</option>
+      </select>
+      <input type="time" id="scStart" value="09:40">
+      <input type="time" id="scEnd" value="10:30">
+      <input type="text" id="scTitle" placeholder="Ders / etkinlik" style="flex:2; min-width:140px;">
+      <input type="text" id="scLoc" placeholder="Yer" style="width:90px;">
+      <button class="btn" onclick="addClass()">Ekle</button>
+    </div>
+  </div>
+  <div id="schedList"></div>
+
+  <h2>Yoğun dönem — staj, sınav haftası, iş</h2>
+  <div class="card">
+    <div class="row">
+      <input type="text" id="stjTitle" value="" placeholder="örn. TP-OTC Stajı, Final Haftası" style="flex:1; min-width:160px;">
+      <span class="muted" style="font-size:12px;">tarih</span>
+      <input type="date" id="stjFrom"><input type="date" id="stjTo">
+    </div>
+    <div class="row" style="margin-top:8px;">
+      <span class="muted" style="font-size:12px;">saat</span>
+      <input type="time" id="stjStart" value="08:00"><input type="time" id="stjEnd" value="17:00">
+      <button class="btn" onclick="seedStaj()">Pzt–Cum bloğu ekle</button>
+    </div>
+    <div class="muted" style="margin-top:6px;">Aynı mekanizma her yoğun dönem için geçerli — staj, sınav haftası, tam günlük iş. Bloklar yalnızca bu tarih aralığında sayılır; gün çubuğunu ve akşam penceresi hesabını doldurur. Bitiş tarihi geçince kendiliğinden düşer, silmeyi hatırlaman gerekmez.</div>
+  </div>
+
+  <h2>Akşam penceresi</h2>
+  <div class="card">
+    <div class="row">
+      <span class="muted" style="font-size:12px;">Hedef yatış</span><input type="time" id="stBed" onchange="saveSettings()" style="width:104px;">
+      <span class="muted" style="font-size:12px;">Yol + yemek + toparlanma</span><input type="number" id="stPay" min="0" max="360" step="15" onchange="saveSettings()" style="width:70px;"><span class="muted" style="font-size:12px;">dk</span>
+    </div>
+    <div class="row" style="margin-top:8px;">
+      <span class="muted" style="font-size:12px;">Soru başına</span><input type="number" id="stSoru" min="1" max="120" onchange="saveSettings()" style="width:64px;"><span class="muted" style="font-size:12px;">dk</span>
+      <span class="muted" style="font-size:12px;">Tekrar başına</span><input type="number" id="stTekrar" min="1" max="60" onchange="saveSettings()" style="width:64px;"><span class="muted" style="font-size:12px;">dk</span>
+    </div>
+    <div class="muted" style="margin-top:6px;">Bugün sekmesindeki pencere kartı bu değerlerle hesaplanır: kalan saatten bloklar ve pay düşülür, iş yükü soru/tekrar sayısından çıkar. Süreler kabaca doğru olsun yeter — kartın işi kesin dakika vermek değil, işin akşama sığıp sığmadığını söylemek.</div>
+  </div>
+
+  <h2>Bilgisayar ↔ telefon senkronu</h2>
+  <div class="card">
+    <div class="row">
+      <input id="syncUrlInp" placeholder="Apps Script Web App URL (bkz. KURULUM.md)" style="flex:1; min-width:200px;">
+      <button class="btn ghost" onclick="saveSyncUrl()">Kaydet</button>
+      <button class="btn" onclick="pullSync()">Şimdi eşitle</button>
+    </div>
+    <div class="row" style="margin-top:8px;">
+      <span class="muted" style="font-size:12px;">Bu cihazın adı</span>
+      <input id="deviceNameInp" placeholder="Masaüstü / Telefon" style="width:140px;" onchange="saveDeviceName()">
+      <span class="muted" style="font-size:12px;" id="deviceIdShow"></span>
+    </div>
+    <div class="muted" id="syncStatus" style="margin-top:6px;">senkronizasyon kapalı — URL girilmemiş</div>
+    <div class="muted" style="margin-top:6px; font-size:12px;">İki cihaz da aynı anda düzenlerse aynı satırı sessizce ezmez — hangi cihazın hangi değişikliği yaptığını gösterip seçim ister; kaybeden taraf otomatik yedeklenir.</div>
+  </div>
+  <div id="syncConflict"></div>
+
+  <h2>Yedek</h2>
+  <div class="card">
+    <div class="row">
+      <button class="btn ghost" onclick="exportData()">Verileri dışa aktar</button>
+      <button class="btn ghost" onclick="document.getElementById('importFile').click()">Yedekten geri yükle</button>
+      <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+    </div>
+    <div class="muted" style="margin-top:6px;">Veriler bu tarayıcıda saklanır. Sync kuruluysa bulut da yedek sayılır — uyarı kartı ikisinden yenisine bakar.</div>
+  </div>
+</section>
+
+</div>
+
+<script>
+// ---------- HTML kaçışı ----------
+// innerHTML'e giren her kullanıcı metni buradan geçer. Aksi halde "T < 0" veya
+// "Ecenur & ben" gibi bir başlık satırı görünmez yapıyordu (veri duruyor, render kayıyor).
+const ESC_MAP = {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'};
+function esc(v){ return String(v==null?'':v).replace(/[&<>"']/g, c=>ESC_MAP[c]); }
+
+// ---------- Storage (localStorage + in-memory fallback) ----------
+const mem = {};
+function sget(k, def){ try{ const v = localStorage.getItem(k); return v===null?def:JSON.parse(v);}catch(e){ return k in mem ? mem[k] : def; } }
+function ssetRaw(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){ mem[k]=v; } }
+function sset(k, v){ ssetRaw(k, v); scheduleSync(); }
+
+const DAYS = ['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'];
+const TYPE_LABEL = {exam:'SINAV', hw:'ÖDEV', lab:'LAB', other:'DİĞER'};
+
+let deadlines = sget('deadlines', []);
+let schedule = sget('schedule', []);
+let focusLog = sget('focusLog', {}); // {yyyy-mm-dd: minutes}
+let tagLog = sget('tagLog', {});     // {yyyy-mm-dd: {ders: minutes}}
+let urgeLog = sget('urgeLog', {});   // [ÖZELLİK 1] {yyyy-mm-dd: [{r:sebep, g:ders, t:zaman}]}
+let breakLog = sget('breakLog', {}); // [ÖZELLİK 3] {yyyy-mm-dd: [{o:aşım dk, r:sebep}]}
+let sleepLog = sget('sleepLog', {}); // [ÖZELLİK 4] {yyyy-mm-dd: {h:saat, bed:'23:30', wake:'07:00'}}
+let modeLog = sget('modeLog', {});   // [ÖZELLİK 5] {yyyy-mm-dd: {aktif:dk, pasif:dk}} — retrieval practice oranı
+// [ÖZELLİK 10] Akşam penceresi ayarları — staj/ders bloklarından sonra gerçekten kalan süre
+const SET0 = {bed:'23:30', pay:90, dkSoru:8, dkTekrar:6};
+let settings = Object.assign({}, SET0, sget('settings', {}) || {});
+
+// [ÖZELLİK 10] Blok tarih aralığı: staj blokları bitiş tarihinden sonra kendiliğinden düşer
+function schedActive(sc, dstr){
+  if(sc.from && dstr < sc.from) return false;
+  if(sc.to   && dstr > sc.to)   return false;
+  return true;
+}
+function todaySched(d){
+  d = d || new Date();
+  const k = ymd(d);
+  return schedule.filter(x => x.day == d.getDay() && schedActive(x, k));
+}
+
+// ---------- Clock & gauge ----------
+function pad(n){return String(n).padStart(2,'0');}
+function ymd(d){ d = d || new Date(); return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+function ymdPlus(days){ const d = new Date(); d.setDate(d.getDate()+days); return ymd(d); }
+let lastYmd = ymd();
+function rollDayIfNeeded(){
+  const today = ymd();
+  if(today === lastYmd) return;
+  const prev = lastYmd;
+  lastYmd = today;
+  chRollDay(prev);          // dünün bloğu düne yazılır, seans devam eder
+  prioRoll();               // 3 öncelik sıfırlanır, bitmeyenler "dünden" satırına düşer
+  renderPrio(); renderToday(); renderDeadlines(); renderReviews(); renderMistakes(); renderReview(); checkBackup();
+}
+function tickClock(){
+  rollDayIfNeeded();
+  const now = new Date();
+  document.getElementById('clock').textContent = pad(now.getHours())+':'+pad(now.getMinutes());
+  document.getElementById('dateline').textContent = now.toLocaleDateString('tr-TR',{weekday:'long', day:'numeric', month:'long', year:'numeric'});
+  renderGauge(now);
+  const lw = document.getElementById('lateWarn');
+  if(lw){
+    const h = now.getHours();
+    if(h >= 1 && h < 5){ lw.style.display='block'; lw.textContent='🌙 Geç oldu — bu saatten sonra çalışmanın verimi düşük ve yarını da götürür. Yarının ilk slotuna yaz, uyu.'; }
+    else lw.style.display='none';
+  }
+}
+// Pencere 07:00 → ertesi gün 02:00. Gece yarısından sonraki saatler gün sonuna düşer,
+// yoksa 01:00'de çizgi sola kaçıp 07:00'yi gösteriyordu.
+const G_START = 7*60, G_END = 26*60, G_SPAN = G_END - G_START;
+function gMin(h, m){ const t = h*60 + (m||0); return h < 5 ? t + 1440 : t; }
+function gPct(t){ return Math.min(100, Math.max(0, (t - G_START)/G_SPAN*100)); }
+function renderGauge(now){
+  const cur = gMin(now.getHours(), now.getMinutes());
+  document.getElementById('gaugeFill').style.width = gPct(cur)+'%';
+  const track = document.getElementById('gaugeTrack');
+  track.querySelectorAll('.gauge-block, .gauge-now').forEach(b=>b.remove());
+  todaySched(now).forEach(s=>{
+    const [sh,sm]=s.start.split(':').map(Number), [eh,em]=s.end.split(':').map(Number);
+    const a = gMin(sh,sm), b = gMin(eh,em);
+    const div = document.createElement('div');
+    div.className='gauge-block';
+    div.style.left = gPct(a)+'%';
+    div.style.width = Math.max(0.5, gPct(b)-gPct(a))+'%';
+    div.title = s.start+'–'+s.end+' '+s.title;
+    if(b < cur) div.dataset.past='1';
+    track.appendChild(div);
+  });
+  const nowLine = document.createElement('div');
+  nowLine.className = 'gauge-now';
+  nowLine.style.left = gPct(cur)+'%';
+  nowLine.title = pad(now.getHours())+':'+pad(now.getMinutes());
+  track.appendChild(nowLine);
+  const ticks = document.getElementById('gaugeTicks');
+  if(ticks && !ticks.dataset.done){
+    ticks.innerHTML = [10,13,16,19,22].map(h =>
+      `<span style="left:${gPct(h*60)}%">${pad(h)}</span>`).join('');
+    ticks.dataset.done = '1';
+  }
+}
+setInterval(tickClock, 10000); tickClock();
+
+// ---------- Tabs ----------
+document.getElementById('tabs').addEventListener('click', e=>{
+  if(e.target.tagName!=='BUTTON') return;
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));
+  e.target.classList.add('active');
+  document.getElementById(e.target.dataset.tab).classList.add('active');
+});
+
+// ---------- Bugünün 3 önceliği ----------
+const PRIO0 = () => ({date: ymd(), items:[{t:'',d:false,w:''},{t:'',d:false,w:''},{t:'',d:false,w:''}], prev:[]});
+let prio = sget('prio', null) || PRIO0();
+if(!Array.isArray(prio.items) || prio.items.length !== 3) prio = PRIO0();
+prio.items.forEach(x => { if(typeof x.w !== 'string') x.w = ''; }); // [ÖZELLİK 6] geriye dönük uyum
+function prioRoll(){
+  if(prio.date === ymd()) return false;
+  const left = prio.items.filter(x => x.t.trim() && !x.d).map(x => x.t.trim());
+  prio = PRIO0(); prio.prev = left;
+  sset('prio', prio); return true;
+}
+function prioSet(i, v){ prio.items[i].t = v; sset('prio', prio); }
+// [ÖZELLİK 6] implementation intention: "Eğer X olursa, o zaman Y" — niyet-eylem boşluğunu kapatan tetikleyici
+function prioSetWhen(i, v){ prio.items[i].w = v; sset('prio', prio); }
+function prioToggle(i){ prio.items[i].d = !prio.items[i].d; sset('prio', prio); renderPrio(); }
+function prioReuse(idx){
+  const t = (prio.prev||[])[idx];
+  if(!t) return;
+  const slot = prio.items.findIndex(x => !x.t.trim());
+  if(slot < 0) return;
+  prio.items[slot].t = t; sset('prio', prio); renderPrio();
+}
+function renderPrio(){
+  const rows = prio.items.map((x,i) =>
+    `<div class="prio-row ${x.d?'on':''}">
+      <input type="checkbox" ${x.d?'checked':''} onchange="prioToggle(${i})">
+      <span class="prio-num">${i+1}</span>
+      <input type="text" value="${esc(x.t)}" placeholder="—" oninput="prioSet(${i}, this.value)">
+    </div>
+    <div class="prio-when ${x.d?'on':''}">
+      <span class="prio-num"></span>
+      <span class="prio-if">eğer</span>
+      <input type="text" value="${esc(x.w)}" placeholder="… olursa → o zaman bunu yaparım" oninput="prioSetWhen(${i}, this.value)">
+    </div>`).join('');
+  const prev = (prio.prev||[]).length
+    ? `<div class="muted" style="font-size:12px; margin-top:8px;">Dünden kalan: ` +
+      prio.prev.map((t,i)=>`<span onclick="prioReuse(${i})" style="cursor:pointer; border-bottom:1px dashed var(--muted);">${esc(t)}</span>`).join(' · ') +
+      ` <span style="opacity:.7;">— hâlâ önemliyse dokun, yukarı taşınsın</span></div>` : '';
+  document.getElementById('prioBox').innerHTML =
+    `<div class="muted" style="font-size:11px; letter-spacing:.08em; margin-bottom:4px;">BUGÜNÜN 3 ÖNCELİĞİ</div>${rows}${prev}`;
+}
+
+// ---------- Deadlines ----------
+function addDeadline(){
+  const t = document.getElementById('dlTitle').value.trim();
+  const d = document.getElementById('dlDate').value;
+  if(!t || !d) return;
+  const item = {id:Date.now(), title:t, date:d, type:document.getElementById('dlType').value, done:false};
+  // [ÖZELLİK 2] opsiyonel çalışma planı
+  const tot = parseInt(document.getElementById('dlTotal').value,10);
+  const dys = parseInt(document.getElementById('dlDays').value,10);
+  if(tot > 0){
+    const nd = (dys > 0) ? dys : Math.max(1, Math.min(14, daysLeft(d)||1));
+    item.plan = {total:tot, days:nd, perDay:Math.ceil(tot/nd), start:ymd(), log:{}};
+  }
+  deadlines.push(item);
+  document.getElementById('dlTitle').value='';
+  document.getElementById('dlTotal').value=''; document.getElementById('dlDays').value='';
+  sset('deadlines', deadlines); renderDeadlines(); renderToday();
+}
+function togglePlanFields(){
+  const el = document.getElementById('dlPlanFields');
+  const open = el.style.display === 'none';
+  el.style.display = open ? 'flex' : 'none';
+  document.getElementById('dlPlanToggle').textContent = open ? '− plan' : '+ plan';
+}
+function daysLeft(dateStr){
+  const today = new Date(); today.setHours(0,0,0,0);
+  return Math.round((new Date(dateStr+'T00:00') - today)/86400000);
+}
+function dlRow(d, showDel){
+  const n = daysLeft(d.date);
+  const cls = n<=2?'urgent':(n<=7?'soon':'ok');
+  const label = n<0?(-n)+'g geçti':(n===0?'BUGÜN':n+' gün');
+  return `<div class="item ${d.done?'done':''}">
+    <input type="checkbox" ${d.done?'checked':''} onchange="toggleDl(${d.id})" style="accent-color:var(--teal); width:16px; height:16px; cursor:pointer;">
+    <span class="tag ${d.type}">${TYPE_LABEL[d.type]}</span>
+    <span style="flex:1;">${esc(d.title)}<div class="muted">${new Date(d.date+'T00:00').toLocaleDateString('tr-TR',{day:'numeric',month:'long',weekday:'short'})}</div></span>
+    <span class="countdown ${cls}">${label}</span>
+    ${showDel?`<button class="del" onclick="delDl(${d.id})" title="Sil">✕</button>`:''}
+  </div>`;
+}
+function renderDeadlines(){
+  const sorted = [...deadlines].sort((a,b)=>a.date.localeCompare(b.date));
+  document.getElementById('dlList').innerHTML = sorted.length? sorted.map(d=>dlRow(d,true)+((d.type==='exam'&&!d.done&&daysLeft(d.date)>=0)?triPanel(d):'')+planPanel(d)).join('') : '<div class="card muted">Henüz deadline yok. Sınav ve ödev tarihlerini buraya ekle — Bugün sekmesinde geri sayımlarını görürsün. Sınav eklersen altında D-14 triyaj panosu açılır.</div>';
+}
+function toggleDl(id){ const d=deadlines.find(x=>x.id===id); if(d){d.done=!d.done; sset('deadlines',deadlines); renderDeadlines(); renderToday();} }
+function delDl(id){ deadlines=deadlines.filter(x=>x.id!==id); sset('deadlines',deadlines); renderDeadlines(); renderToday(); }
+
+// ---------- Schedule ----------
+function addClass(){
+  const t=document.getElementById('scTitle').value.trim();
+  if(!t) return;
+  schedule.push({id:Date.now(), day:+document.getElementById('scDay').value,
+    start:document.getElementById('scStart').value, end:document.getElementById('scEnd').value,
+    title:t, loc:document.getElementById('scLoc').value.trim()});
+  document.getElementById('scTitle').value=''; document.getElementById('scLoc').value='';
+  sset('schedule',schedule); renderSchedule(); renderToday(); tickClock();
+}
+// [ÖZELLİK 10] Yoğun dönem bloğu — tarih aralıklı, bitince kendiliğinden düşer.
+// Aynı fonksiyon staj, sınav haftası veya tam günlük iş için kullanılır — hiçbiri
+// isimden anlaşılmaz, o yüzden başlık zorunlu.
+function seedStaj(){
+  const from  = document.getElementById('stjFrom').value;
+  const to    = document.getElementById('stjTo').value;
+  const st    = document.getElementById('stjStart').value || '08:00';
+  const en    = document.getElementById('stjEnd').value   || '17:00';
+  const title = document.getElementById('stjTitle').value.trim();
+  if(!title){ alert('Dönemin adını gir (örn. "TP-OTC Stajı") — takvimde ve gün çubuğunda bununla görünecek.'); return; }
+  if(!from || !to){ alert('Başlangıç ve bitiş tarihini gir — blok bu aralıkta sayılacak.'); return; }
+  if(to < from){ alert('Bitiş tarihi başlangıçtan önce olamaz.'); return; }
+  if(en <= st){ alert('Bitiş saati başlangıç saatinden sonra olmalı.'); return; }
+  let added = 0;
+  [1,2,3,4,5].forEach((d,i)=>{
+    if(schedule.some(x=>x.day===d && x.title===title && x.from===from && x.to===to)) return;
+    schedule.push({id:Date.now()+i, day:d, start:st, end:en, title, loc:'', from, to});
+    added++;
+  });
+  if(!added){ alert('Bu aralık için bloklar zaten ekli.'); return; }
+  sset('schedule',schedule); renderSchedule(); renderToday(); tickClock();
+}
+function delClass(id){ schedule=schedule.filter(x=>x.id!==id); sset('schedule',schedule); renderSchedule(); renderToday(); tickClock(); }
+function renderSchedule(){
+  const order=[1,2,3,4,5,6,0];
+  let html='';
+  order.forEach(day=>{
+    const entries = schedule.filter(s=>s.day==day).sort((a,b)=>a.start.localeCompare(b.start));
+    if(!entries.length) return;
+    html+=`<div class="sched-day"><h3>${DAYS[day]}</h3>`+
+      entries.map(s=>{
+        const gone = s.to && ymd() > s.to;
+        const rng = (s.from||s.to) ? `<span class="tag" style="font-size:10px;">${esc(s.from||'…')} → ${esc(s.to||'…')}</span>` : '';
+        return `<div class="sched-entry" style="${gone?'opacity:.35;':''}"><span class="time">${s.start}–${s.end}</span><span style="flex:1;">${esc(s.title)}</span>${rng}<span class="muted">${esc(s.loc||'')}</span><button class="del" onclick="delClass(${s.id})" title="Sil">✕</button></div>`;
+      }).join('')+`</div>`;
+  });
+  document.getElementById('schedList').innerHTML = html || '<div class="card muted">Program boş. Güz dönemi ders programın açıklanınca buraya gir — Bugün sekmesi ve üstteki günlük akış çubuğu otomatik dolar.</div>';
+}
+
+// ---------- Spaced repetition (Tekrar) ----------
+let reviews = sget('reviews', []);
+// [ÖZELLİK 8] Kalibrasyon günlüğü — gecikmeli JOL (tahmin) vs gerçek performans
+let calibLog = sget('calibLog', []);   // [{d:tarih, t:konu, c:ders, p:tahmin 0-100, a:gerçek 0-100}]
+let jolPend = {};                       // {reviewId: tahmin} — sayfa yenilenince sıfırlanır, kalıcı değil
+const LADDER = [1,3,7,14,30,60];
+const isoToday = () => ymd();
+// Zor/Orta/Kolay → gerçek hatırlama yüzdesi karşılığı
+const ACT = {'-1':0, '0':50, '1':100};
+function setJOL(id, val){ jolPend[id] = val; renderReviews(); }
+function clearJOL(id){ delete jolPend[id]; renderReviews(); }
+function addReview(){
+  const t = document.getElementById('rvTopic').value.trim();
+  if(!t) return;
+  const c = document.getElementById('rvCourse').value.trim();
+  const due = ymdPlus(1);
+  reviews.push({id:Date.now(), topic:t, course:c, level:0, due, count:0});
+  document.getElementById('rvTopic').value='';
+  sset('reviews', reviews); renderReviews(); renderToday();
+}
+function rateReview(id, rating){ // -1 zor, 0 orta, +1 kolay
+  const r = reviews.find(x=>x.id===id); if(!r) return;
+  // [ÖZELLİK 8] tahmin verilmişse kalibrasyon kaydı düş
+  if(typeof jolPend[id] === 'number'){
+    calibLog.unshift({d:ymd(), t:r.topic, c:r.course||'', p:jolPend[id], a:ACT[String(rating)]});
+    if(calibLog.length > 400) calibLog.length = 400;
+    sset('calibLog', calibLog);
+    delete jolPend[id];
+  }
+  // [ÖZELLİK 7] "Kolay" ilk iki tekrarda tek basamak atlar — erken 60 güne sıçrayıp unutmayı önler.
+  // Konu 2+ kez başarıyla tekrarlandıysa çift basamak atlamaya izin verilir.
+  if(rating < 0) r.level = Math.max(0, r.level-1);
+  else if(rating > 0) r.level = Math.min(LADDER.length-1, r.level + (r.count >= 2 ? 2 : 1));
+  else r.level = Math.min(LADDER.length-1, r.level+1);
+  r.count++;
+  r.due = ymdPlus(LADDER[r.level]);
+  sset('reviews', reviews); renderReviews(); renderToday();
+}
+// [ÖZELLİK 8] kalibrasyon istatistiği: bias (aşırı güven) + Brier skoru
+function calibStats(n){
+  const rows = calibLog.slice(0, n || calibLog.length);
+  if(!rows.length) return null;
+  const bias = rows.reduce((a,x)=>a + (x.p - x.a), 0) / rows.length;
+  const brier = rows.reduce((a,x)=>a + Math.pow((x.p-x.a)/100, 2), 0) / rows.length;
+  const byC = {};
+  rows.forEach(x => { const k = x.c || '—'; byC[k] = byC[k] || {s:0,n:0}; byC[k].s += (x.p - x.a); byC[k].n++; });
+  const worst = Object.entries(byC).filter(([,v])=>v.n>=3)
+    .map(([k,v])=>({c:k, b:v.s/v.n, n:v.n})).sort((a,b)=>b.b-a.b)[0];
+  return {n:rows.length, bias:Math.round(bias), brier:brier.toFixed(3), worst};
+}
+function delReview(id){ reviews = reviews.filter(x=>x.id!==id); sset('reviews', reviews); renderReviews(); renderToday(); }
+function renderReviews(){
+  const t = isoToday();
+  const due = reviews.filter(r=>r.due<=t).sort((a,b)=>a.due.localeCompare(b.due));
+  const up = reviews.filter(r=>r.due>t).sort((a,b)=>a.due.localeCompare(b.due));
+  document.getElementById('rvDue').innerHTML = due.length ? due.map(r=>{
+    const j = jolPend[r.id];
+    // [ÖZELLİK 8] Önce tahmin (cevaba/deftere bakmadan), sonra gerçek performans → kalibrasyon
+    const step = (typeof j === 'number')
+      ? `<span class="tag" style="color:var(--teal);">tahmin %${j}</span>
+         <button class="btn warn" style="padding:5px 9px;font-size:12px;" onclick="rateReview(${r.id},-1)">Zor</button>
+         <button class="btn ghost" style="padding:5px 9px;font-size:12px;" onclick="rateReview(${r.id},0)">Orta</button>
+         <button class="btn" style="padding:5px 9px;font-size:12px;" onclick="rateReview(${r.id},1)">Kolay</button>
+         <button class="del" onclick="clearJOL(${r.id})" title="Tahmini geri al">↺</button>`
+      : `<button class="btn ghost" style="padding:5px 8px;font-size:11px;" onclick="setJOL(${r.id},0)">%0</button>
+         <button class="btn ghost" style="padding:5px 8px;font-size:11px;" onclick="setJOL(${r.id},35)">%35</button>
+         <button class="btn ghost" style="padding:5px 8px;font-size:11px;" onclick="setJOL(${r.id},70)">%70</button>
+         <button class="btn ghost" style="padding:5px 8px;font-size:11px;" onclick="setJOL(${r.id},100)">%100</button>`;
+    const hint = (typeof j === 'number') ? 'şimdi boş kağıda dök, sonra gerçeği işaretle' : 'önce tahmin et: ne kadarını hatırlıyorsun?';
+    return `<div class="item"><span class="tag">${esc(r.course||'—')}</span>
+    <span style="flex:1;">${esc(r.topic)}<div class="muted">${r.count}. tekrar · ${hint}</div></span>
+    ${step}
+    <button class="del" onclick="delReview(${r.id})" title="Sil">✕</button></div>`; }).join('')
+    : '<div class="card muted">Bugün tekrar yok. Yeni öğrendiğin her önemli konuyu yukarıdan ekle.</div>';
+  renderCalib();
+  document.getElementById('rvUpcoming').innerHTML = up.length ? up.map(r=>`
+    <div class="item"><span class="tag">${esc(r.course||'—')}</span><span style="flex:1;">${esc(r.topic)}</span>
+    <span class="countdown ok">${new Date(r.due+'T00:00').toLocaleDateString('tr-TR',{day:'numeric',month:'short'})}</span>
+    <button class="del" onclick="delReview(${r.id})" title="Sil">✕</button></div>`).join('')
+    : '<div class="card muted">Sırada konu yok.</div>';
+}
+// [ÖZELLİK 8] Kalibrasyon kartı — nerede kendine fazla/az güveniyorsun
+function renderCalib(){
+  const box = document.getElementById('calibBox'); if(!box) return;
+  const s = calibStats(40);
+  if(!s || s.n < 3){
+    box.innerHTML = `<div class="card muted">Kalibrasyon için en az 3 tahmin gerek (${s?s.n:0}/3). Her tekrarda önce tahmin et, sonra gerçeği işaretle.</div>`;
+    return;
+  }
+  const dir = s.bias > 8 ? ['Aşırı güven','var(--danger)'] : (s.bias < -8 ? ['Fazla temkinli','var(--accent)'] : ['İyi kalibre','var(--teal)']);
+  const msg = s.bias > 8
+    ? 'Bildiğini sandığın kadar bilmiyorsun — tanıma (recognition) ile hatırlamayı (retrieval) karıştırıyorsun. Çözüme bakmadan boş kağıda dökmeyi sıkılaştır.'
+    : (s.bias < -8 ? 'Aslında sandığından iyi biliyorsun — gereksiz tekrar yapıp zaman kaybediyor olabilirsin.'
+      : 'Tahminlerin gerçeğe yakın. Bu, hangi konuya ne kadar çalışacağına doğru karar verebildiğin anlamına gelir.');
+  box.innerHTML = `<div class="card">
+    <div class="row"><b style="color:${dir[1]};">${dir[0]}</b><span class="spacer"></span>
+      <span class="muted" style="font-size:12px;">son ${s.n} tahmin</span></div>
+    <div style="margin-top:6px; font-size:13px;">Sapma: <b style="color:${dir[1]};">${s.bias>0?'+':''}${s.bias}</b> puan · Brier: <b>${s.brier}</b> <span class="muted">(0 = kusursuz)</span></div>
+    ${s.worst && s.worst.b > 12 ? `<div style="margin-top:6px; font-size:13px;">En çok şişirdiğin ders: <b style="color:var(--danger);">${esc(s.worst.c)}</b> (+${Math.round(s.worst.b)} puan, ${s.worst.n} tahmin)</div>` : ''}
+    <div class="muted" style="margin-top:8px; font-size:12.5px;">${msg}</div>
+  </div>`;
+}
+
+// ---------- Hata Defteri ----------
+let mistakes = sget('mistakes', []);
+function gv(id){ return document.getElementById(id).value.trim(); }
+function addMistake(){
+  const c=gv('mCourse'), note=gv('mNote'), se=gv('mWhy');
+  if(!note) return;
+  mistakes.unshift({id:Date.now(), course:c, note:note, se:se, date:ymd()});
+  document.getElementById('mNote').value='';
+  document.getElementById('mWhy').value='';
+  sset('mistakes', mistakes); renderMistakes();
+}
+// eski kayıtlar (type/why/fix) ile yeni kayıtlar (note) birlikte gösterilir
+function mText(m){
+  if(m.note) return m.note;
+  const head = [m.type, m.why].filter(Boolean).join(' · ');
+  return head + (m.fix ? ' → ' + m.fix : '');
+}
+function delMistake(id){ mistakes = mistakes.filter(x=>x.id!==id); sset('mistakes', mistakes); renderMistakes(); }
+function mistakeToReview(id){
+  const m = mistakes.find(x=>x.id===id); if(!m) return;
+  const due = ymdPlus(1);
+  reviews.push({id:Date.now(), topic:mText(m), course:m.course, level:0, due, count:0});
+  sset('reviews', reviews); renderReviews(); renderToday();
+}
+function renderMistakes(){
+  const sel = document.getElementById('mFilter');
+  const courses = [...new Set(mistakes.map(m=>m.course).filter(Boolean))];
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">Tümü</option>' + courses.map(c=>`<option value="${esc(c)}" ${c===cur?'selected':''}>${esc(c)}</option>`).join('');
+  const list = mistakes.filter(m=>!sel.value || m.course===sel.value);
+  document.getElementById('mCount').textContent = list.length + ' kayıt';
+  document.getElementById('mList').innerHTML = list.length ? list.map(m=>`
+    <div class="item"><span class="tag">${esc(m.course||'—')}</span>
+    <span style="flex:1;">${esc(mText(m))}${m.se?`<div class="muted" style="font-size:12px; color:var(--teal); margin-top:2px;">↳ ${esc(m.se)}</div>`:''}<div class="muted" style="font-size:11px;">${esc(m.date||'')}</div></span>
+    <button class="btn ghost" style="padding:4px 8px; font-size:11px; white-space:nowrap;" onclick="mistakeToReview(${m.id})" title="Tekrar listesine ekle">↻ Tekrara</button>
+    <button class="del" onclick="delMistake(${m.id})" title="Sil">✕</button></div>`).join('')
+    : '<div class="card muted">Kayıt yok. Tek cümle yeterli: hata neydi, doğrusu ne — ve mümkünse neden.</div>';
+}
+
+// ---------- [ÖZELLİK 9] Problem çözüm kalibrasyonu + destek kademesi ----------
+// tierLog: {tip_anahtarı: {kademe:0-3, streak:signed int (+doğru serisi / -yanlış serisi)}}
+// Eşikler (N_up=5, N_down=2) literatürden değil — bkz. problem-cozum-rehberi skill notu.
+let tierLog = sget('tierLog', {});
+let pcConf = null;
+const TIER_NAMES = ['0 · Worked Example', '1 · Backward Fading', '2 · Roadmap-only', '3 · Minimal Check'];
+function pcSetConf(v){
+  pcConf = v;
+  const el = document.getElementById('pcConfShow');
+  el.style.display = 'inline-block'; el.textContent = 'tahmin %' + v;
+}
+function addProblemCalib(correct){
+  const c = gv('pcCourse'), t = gv('pcTip');
+  if(!t){ alert('Soru tipini gir.'); return; }
+  if(pcConf === null){ alert('Önce tahmini işaretle (Step 0) — sonucu görmeden verilmeli.'); return; }
+  const key = (c ? c + ' · ' : '') + t;
+  const st = tierLog[key] || {kademe:0, streak:0};
+  st.streak = correct ? (st.streak > 0 ? st.streak + 1 : 1) : (st.streak < 0 ? st.streak - 1 : -1);
+  if(st.streak >= 5){ st.kademe = Math.min(3, st.kademe + 1); st.streak = 0; }
+  else if(st.streak <= -2){ st.kademe = Math.max(0, st.kademe - 1); st.streak = 0; }
+  tierLog[key] = st;
+  sset('tierLog', tierLog);
+  calibLog.unshift({d:ymd(), t:t, c:c||'', p:pcConf, a: correct ? 100 : 0, k:st.kademe, src:'problem'});
+  if(calibLog.length > 400) calibLog.length = 400;
+  sset('calibLog', calibLog);
+  pcConf = null;
+  document.getElementById('pcConfShow').style.display = 'none';
+  document.getElementById('pcTip').value = '';
+  renderTierBox(); renderCalib();
+}
+function renderTierBox(){
+  const box = document.getElementById('tierBox'); if(!box) return;
+  const entries = Object.entries(tierLog);
+  if(!entries.length){ box.innerHTML = ''; return; }
+  box.innerHTML = '<div class="card">' + entries.sort((a,b)=>b[1].kademe-a[1].kademe).map(([k,v])=>
+    `<div class="item"><span style="flex:1;">${esc(k)}</span><span class="tag">${TIER_NAMES[v.kademe]}</span>` +
+    (v.streak ? `<span class="muted" style="font-size:11px;">(${v.streak>0?'+':''}${v.streak})</span>` : '') +
+    `</div>`
+  ).join('') + '</div>';
+}
+
+// ---------- [ÖZELLİK 2] Çalışma planı: çok günlük soru/görev takibi ----------
+function dayDiff(a, b){ return Math.round((new Date(b+'T00:00') - new Date(a+'T00:00'))/86400000); }
+function planTotals(p){
+  const done = Object.values(p.log||{}).reduce((a,b)=>a+b, 0);
+  const today = p.log[ymd()] || 0;
+  const dayIdx = Math.max(1, Math.min(p.days, dayDiff(p.start, ymd())+1));
+  return {done, today, dayIdx, pct: Math.min(100, Math.round(done/p.total*100))};
+}
+function planAddNew(id){
+  const d = deadlines.find(x=>x.id===id); if(!d) return;
+  const tot = parseInt(prompt('Toplam soru / görev sayısı:'), 10);
+  if(!tot || tot < 1) return;
+  const sug = Math.max(1, Math.min(14, daysLeft(d.date)||1));
+  const dys = parseInt(prompt('Kaç güne yayılsın? (öneri: '+sug+')', sug), 10) || sug;
+  d.plan = {total:tot, days:dys, perDay:Math.ceil(tot/dys), start:ymd(), log:{}};
+  sset('deadlines', deadlines); renderDeadlines(); renderToday();
+}
+function planCount(id, n){
+  const d = deadlines.find(x=>x.id===id); if(!d || !d.plan) return;
+  const k = ymd();
+  d.plan.log[k] = Math.max(0, (d.plan.log[k]||0) + n);
+  sset('deadlines', deadlines); renderDeadlines(); renderToday();
+}
+function planTarget(id){
+  const d = deadlines.find(x=>x.id===id); if(!d || !d.plan) return;
+  const v = parseInt(prompt('Gün başına hedef (otomatik: '+Math.ceil(d.plan.total/d.plan.days)+'):', d.plan.perDay), 10);
+  if(v > 0){ d.plan.perDay = v; sset('deadlines', deadlines); renderDeadlines(); renderToday(); }
+}
+function planDelete(id){
+  const d = deadlines.find(x=>x.id===id); if(!d) return;
+  delete d.plan; sset('deadlines', deadlines); renderDeadlines(); renderToday();
+}
+function planPanel(d){
+  if(d.done) return '';
+  if(!d.plan) return `<div style="margin:-6px 0 10px; text-align:right;"><button class="btn ghost" style="padding:4px 10px; font-size:11px;" onclick="planAddNew(${d.id})">📋 çalışma planı ekle</button></div>`;
+  const p = d.plan, t = planTotals(p);
+  const hit = t.today >= p.perDay;
+  return `<div class="card" style="margin:-4px 0 10px; padding:12px;">
+    <div class="row" style="font-size:13px;">
+      <b>Gün ${t.dayIdx}/${p.days}</b>
+      <span style="color:${hit?'var(--teal)':'var(--accent)'};">Bugün ${t.today}/${p.perDay}</span>
+      <span class="muted">Toplam ${t.done}/${p.total}</span>
+      <span class="spacer"></span>
+      <button class="del" onclick="planTarget(${d.id})" title="Günlük hedefi değiştir">⚙</button>
+      <button class="del" onclick="planDelete(${d.id})" title="Planı kaldır">✕</button>
+    </div>
+    <div style="height:8px; background:var(--surface2); border-radius:4px; margin:8px 0; overflow:hidden;">
+      <div style="height:100%; width:${t.pct}%; background:${t.pct>=100?'var(--teal)':'var(--accent)'};"></div>
+    </div>
+    <div class="row" style="gap:8px;">
+      <button class="btn ghost" style="flex:1; padding:10px;" onclick="planCount(${d.id},-1)">−1</button>
+      <button class="btn" style="flex:2; padding:10px;" onclick="planCount(${d.id},1)">+1 soru</button>
+      <button class="btn ghost" style="flex:1; padding:10px;" onclick="planCount(${d.id},5)">+5</button>
+    </div>
+  </div>`;
+}
+
+// ---------- Sınav Triyajı ----------
+let triage = sget('triage', {}); // {deadlineId: [{id, topic, color: r|y|g}]}
+function addTriTopic(dlId){
+  const inp = document.getElementById('tri-inp-'+dlId);
+  const t = inp.value.trim(); if(!t) return;
+  (triage[dlId] = triage[dlId] || []).push({id:Date.now(), topic:t, color:'r'});
+  sset('triage', triage); renderDeadlines(); renderToday();
+}
+function cycleTri(dlId, tid){
+  const t = (triage[dlId]||[]).find(x=>x.id===tid); if(!t) return;
+  t.color = t.color==='r' ? 'y' : (t.color==='y' ? 'g' : 'r');
+  sset('triage', triage); renderDeadlines(); renderToday();
+}
+function delTri(dlId, tid){
+  triage[dlId] = (triage[dlId]||[]).filter(x=>x.id!==tid);
+  sset('triage', triage); renderDeadlines(); renderToday();
+}
+function triPanel(d){
+  const arr = triage[d.id] || [];
+  const col = {r:['rgba(226,101,78,.18)','var(--danger)'], y:['rgba(242,169,59,.18)','var(--accent)'], g:['rgba(69,184,174,.18)','var(--teal)']};
+  const chips = arr.map(t=>`<span onclick="cycleTri(${d.id},${t.id})" style="cursor:pointer; padding:3px 10px; border-radius:20px; font-size:12px; margin:2px; display:inline-block; background:${col[t.color][0]}; color:${col[t.color][1]}; border:1px solid ${col[t.color][1]};">${esc(t.topic)} <span onclick="event.stopPropagation();delTri(${d.id},${t.id})" style="opacity:.6;">✕</span></span>`).join('');
+  const n = c => arr.filter(t=>t.color===c).length;
+  return `<div class="card" style="margin:-4px 0 10px; padding:10px 12px;">
+    <div class="muted" style="margin-bottom:6px;">Triyaj — konuya tıkla: kırmızı→sarı→yeşil · ${n('r')} kırmızı / ${n('y')} sarı / ${n('g')} yeşil · zaman dağılımı %70/%25/%5</div>
+    <div>${chips || '<span class="muted">Konu listesini gir, hepsi kırmızı başlar. Hedef: her gün 1 kırmızıyı sarıya çevir.</span>'}</div>
+    <div class="row" style="margin-top:8px;"><input id="tri-inp-${d.id}" placeholder="Konu" style="flex:1;" onkeydown="if(event.key==='Enter')addTriTopic(${d.id})"><button class="btn ghost" style="padding:5px 10px;" onclick="addTriTopic(${d.id})">Ekle</button></div>
+  </div>`;
+}
+
+// ---------- Today ----------
+function renderToday(){
+  const now = new Date(); const day = now.getDay();
+  const exams = deadlines.filter(d=>d.type==='exam'&&!d.done&&daysLeft(d.date)>=0&&daysLeft(d.date)<=14).sort((a,b)=>a.date.localeCompare(b.date));
+  if(exams.length){
+    const e = exams[0]; const reds = (triage[e.id]||[]).filter(t=>t.color==='r').length;
+    const dl = daysLeft(e.date);
+    document.getElementById('todayExam').innerHTML = `<div class="card" style="border-color:var(--accent);"><b>${esc(e.title)}</b> — ${dl===0?'BUGÜN':dl+' gün kaldı'} · ${reds>0?`<b style="color:var(--danger)">${reds} kırmızı konu</b> bekliyor`:'kırmızı konu kalmadı'} <span class="muted">(triyaj: Deadlineler sekmesi)</span></div>`;
+  } else document.getElementById('todayExam').innerHTML = '';
+  const todayCls = todaySched(now).sort((a,b)=>a.start.localeCompare(b.start));
+  document.getElementById('todayClasses').innerHTML = todayCls.length?
+    todayCls.map(s=>`<div class="sched-entry"><span class="time">${s.start}–${s.end}</span><span style="flex:1;">${esc(s.title)}</span><span class="muted">${esc(s.loc||'')}</span></div>`).join('') :
+    '<div class="card muted">Bugün ders yok — deadline listesine göre çalış.</div>';
+  const upcoming = deadlines.filter(d=>!d.done && daysLeft(d.date)>=-1).sort((a,b)=>a.date.localeCompare(b.date)).slice(0,5);
+  document.getElementById('todayDeadlines').innerHTML = upcoming.length? upcoming.map(d=>dlRow(d,false)).join('') : '<div class="card muted">Yaklaşan deadline yok.</div>';
+  const key = ymd(now);   // yerel gün — toISOString() UTC verdiği için 00:00-03:00 arası dünü gösteriyordu
+  const mins = focusLog[key]||0;
+  const week = Object.entries(focusLog).filter(([k])=>daysAgo(k)<7).reduce((a,[,v])=>a+v,0);
+  const dueCount = reviews.filter(r=>r.due<=isoToday()).length;
+  const rvLine = dueCount>0 ? ` · <b style="color:var(--danger)">${dueCount} tekrar bekliyor</b> (Tekrar sekmesi)` : ' · Tekrar listesi temiz';
+  renderSuggest(); renderWindow(); renderPlans(); renderWeekChart(); renderSleep();
+  const md = modeSpan(1), mdw = modeSpan(7);
+  let mdLine = '';
+  if(md.tot){
+    const col = md.pct >= 50 ? 'var(--teal)' : 'var(--danger)';
+    mdLine = `<div class="muted" style="font-size:12px; margin-top:6px;">✍ Bugün <b style="color:${col}">%${md.pct} aktif</b> (${md.a} dk soru/tekrar · ${md.p} dk okuma)` +
+      (mdw.pct !== null ? ` · 7 gün: <b style="color:${mdw.pct>=50?'var(--teal)':'var(--accent)'}">%${mdw.pct}</b>` : '') +
+      (md.pct < 50 ? ' — <span style="color:var(--danger)">okuma çözmenin yerini tutmuyor</span>' : '') + `</div>`;
+  }
+  document.getElementById('todayStats').innerHTML = `Bugün <b style="color:var(--accent)">${mins} dk</b> odaklanılmış çalışma · Son 7 gün toplam <b style="color:var(--teal)">${(week/60).toFixed(1)} saat</b>${rvLine}${mdLine}`;
+}
+function daysAgo(dateStr){ return Math.round((new Date().setHours(0,0,0,0) - new Date(dateStr+'T00:00'))/86400000); }
+
+// ---------- Ortak yardımcılar ----------
+const todayKey = ()=> ymd();
+function fmt(s){ return pad(Math.floor(s/60))+':'+pad(s%60); }
+function beep(){
+  try{
+    const ctx=new (window.AudioContext||window.webkitAudioContext)();
+    const o=ctx.createOscillator(), g=ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.frequency.value=880; g.gain.value=0.15;
+    o.start(); o.stop(ctx.currentTime+0.4);
+  }catch(e){}
+}
+
+// ---------- Kronometre (serbest sayaç) ----------
+const CH0 = () => ({phase:'idle', kind:'mola', start:null, day:ymd(), s:0, b:0, m:0, log:[], count:0, u:0, su:0, tag:'', bl:10, lam:-1, auto:true, ls:0, mode:'aktif'});
+let ch = sget('chrono', null) || CH0();
+if(ch.day !== ymd()) ch = CH0();
+['u','su'].forEach(k => { if(typeof ch[k] !== 'number') ch[k] = 0; });
+if(typeof ch.lam !== 'number') ch.lam = -1;
+if(typeof ch.tag !== 'string') ch.tag = '';
+if(typeof ch.bl !== 'number') ch.bl = 10;
+if(typeof ch.auto !== 'boolean') ch.auto = true;
+if(typeof ch.ls !== 'number') ch.ls = 0;
+if(ch.mode !== 'aktif' && ch.mode !== 'pasif') ch.mode = 'aktif';
+let chTimer = null;
+
+function chSave(){ sset('chrono', ch); }
+// Adaptif mola önerisi: blok uzadıkça toparlanma ihtiyacı orantısızca artar,
+// üstüne günün biriken yorgunluğu binir.
+function recBreak(studySec){
+  const m = studySec/60;
+  let b = m < 20 ? 4 : m < 35 ? 7 : m < 55 ? 10 : m < 80 ? 15 : m < 110 ? 20 : 28;
+  let why = m < 20 ? 'kısa blok' : m < 55 ? 'standart blok' : m < 110 ? 'uzun blok' : 'çok uzun blok';
+  if(ch.s/60 > 180){ b += 3; why += ' + 3sa üstü gün'; }
+  if(ch.log.filter(x=>x.t==='study').length >= 4){ b += 2; why += ' + 4. blok'; }
+  return {min: Math.min(30, Math.round(b)), why};
+}
+function chElapsed(){ return ch.start ? Math.floor((Date.now()-ch.start)/1000) : 0; }
+function chSetTag(){ ch.tag = document.getElementById('chTag').value.trim(); chSave(); chRender(); }
+// [ÖZELLİK 5] Mod değişimi: çalışırken basılırsa o ana kadarki süre eski moda yazılır, sonrası yenisine
+function chSetMode(m){
+  if(ch.mode === m) return;
+  if(ch.phase === 'study'){
+    const e = chElapsed();
+    if(e >= 60){ ch.s += e; chLog('study', e, ch.tag); creditFocus(e, ch.tag); ch.start = Date.now(); }
+  }
+  ch.mode = m; chSave(); chRender(); renderToday();
+}
+function chSetLimit(){ const v = parseInt(document.getElementById('chBrkLimit').value,10); ch.bl = (v>0 && v<=120) ? v : 10; ch.auto = false; ch.lam = -1; chSave(); askNotify(); chRender(); }
+function chToggleAuto(){ ch.auto = document.getElementById('chAuto').checked; if(ch.auto && ch.ls) ch.bl = recBreak(ch.ls).min; ch.lam = -1; chSave(); chRender(); }
+
+async function askNotify(){
+  try{ if('Notification' in window && Notification.permission === 'default') await Notification.requestPermission(); }catch(e){}
+}
+async function notify(title, body){
+  try{
+    if(!('Notification' in window) || Notification.permission !== 'granted') return;
+    const reg = navigator.serviceWorker ? await navigator.serviceWorker.getRegistration() : null;
+    if(reg && reg.showNotification) reg.showNotification(title, {body, tag:'kp-mola', icon:'icon-192.png', renotify:true});
+    else new Notification(title, {body});
+  }catch(e){}
+}
+
+function creditFocus(sec, tag, key){
+  const min = Math.round(sec/60); if(min < 1) return;
+  const k = key || ymd();
+  focusLog[k] = (focusLog[k]||0) + min; sset('focusLog', focusLog);
+  const t = (tag||'').trim();
+  if(t){ tagLog[k] = tagLog[k] || {}; tagLog[k][t] = (tagLog[k][t]||0) + min; sset('tagLog', tagLog); }
+  // [ÖZELLİK 5] aktif (retrieval) / pasif (okuma) dakika ayrımı
+  const md = (ch && ch.mode === 'pasif') ? 'pasif' : 'aktif';
+  modeLog[k] = modeLog[k] || {aktif:0, pasif:0};
+  modeLog[k][md] = (modeLog[k][md]||0) + min;
+  sset('modeLog', modeLog);
+  renderToday();
+}
+function chLog(type, dur, tag){
+  if(dur < 1) return;
+  ch.count++;
+  ch.log.unshift({t:type, d:dur, n:ch.count, ur:(type==='study'?ch.su:0), g:(type==='study'?(tag||ch.tag||''):''), md:(type==='study'?ch.mode:'')});
+  ch.log = ch.log.slice(0,40);
+}
+// [ÖZELLİK 1] Dürtü: tek dokunuşla sayılır, ikinci dokunuşla sebebi etiketlenir
+const URGE_LBL = {kacis:'kaçış', yorgun:'yorgunluk', anlamadim:'anlamıyorum', rastgele:'rastgele', '?':'sebepsiz'};
+let urgeChipTimer = null;
+function chUrge(){
+  if(ch.phase !== 'study') return;
+  ch.u++; ch.su++; chSave();
+  const k = ymd();
+  urgeLog[k] = urgeLog[k] || [];
+  urgeLog[k].push({r:'?', g: ch.tag || '', t: Date.now()});
+  sset('urgeLog', urgeLog);
+  const el = document.getElementById('chUrgeChips');
+  el.style.display = 'block';
+  clearTimeout(urgeChipTimer);
+  urgeChipTimer = setTimeout(()=>{ el.style.display='none'; }, 9000);
+  const b = document.getElementById('chUrgeBtn');
+  b.textContent = '✔ yakalandı — devam';
+  setTimeout(chRender, 900);
+  renderToday();
+}
+function chUrgeReason(r){
+  const arr = urgeLog[ymd()] || [];
+  if(arr.length){ arr[arr.length-1].r = r; sset('urgeLog', urgeLog); }
+  document.getElementById('chUrgeChips').style.display='none';
+  clearTimeout(urgeChipTimer);
+  chRender(); renderToday();
+}
+function urgeDaySummary(k){
+  const arr = urgeLog[k] || [];
+  if(!arr.length) return '';
+  const c = {};
+  arr.forEach(u => c[u.r] = (c[u.r]||0) + 1);
+  return arr.length + ' dürtü: ' + Object.entries(c).sort((a,b)=>b[1]-a[1]).map(([r,n])=>n+' '+URGE_LBL[r]).join(', ');
+}
+function urgeWeek(){
+  const byTag = {}, byR = {}; let total = 0;
+  for(let i=0;i<7;i++){
+    const d = new Date(); d.setDate(d.getDate()-i);
+    (urgeLog[ymd(d)]||[]).forEach(u => { total++; if(u.g) byTag[u.g]=(byTag[u.g]||0)+1; byR[u.r]=(byR[u.r]||0)+1; });
+  }
+  return {total, byTag, byR};
+}
+// [ÖZELLİK 5] aktif/pasif oran hesabı — hedef aktif ≥ %50 (retrieval practice, g≈0.51)
+function modeSpan(days){
+  let a = 0, p = 0;
+  for(let i=0;i<days;i++){
+    const d = new Date(); d.setDate(d.getDate()-i);
+    const r = modeLog[ymd(d)]; if(!r) continue;
+    a += r.aktif||0; p += r.pasif||0;
+  }
+  const tot = a + p;
+  return {a, p, tot, pct: tot ? Math.round(100*a/tot) : null};
+}
+function chManual(kind){
+  const label = kind === 'study' ? 'Telefonsuz / dışarıda çalıştığın süre (dakika):' : 'Sayaç dışında geçen mola süresi (dakika):';
+  const mm = parseInt(prompt(label), 10);
+  if(!mm || mm < 1 || mm > 600) return;
+  if(kind === 'study'){ ch.s += mm*60; chLog('study', mm*60, ch.tag); creditFocus(mm*60, ch.tag); }
+  else { ch.b += mm*60; chLog('break', mm*60); }
+  chSave(); chRender();
+}
+function chMain(){
+  const e = chElapsed();
+  if(ch.phase === 'idle'){ ch.phase='study'; ch.su=0; ch.start=Date.now(); }
+  else if(ch.phase === 'study'){
+    ch.s += e; chLog('study', e, ch.tag); creditFocus(e, ch.tag);
+    ch.ls = e;
+    if(ch.auto) ch.bl = recBreak(e).min;
+    ch.phase='break'; ch.kind='mola'; ch.lam=-1; ch.start=Date.now(); askNotify();
+  } else {
+    if(ch.kind === 'yemek'){ ch.m += e; chLog('meal', e); }
+    else { ch.b += e; chLog('break', e); }
+    chCloseBreak(e, ch.kind === 'yemek');   // [ÖZELLİK 3]
+    ch.phase='study'; ch.su=0; ch.lam=-1; ch.start=Date.now();
+  }
+  chSave(); chRender(); chLoop();
+}
+function chFinish(){
+  const e = chElapsed();
+  if(ch.phase === 'study'){ ch.s += e; chLog('study', e, ch.tag); creditFocus(e, ch.tag); }
+  else if(ch.phase === 'break'){
+    if(ch.kind === 'yemek'){ ch.m += e; chLog('meal', e); } else { ch.b += e; chLog('break', e); }
+    chCloseBreak(e, ch.kind === 'yemek');   // [ÖZELLİK 3]
+  }
+  ch.phase='idle'; ch.kind='mola'; ch.start=null; ch.su=0; ch.lam=-1;
+  chSave(); chLoop(); chRender();
+}
+function chMeal(){
+  if(ch.phase !== 'break' || ch.kind === 'yemek') return;
+  const e = chElapsed();
+  if(e > 0){ ch.b += e; chLog('break', e); }
+  ch.kind='yemek'; ch.lam=-1; ch.start=Date.now();
+  chSave(); chRender();
+}
+function chReset(){
+  if(ch.phase === 'study'){ const e = chElapsed(); if(e >= 60) creditFocus(e, ch.tag); }
+  const keepTag = ch.tag, keepBl = ch.bl, keepAuto = ch.auto;
+  ch = CH0(); ch.tag = keepTag; ch.bl = keepBl; ch.auto = keepAuto;
+  chSave(); chLoop(); chRender();
+}
+// [ÖZELLİK 3] Mola limiti aşıldıysa çalışmaya dönerken sebebini sor
+const OVER_LBL = {telefon:'telefon', ihtiyac:'yemek/ihtiyaç', farketmedim:'fark etmedim', '?':'belirtilmedi'};
+let overChipTimer = null;
+function chCloseBreak(elapsedSec, wasMeal){
+  if(wasMeal) return;
+  const lim = (ch.bl||10)*60;
+  if(elapsedSec <= lim) return;
+  const k = ymd();
+  breakLog[k] = breakLog[k] || [];
+  breakLog[k].push({o: Math.round((elapsedSec-lim)/60), tot: Math.round(elapsedSec/60), r:'?', t: Date.now()});
+  sset('breakLog', breakLog);
+  const el = document.getElementById('chOverChips');
+  el.style.display = 'block';
+  clearTimeout(overChipTimer);
+  overChipTimer = setTimeout(()=>{ el.style.display='none'; }, 12000);
+}
+function chOverReason(r){
+  const arr = breakLog[ymd()] || [];
+  if(arr.length){ arr[arr.length-1].r = r; sset('breakLog', breakLog); }
+  document.getElementById('chOverChips').style.display='none';
+  clearTimeout(overChipTimer);
+  renderReview();
+}
+function overWeek(){
+  const byR = {}; let n = 0, mins = 0;
+  for(let i=0;i<7;i++){
+    const d = new Date(); d.setDate(d.getDate()-i);
+    (breakLog[ymd(d)]||[]).forEach(b => { n++; mins += b.o||0; byR[b.r]=(byR[b.r]||0)+1; });
+  }
+  return {n, mins, byR};
+}
+
+// Gece yarısı: dünün bloğu düne yazılır, açık seans yeni günde kaldığı yerden sürer
+function chRollDay(prevKey){
+  const e = chElapsed();
+  if(ch.phase === 'study' && e >= 60) creditFocus(e, ch.tag, prevKey);
+  const keepTag = ch.tag, keepBl = ch.bl, keepAuto = ch.auto, ph = ch.phase, kind = ch.kind;
+  ch = CH0(); ch.tag = keepTag; ch.bl = keepBl; ch.auto = keepAuto;
+  if(ph !== 'idle'){ ch.phase = ph; ch.kind = kind; ch.start = Date.now(); }
+  chSave(); chLoop(); chRender();
+}
+function chLoop(){ if(chTimer) clearInterval(chTimer); if(ch.phase !== 'idle') chTimer = setInterval(chRender, 1000); }
+
+function chRender(){
+  const e = chElapsed();
+  const isMeal = ch.phase === 'break' && ch.kind === 'yemek';
+  const lim = (ch.bl||10)*60;
+  const over = ch.phase === 'break' && !isMeal && e > lim;
+  const badge = document.getElementById('chBadge'), clock = document.getElementById('chClock'),
+        label = document.getElementById('chLabel'), main = document.getElementById('chMainBtn'),
+        meal = document.getElementById('chMealBtn'), urge = document.getElementById('chUrgeBtn'),
+        fin = document.getElementById('chFinishBtn');
+  const tagInp = document.getElementById('chTag'), blInp = document.getElementById('chBrkLimit');
+  if(document.activeElement !== tagInp) tagInp.value = ch.tag || '';
+  if(document.activeElement !== blInp) blInp.value = ch.bl;
+  document.getElementById('chAuto').checked = !!ch.auto;
+  // [ÖZELLİK 5] mod butonlarının görsel durumu
+  const mA = document.getElementById('chModeA'), mP = document.getElementById('chModeP');
+  const on = (el, col) => { el.style.background = col; el.style.color = '#0A1514'; el.style.borderColor = col; el.style.fontWeight = '700'; };
+  const off = el => { el.style.background = 'transparent'; el.style.color = 'var(--muted)'; el.style.borderColor = 'var(--border)'; el.style.fontWeight = '600'; };
+  if(ch.mode === 'aktif'){ on(mA, 'var(--teal)'); off(mP); } else { on(mP, 'var(--accent)'); off(mA); }
+  const known = [...new Set([...schedule.map(x=>x.title), ...ch.log.map(x=>x.g), ...Object.values(tagLog).flatMap(o=>Object.keys(o))].filter(Boolean))];
+  document.getElementById('chTagList').innerHTML = known.map(t=>`<option value="${esc(t)}">`).join('');
+
+  clock.textContent = ch.phase === 'idle' ? '00:00' : fmt(e);
+  fin.style.display = ch.phase === 'idle' ? 'none' : 'inline-block';
+
+  if(ch.phase === 'study'){
+    badge.textContent = '▤ Çalışıyorum' + (ch.tag ? ' · '+ch.tag : '');
+    badge.style.color='var(--teal)'; badge.style.borderColor='var(--teal)';
+    clock.style.color='var(--teal)';
+    const pv = recBreak(e);
+    label.textContent = e > 5400 ? '90 dakikayı geçtin — mola şart · önerilen: '+pv.min+' dk'
+      : (e > 1200 ? 'Şimdi mola verirsen önerilen süre: '+pv.min+' dk' : 'Mola için "Mola Ver", günü kapatmak için "Bitir"');
+    main.textContent='❙❙ Mola Ver'; meal.style.display='none';
+    urge.style.display='inline-block'; urge.textContent='📱 Dürtü geldi'+(ch.su>0?' ('+ch.su+')':'');
+  } else if(ch.phase === 'break'){
+    badge.textContent = isMeal ? '🍽 Yemekteyim' : (over ? '⏰ Mola aşıldı' : '☕ Moladayım');
+    badge.style.color = over ? 'var(--danger)' : 'var(--accent)';
+    badge.style.borderColor = over ? 'var(--danger)' : 'var(--accent)';
+    clock.style.color = over ? 'var(--danger)' : 'var(--accent)';
+    const recTxt = (ch.auto && ch.ls) ? Math.round(ch.ls/60)+' dk çalışma → önerilen mola '+ch.bl+' dk' : 'Mola limiti '+ch.bl+' dk';
+    label.textContent = isMeal ? 'Yemek bitince çalışmaya dön'
+      : (over ? 'Molan '+Math.floor(e/60)+' dk sürdü — limit '+ch.bl+' dk. Telefonu bırak, çalışmaya dön.' : recTxt);
+    main.textContent='▶ Çalışmaya Dön'; meal.style.display = isMeal ? 'none' : 'inline-block';
+    urge.style.display='none';
+    if(over){
+      const mn = Math.floor(e/60);
+      if(ch.lam !== mn){
+        ch.lam = mn; chSave(); beep();
+        const first = Math.floor(lim/60)+1;
+        if(mn === first || (mn - first) % 5 === 0) notify('Mola uzadı ⏰', 'Molan '+mn+' dakika oldu (limit '+ch.bl+' dk). Çalışmaya dön.');
+      }
+    }
+  } else {
+    badge.textContent='Hazır'; badge.style.color='var(--muted)'; badge.style.borderColor='var(--border)';
+    clock.style.color='var(--text)';
+    label.textContent = ch.s > 0 ? 'Bugün '+fmt(ch.s)+' çalışıldı — devam etmek için bas' : 'Başlamak için düğmeye bas';
+    main.textContent='▶ Çalışmaya Başla'; meal.style.display='none'; urge.style.display='none';
+  }
+
+  document.getElementById('chS').textContent = fmt(ch.s + (ch.phase==='study' ? e : 0));
+  document.getElementById('chB').textContent = fmt(ch.b + (ch.phase==='break' && !isMeal ? e : 0));
+  document.getElementById('chM').textContent = fmt(ch.m + (isMeal ? e : 0));
+  const S = ch.s + (ch.phase==='study'?e:0), B = ch.b + (ch.phase==='break'&&!isMeal?e:0);
+  const r = document.getElementById('chRatio');
+  if(S+B > 300){
+    r.style.display='block';
+    r.innerHTML = 'Verim: <b style="color:var(--teal)">%'+Math.round(100*S/(S+B))+'</b> <span class="muted">(çalışma / çalışma+mola, yemek hariç · hedef %70+)</span>'+(ch.u>0?' · 📱 bugün <b>'+ch.u+'</b> dürtü yakalandı':'');
+  } else r.style.display='none';
+
+  const us = document.getElementById('chUrgeSum');   // [ÖZELLİK 1] günlük dürtü dağılımı
+  const usTxt = urgeDaySummary(ymd());
+  if(usTxt){ us.style.display='block'; us.innerHTML = '📱 Bugün ' + usTxt; } else us.style.display='none';
+
+  const map = {study:['var(--teal)','▤ Çalışma'], break:['var(--accent)','☕ Mola'], meal:['var(--muted)','🍽 Yemek']};
+  document.getElementById('chHist').innerHTML = ch.log.length ? ch.log.slice(0,15).map(h=>
+    `<div class="item"><span style="color:${map[h.t][0]};">${map[h.t][1]} #${h.n}</span>${h.md?'<span class="tag" style="color:'+(h.md==='aktif'?'var(--teal)':'var(--accent)')+';">'+(h.md==='aktif'?'✍':'📖')+'</span>':''}${h.g?'<span class="tag">'+esc(h.g)+'</span>':''}${h.ur>0?'<span class="muted" style="font-size:12px;">📱 '+h.ur+'</span>':''}<span class="spacer"></span><span class="countdown ok">${fmt(h.d)}</span></div>`).join('')
+    : '<div class="card muted">Henüz oturum yok. Çalışma süresi bittiğinde Bugün istatistiğine otomatik işlenir.</div>';
+  document.title = ch.phase !== 'idle'
+    ? fmt(e) + (ch.phase==='study'?' ▤':(over?' ⏰':' ☕')) + ' — Kontrol Paneli'
+    : 'Kontrol Paneli — Umut';
+}
+
+// ---------- Weekly review ----------
+const REVIEW_ITEMS = [
+  'Bu haftaki tüm ders notlarını gözden geçirdim (aktif hatırlama ile, okuyarak değil)',
+  'Gelecek haftanın deadlinelarını kontrol ettim ve listeye ekledim',
+  'Curve altında kaldığım konuları belirledim ve plana yazdım',
+  'Gelecek hafta için 3 net öncelik seçtim',
+  'En az 3 gün kronometreyle çalıştım',
+  'SPE / Enerji Topluluğu işlerimi kontrol ettim',
+  'Ecenur ve dinlenme için zaman ayırdım (sürdürülebilirlik = performans)',
+  'Verim buluta eşitlendi veya yedeğini aldım (Kurulum sekmesi)'
+];
+function weekKey(){
+  const d=new Date(); const onejan=new Date(d.getFullYear(),0,1);
+  const w=Math.ceil((((d-onejan)/86400000)+onejan.getDay()+1)/7);
+  return d.getFullYear()+'-W'+pad(w);
+}
+// [ÖZELLİK 1+3+4] Haftalık review için veri özeti
+function weekPatterns(){
+  const ow = overWeek(), uw = urgeWeek(), sw = sleepWeek();
+  const bits = [];
+  if(ow.n){
+    const tel = ow.byR.telefon || 0;
+    bits.push('⏰ <b>'+ow.n+'</b> mola limiti aştı (toplam +'+ow.mins+' dk)' + (tel ? ' · <b style="color:var(--danger)">%'+Math.round(100*tel/ow.n)+'</b> telefon yüzünden' : ''));
+  }
+  if(uw.total){
+    const topTag = Object.entries(uw.byTag).sort((a,b)=>b[1]-a[1])[0];
+    bits.push('📱 <b>'+uw.total+'</b> dürtü yakalandı' + (topTag ? ' · en çok <b>'+esc(topTag[0])+'</b> çalışırken' : ''));
+    const anl = uw.byR.anlamadim || 0;
+    if(anl && anl/uw.total >= 0.4)
+      bits.push('🧠 dürtülerin <b style="color:var(--accent)">%'+Math.round(100*anl/uw.total)+'</b>\'i "anlamıyorum" — bu disiplin değil içerik sorunu, o konuyu soru olarak yaz');
+  }
+  if(sw.avg) bits.push('🌙 ortalama uyku <b>'+sw.avg.toFixed(1)+' saat</b>' + (sw.spread !== null ? ' · kalkış oynaması ±'+Math.round(sw.spread/2)+' dk' : ''));
+  const wkMin = Object.entries(focusLog).filter(([k])=>daysAgo(k)<7).reduce((a,[,v])=>a+v,0);
+  if(wkMin) bits.push('▤ toplam çalışma <b>'+(wkMin/60).toFixed(1)+' saat</b>');
+  const cs = calibStats(25);
+  if(cs && cs.n >= 5){
+    if(cs.bias > 8) bits.push('◎ tahminlerin gerçeğin <b style="color:var(--danger)">+'+cs.bias+' puan</b> üstünde — bildiğini sandığın konular aslında oturmamış' + (cs.worst && cs.worst.b>12 ? ' (en çok: <b>'+esc(cs.worst.c)+'</b>)' : ''));
+    else if(cs.bias < -8) bits.push('◎ tahminlerin gerçeğin <b>'+cs.bias+' puan</b> altında — sandığından iyi biliyorsun, gereksiz tekrara zaman gitmiş olabilir');
+    else bits.push('◎ kalibrasyonun iyi (sapma '+(cs.bias>0?'+':'')+cs.bias+' puan) — neye ne kadar çalışacağını doğru kestiriyorsun');
+  }
+  const ms = modeSpan(7);
+  if(ms.pct !== null){
+    bits.push('✍ aktif çalışma oranı <b style="color:'+(ms.pct>=50?'var(--teal)':'var(--danger)')+'">%'+ms.pct+'</b> ('+(ms.a/60).toFixed(1)+'sa soru/tekrar · '+(ms.p/60).toFixed(1)+'sa okuma)');
+    if(ms.pct < 50) bits.push('📖 pasif okuma ağır basıyor — okuduğun her bölümden sonra kitabı kapat, boş kağıda dök; test etme okumaktan belirgin şekilde daha çok kalıcılık veriyor');
+  }
+  return bits.length ? '<div class="card" style="border-color:var(--teal);"><div class="muted" style="font-size:11px; letter-spacing:.08em; margin-bottom:6px;">BU HAFTANIN VERİSİ</div>'+bits.map(b=>'<div style="font-size:13px; margin:3px 0;">'+b+'</div>').join('')+'</div>' : '';
+}
+function renderReview(){
+  const wk=weekKey();
+  document.getElementById('reviewPatterns').innerHTML = weekPatterns();
+  document.getElementById('reviewWeekLabel').textContent = 'Hafta: '+wk+' — her Pazar akşamı 15 dakika.';
+  const data = sget('review-'+wk, {checks:{}, note:''});
+  document.getElementById('reviewChecks').innerHTML = REVIEW_ITEMS.map((txt,i)=>
+    `<label class="check"><input type="checkbox" ${data.checks[i]?'checked':''} onchange="toggleReview(${i})"><span>${txt}</span></label>`).join('');
+  document.getElementById('reviewNote').value = data.note;
+}
+function toggleReview(i){
+  const wk=weekKey(); const data=sget('review-'+wk,{checks:{},note:''});
+  data.checks[i]=!data.checks[i]; sset('review-'+wk,data);
+}
+function saveReview(){
+  const wk=weekKey(); const data=sget('review-'+wk,{checks:{},note:''});
+  data.note=document.getElementById('reviewNote').value; sset('review-'+wk,data);
+}
+
+// ---------- Öneri + haftalık grafik ----------
+function renderSuggest(){
+  const el = document.getElementById('todaySuggest');
+  let txt='', sub='';
+  // [ÖZELLİK 2] günlük kotası dolmamış plan en somut iş — ilk sırada
+  const behind = deadlines.filter(d=>!d.done && d.plan && daysLeft(d.date)>=0)
+    .map(d=>({d, t:planTotals(d.plan)})).filter(x=>x.t.today < x.d.plan.perDay)
+    .sort((a,b)=>daysLeft(a.d.date)-daysLeft(b.d.date))[0];
+  if(behind){
+    txt = '📋 ' + esc(behind.d.title) + ' · ' + (behind.d.plan.perDay - behind.t.today) + ' soru kaldı';
+    sub = 'Gün ' + behind.t.dayIdx + '/' + behind.d.plan.days + ' · bugünkü hedef ' + behind.d.plan.perDay;
+  }
+  const exams = deadlines.filter(d=>d.type==='exam'&&!d.done&&daysLeft(d.date)>=0&&daysLeft(d.date)<=14).sort((a,b)=>a.date.localeCompare(b.date));
+  if(!txt && exams.length){
+    const ex = exams[0], reds = (triage[ex.id]||[]).filter(t=>t.color==='r');
+    if(reds.length){ txt = '🔴 ' + esc(reds[0].topic); sub = esc(ex.title) + ' · kırmızı konu — günün en verimli saatinde bunu çalış'; }
+  }
+  const dueRv = reviews.filter(r=>r.due<=isoToday()).length;
+  if(!txt && dueRv){ txt = '↻ ' + dueRv + ' konu tekrar bekliyor'; sub = 'Tekrar sekmesi · defter kapalı, boş kağıda dök'; }
+  if(!txt){
+    const near = deadlines.filter(d=>!d.done && daysLeft(d.date)>=0).sort((a,b)=>a.date.localeCompare(b.date))[0];
+    if(near){ const n = daysLeft(near.date); txt = '→ ' + esc(near.title); sub = (n===0 ? 'bugün' : n+' gün kaldı'); }
+  }
+  if(!txt && mistakes.length){ txt = '📓 Hata defterini gözden geçir'; sub = mistakes.length + ' kayıt · en ucuz puan kaynağı'; }
+  el.innerHTML = txt ? `<div class="card" style="border-color:var(--teal);"><div class="muted" style="font-size:11px; letter-spacing:.08em;">ŞİMDİ NE YAPMALIYIM</div><b style="font-size:15px;">${txt}</b><div class="muted">${sub}</div></div>` : '';
+}
+// [ÖZELLİK 2] Bugün sekmesinde aktif plan ilerlemeleri
+function renderPlans(){
+  const act = deadlines.filter(d=>!d.done && d.plan && daysLeft(d.date) >= 0);
+  document.getElementById('todayPlans').innerHTML = act.length ? act.map(d=>{
+    const t = planTotals(d.plan), hit = t.today >= d.plan.perDay;
+    return `<div class="item"><span class="tag ${d.type}">PLAN</span>
+      <span style="flex:1;">${esc(d.title)}<div class="muted">Gün ${t.dayIdx}/${d.plan.days} · ${t.done}/${d.plan.total} soru</div></span>
+      <span class="countdown ${hit?'ok':'soon'}">${t.today}/${d.plan.perDay}</span>
+      <button class="btn" style="padding:6px 10px; font-size:12px;" onclick="planCount(${d.id},1)">+1</button></div>`;
+  }).join('') : '';
+}
+function renderWeekChart(){
+  const labels = ['Pz','Pt','Sa','Ça','Pe','Cu','Ct'];
+  let days = [], vals = [];
+  for(let i=6;i>=0;i--){ const d=new Date(); d.setDate(d.getDate()-i); days.push(labels[d.getDay()]); vals.push(focusLog[ymd(d)]||0); }
+  const max = Math.max(60, ...vals);
+  const bars = vals.map((v,i)=>{
+    const h = Math.round(v/max*46), isT = i===6;
+    return `<div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:4px;">
+      <div style="font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--muted);">${v||''}</div>
+      <div style="width:100%; height:48px; display:flex; align-items:flex-end;"><div style="width:100%; height:${Math.max(2,h)}px; border-radius:3px 3px 0 0; background:${isT?'var(--accent)':'var(--teal)'}; opacity:${v?1:.25};"></div></div>
+      <div style="font-size:10px; color:${isT?'var(--accent)':'var(--muted)'};">${days[i]}</div></div>`;
+  }).join('');
+  const wk = {};
+  for(let i=0;i<7;i++){ const d=new Date(); d.setDate(d.getDate()-i); const t = tagLog[ymd(d)]||{}; Object.entries(t).forEach(([c,mn])=>wk[c]=(wk[c]||0)+mn); }
+  const top = Object.entries(wk).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const tagLine = top.length ? '<div class="muted" style="margin-top:10px; font-size:12px;">Son 7 gün ders dağılımı — ' +
+    top.map(([c,mn])=>`<b style="color:var(--text)">${esc(c)}</b> ${(mn/60).toFixed(1)}s`).join(' · ') + '</div>' : '';
+  // [ÖZELLİK 1] 7 günlük dürtü örüntüsü: en çok hangi dersten kaçılıyor
+  const uw = urgeWeek();
+  let urgeLine = '';
+  if(uw.total){
+    const topTag = Object.entries(uw.byTag).sort((a,b)=>b[1]-a[1])[0];
+    const topR = Object.entries(uw.byR).sort((a,b)=>b[1]-a[1])[0];
+    urgeLine = '<div class="muted" style="margin-top:6px; font-size:12px;">📱 Son 7 gün <b style="color:var(--text)">'+uw.total+'</b> dürtü'+
+      (topR ? ' · çoğu <b style="color:var(--text)">'+URGE_LBL[topR[0]]+'</b>' : '')+
+      (topTag ? ' · en çok kaçılan: <b style="color:var(--accent)">'+esc(topTag[0])+'</b> ('+topTag[1]+')' : '')+'</div>';
+  }
+  document.getElementById('weekChart').innerHTML =
+    '<div class="muted" style="font-size:11px; letter-spacing:.08em; margin-bottom:6px;">SON 7 GÜN (dk)</div><div style="display:flex; gap:6px; align-items:flex-end;">'+bars+'</div>'+tagLine+urgeLine;
+}
+
+// ---------- [ÖZELLİK 10] Akşam penceresi: kapasite × iş yükü × geçmiş veri ----------
+// Üç sayıyı yan yana koyar. Kapasite takvimden gelir, iş yükü kotalardan, geçmiş
+// veri kendi son 7 gününden. Kararı üçünün çeliştiği yerde vermek gerekiyor.
+function hhmm(min){
+  min = Math.max(0, Math.round(min));
+  const h = Math.floor(min/60), m = min%60;
+  return h ? (h+' sa' + (m ? ' '+m+' dk' : '')) : (m+' dk');
+}
+function saveSettings(){
+  const bed = document.getElementById('stBed').value || SET0.bed;
+  const num = (id, def, lo, hi) => {
+    const v = parseInt(document.getElementById(id).value, 10);
+    return (isNaN(v) || v < lo || v > hi) ? def : v;
+  };
+  settings = {
+    bed,
+    pay:      num('stPay',    SET0.pay,      0, 360),
+    dkSoru:   num('stSoru',   SET0.dkSoru,   1, 120),
+    dkTekrar: num('stTekrar', SET0.dkTekrar, 1, 60)
+  };
+  sset('settings', settings); renderSettings(); renderWindow();
+}
+function renderSettings(){
+  const set = (id, v) => { const el = document.getElementById(id); if(el && document.activeElement !== el) el.value = v; };
+  set('stBed', settings.bed); set('stPay', settings.pay);
+  set('stSoru', settings.dkSoru); set('stTekrar', settings.dkTekrar);
+}
+function windowToday(){
+  const now = new Date();
+  const cur = gMin(now.getHours(), now.getMinutes());
+  let bed = hm(settings.bed); if(bed === null) bed = 23*60+30;
+  const bedG = bed < 5*60 ? bed + 1440 : bed;
+  if(bedG <= cur) return {closed:true, cur, bedG, gross:0, busy:0, pay:0, free:0, blocks:[]};
+  let busy = 0; const blocks = [];
+  todaySched(now).forEach(x=>{
+    const [sh,sm] = x.start.split(':').map(Number), [eh,em] = x.end.split(':').map(Number);
+    const lo = Math.max(gMin(sh,sm), cur), hi = Math.min(gMin(eh,em), bedG);
+    if(hi > lo){ busy += hi - lo; blocks.push(x.title); }
+  });
+  const gross = bedG - cur;
+  const pay = Math.min(settings.pay||0, Math.max(0, gross - busy));
+  return {closed:false, cur, bedG, gross, busy, pay, free: Math.max(0, gross-busy-pay), blocks};
+}
+function demandToday(){
+  const items = [];
+  deadlines.filter(d=>!d.done && d.plan && daysLeft(d.date)>=0).forEach(d=>{
+    const left = Math.max(0, d.plan.perDay - planTotals(d.plan).today);
+    if(left) items.push({kind:'plan', title:d.title, n:left, min:left*settings.dkSoru, slack:daysLeft(d.date)});
+  });
+  const due = reviews.filter(r=>r.due<=isoToday()).length;
+  if(due) items.push({kind:'rv', title:'tekrar', n:due, min:due*settings.dkTekrar, slack:0});
+  return {items, total: items.reduce((a,x)=>a+x.min, 0)};
+}
+function avgFocus(days){
+  let sum = 0;
+  for(let i=1;i<=days;i++){ const d = new Date(); d.setDate(d.getDate()-i); sum += focusLog[ymd(d)]||0; }
+  return Math.round(sum/days);
+}
+function cutLine(dem, over){
+  const plans = dem.items.filter(x=>x.kind==='plan').sort((a,b)=>b.slack-a.slack);
+  if(!plans.length) return 'Kesecek plan yok, kalan iş tekrar — aralığı kaçırmak unutmayı başlatır. Pencereyi büyüt: payı düşür ya da bloktan önce başla.';
+  const p = plans[0];
+  const cut = Math.min(p.n, Math.ceil(over/settings.dkSoru));
+  return '<b>' + esc(p.title) + '</b> kotasından ' + cut + ' soruyu yarına at — sınavına ' + p.slack + ' gün var, en bol zamanı olan iş bu.';
+}
+function renderWindow(){
+  const el = document.getElementById('todayWindow'); if(!el) return;
+  const w = windowToday(), dem = demandToday(), avg = avgFocus(7), done = focusLog[ymd()]||0;
+  const head = '<div class="muted" style="font-size:11px; letter-spacing:.08em;">PENCERE</div>';
+
+  if(w.closed){
+    el.innerHTML = `<div class="card">${head}<b>Kapandı</b> <span class="muted">— hedef yatış saatini (${esc(settings.bed)}) geçtin. Bugün ${done} dk işlendi. Kalanı yarının ilk slotuna yaz; bu saatten sonra çalışmak yarını da götürüyor.</span></div>`;
+    return;
+  }
+
+  const scale = Math.max(w.free, dem.total, 60);
+  const pct = v => Math.min(100, Math.round(v/scale*100));
+  const fits = dem.total <= w.free;
+  const barCol = fits ? 'var(--teal)' : 'var(--danger)';
+
+  let verdict, vcol;
+  if(!dem.total){
+    verdict = 'Bugüne düşen kota yok — pencereyi ne dolduracak belli değil. Deadline\'a plan bağla ya da tekrar listesine konu ekle.';
+    vcol = 'var(--muted)';
+  } else if(!fits){
+    verdict = 'Sığmıyor: <b>' + hhmm(dem.total - w.free) + '</b> fazla. ' + cutLine(dem, dem.total - w.free);
+    vcol = 'var(--danger)';
+  } else if(avg && dem.total > avg*1.25){
+    verdict = 'Takvime sığıyor ama son 7 günde günde ortalama <b>' + hhmm(avg) + '</b> çalışmışsın — bu iş onun <b>' + (dem.total/avg).toFixed(1) + ' katı</b>. Takvim değil geçmiş veri haklı çıkıyor genelde; şimdiden birini yarına at.';
+    vcol = 'var(--accent)';
+  } else {
+    verdict = 'Sığıyor — üstüne <b>' + hhmm(w.free - dem.total) + '</b> boşluk kalıyor.';
+    vcol = 'var(--teal)';
+  }
+
+  const breakdown = hhmm(w.gross) + ' ham'
+    + (w.busy ? ' − ' + hhmm(w.busy) + ' blok (' + esc([...new Set(w.blocks)].join(', ')) + ')' : '')
+    + (w.pay  ? ' − ' + hhmm(w.pay) + ' pay' : '');
+
+  const dlist = dem.items.map(x => x.kind==='plan'
+      ? esc(x.title) + ' ' + x.n + ' soru'
+      : x.n + ' tekrar').join(' · ');
+
+  el.innerHTML = `<div class="card" style="border-color:${vcol};">
+    ${head}
+    <div class="row" style="gap:16px; margin-top:2px; align-items:baseline;">
+      <span>Boş <b style="color:var(--teal); font-family:'JetBrains Mono',monospace;">${hhmm(w.free)}</b></span>
+      <span>İş <b style="color:${barCol}; font-family:'JetBrains Mono',monospace;">${hhmm(dem.total)}</b></span>
+      <span class="muted" style="font-size:13px;">7g ort. <b style="font-family:'JetBrains Mono',monospace;">${hhmm(avg)}</b></span>
+      <span class="spacer"></span>
+      <span class="muted" style="font-size:12px; font-family:'JetBrains Mono',monospace;">${pad(Math.floor(w.cur/60)%24)}:${pad(w.cur%60)} → ${esc(settings.bed)}</span>
+    </div>
+    <div style="position:relative; height:24px; background:var(--surface2); border-radius:6px; overflow:hidden; margin:10px 0 4px;">
+      <div style="position:absolute; left:0; top:0; bottom:0; width:${pct(w.free)}%; background:rgba(69,184,174,.14); border-right:2px solid var(--teal);"></div>
+      <div style="position:absolute; left:0; top:6px; bottom:6px; width:${pct(dem.total)}%; background:${barCol}; border-radius:4px; min-width:2px;"></div>
+      ${avg ? `<div style="position:absolute; left:${pct(avg)}%; top:0; bottom:0; border-left:2px dashed var(--muted);"></div>` : ''}
+    </div>
+    <div class="muted" style="font-size:11px; font-family:'JetBrains Mono',monospace;">${breakdown}${done?' · bugün '+done+' dk işlendi':''}</div>
+    ${dlist ? `<div class="muted" style="font-size:12px; margin-top:6px;">İş: ${dlist}</div>` : ''}
+    <div style="font-size:13px; margin-top:8px; color:${vcol};">${verdict}</div>
+  </div>`;
+}
+
+// ---------- [ÖZELLİK 4] Uyku takibi ----------
+function hm(t){ const [h,m] = (t||'').split(':').map(Number); return (isNaN(h)?null:h*60+(m||0)); }
+function saveSleep(){
+  const hIn = parseFloat(document.getElementById('slHours').value);
+  const bed = document.getElementById('slBed').value;
+  const wake = document.getElementById('slWake').value;
+  let h = (hIn > 0 && hIn <= 14) ? hIn : null;
+  if(h === null && bed && wake){                 // saatlerden süreyi hesapla (gece yarısını aşan durum dahil)
+    let diff = hm(wake) - hm(bed); if(diff <= 0) diff += 1440;
+    h = Math.round(diff/6)/10;
+  }
+  if(h === null && !bed && !wake) return;
+  sleepLog[ymd()] = {h: h, bed: bed || '', wake: wake || ''};
+  sset('sleepLog', sleepLog);
+  renderSleep(); renderToday();
+}
+function sleepWeek(){
+  const rows = [];
+  for(let i=0;i<7;i++){ const d = new Date(); d.setDate(d.getDate()-i); const r = sleepLog[ymd(d)]; if(r) rows.push(r); }
+  const hs = rows.map(r=>r.h).filter(x=>typeof x === 'number' && x > 0);
+  const wk = rows.map(r=>hm(r.wake)).filter(x=>x !== null);
+  const avg = hs.length ? hs.reduce((a,b)=>a+b,0)/hs.length : null;
+  const spread = wk.length > 1 ? Math.max(...wk) - Math.min(...wk) : null;
+  return {n: rows.length, avg, spread, wk};
+}
+function renderSleep(){
+  const cur = sleepLog[ymd()];
+  const hIn = document.getElementById('slHours'), bIn = document.getElementById('slBed'), wIn = document.getElementById('slWake');
+  if(cur && document.activeElement !== hIn && document.activeElement !== bIn && document.activeElement !== wIn){
+    hIn.value = cur.h || ''; bIn.value = cur.bed || ''; wIn.value = cur.wake || '';
+  }
+  const w = sleepWeek();
+  const el = document.getElementById('sleepStats');
+  if(!w.n){ el.innerHTML = '<span class="muted">Henüz kayıt yok — 7 gün girersen ortalama ve tutarlılık burada çıkar.</span>'; }
+  else {
+    const avgTxt = w.avg ? '<b style="color:'+(w.avg>=7?'var(--teal)':'var(--accent)')+'">'+w.avg.toFixed(1)+' saat</b>' : '—';
+    const spTxt = (w.spread === null) ? '<span class="muted">kalkış verisi az</span>'
+      : '<b style="color:'+(w.spread<=60?'var(--teal)':'var(--danger)')+'">±'+Math.round(w.spread/2)+' dk</b>';
+    el.innerHTML = 'Son '+w.n+' kayıt · ortalama '+avgTxt+' · kalkış saati oynaması '+spTxt +
+      '<div class="muted" style="font-size:12px; margin-top:4px;">Düzenlilik süre kadar önemli: sabit kalkış saati sirkadiyen çapadır.</div>';
+  }
+  // uyarı kartı: kalkış saati 1 saatten fazla kayıyorsa
+  const sw = document.getElementById('sleepWarn');
+  if(w.spread !== null && w.spread > 60){
+    sw.style.display = 'block';
+    sw.textContent = '⏰ Kalkış saatin son günlerde ' + Math.round(w.spread/60*10)/10 + ' saat oynamış. Sosyal jetlag: aynı toplam uykuyla bile bilişsel performans düşer. Sabit bir kalkış saati seç.';
+  } else sw.style.display = 'none';
+}
+
+// ---------- Backup reminder ----------
+function checkBackup(){
+  const el = document.getElementById('backupWarn');
+  const hasData = deadlines.length || reviews.length || schedule.length || mistakes.length;
+  if(!hasData){ el.style.display='none'; return; }
+  const exp = sget('lastExport', null), syn = sget('lastSync', null);
+  const last = (!exp) ? syn : (!syn ? exp : (exp > syn ? exp : syn));
+  const viaSync = last && last === syn && last !== exp;
+  const days = last ? daysAgo(last) : 999;
+  if(days > 7){
+    el.style.display = 'block';
+    el.textContent = last
+      ? '⚠ Verin ' + days + ' gün önce ' + (viaSync ? 'buluta eşitlendi' : 'yedeklendi') + ' — Kurulum sekmesinden eşitle veya dışa aktar.'
+      : '⚠ Hiç yedek alınmadı — Kurulum sekmesinden bulut sync\'i kur veya "Verileri dışa aktar" ile yedek al.';
+  } else el.style.display = 'none';
+}
+
+// ---------- Export / import ----------
+function exportData(){
+  const keys=['deadlines','schedule','prio','focusLog','reviews','mistakes','triage','chrono','tagLog','urgeLog','breakLog','sleepLog','modeLog','calibLog','tierLog','settings'];
+  const dump={};
+  keys.forEach(k=>dump[k]=sget(k,null));
+  try{ for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(k.startsWith('review-')) dump[k]=sget(k,null); } }catch(e){}
+  const blob=new Blob([JSON.stringify(dump,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download='kontrol-paneli-yedek-'+todayKey()+'.json'; a.click();
+  sset('lastExport', todayKey()); checkBackup();
+}
+function importData(ev){
+  const f=ev.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=()=>{ try{
+    const dump=JSON.parse(r.result);
+    Object.entries(dump).forEach(([k,v])=>{ if(v!==null) sset(k,v); });
+    deadlines=sget('deadlines',[]); schedule=sget('schedule',[]); focusLog=sget('focusLog',{}); tagLog=sget('tagLog',{}); urgeLog=sget('urgeLog',{}); breakLog=sget('breakLog',{}); sleepLog=sget('sleepLog',{}); modeLog=sget('modeLog',{}); calibLog=sget('calibLog',[]); tierLog=sget('tierLog',{}); reviews=sget('reviews',[]); mistakes=sget('mistakes',[]); triage=sget('triage',{}); settings=Object.assign({},SET0,sget('settings',{})||{}); renderSettings();
+    prio=sget('prio',null)||PRIO0(); if(!Array.isArray(prio.items)||prio.items.length!==3) prio=PRIO0(); prio.items.forEach(x=>{if(typeof x.w!=='string')x.w='';}); prioRoll();
+    ch=sget('chrono',null)||CH0(); if(ch.day!==ymd()) ch=CH0(); chLoop(); chRender();
+    renderDeadlines(); renderSchedule(); renderReviews(); renderMistakes(); renderTierBox(); renderPrio(); renderToday(); renderReview(); tickClock(); checkBackup();
+    alert('Yedek geri yüklendi.');
+  }catch(e){ alert('Dosya okunamadı: geçerli bir yedek dosyası seç.'); } };
+  r.readAsText(f);
+}
+
+// ---------- Bilgisayar ↔ telefon senkronu (Apps Script + Sheets) ----------
+// Eski sürüm zaman damgasına bakıp büyük olanı sessizce yazıyordu: iki cihaz
+// aynı anda, birbirinden habersiz değişiklik yaparsa biri kaybediyordu, fark
+// etmeden. Şimdi her cihazın kendi kimliği ve sürüm sayacı var; push/pull
+// birbirinin üstüne hangi sürümden geldiğini taşıyor, gerçek bir çatal
+// (fork) varsa otomatik seçmek yerine soruyor ve kaybeden tarafı önce
+// dosyaya yedekliyor.
+const SYNC_KEYS = ['deadlines','schedule','prio','focusLog','reviews','mistakes','triage','chrono','tagLog','urgeLog','breakLog','sleepLog','modeLog','calibLog','tierLog','settings','lastExport'];
+let syncPushTimer = null, syncDirty = false;
+
+function syncUrl(){ try{ return localStorage.getItem('syncUrl')||''; }catch(e){ return ''; } }
+function setSyncStatus(t, ok){ const el=document.getElementById('syncStatus'); if(!el) return;
+  el.textContent = t; el.style.color = ok===false ? 'var(--danger)' : (ok ? 'var(--teal)' : 'var(--muted)'); }
+function touch(){ try{ localStorage.setItem('dataUpdatedAt', JSON.stringify(Date.now())); }catch(e){} }
+
+// ----- Cihaz kimliği: rastgele üretilir, bu tarayıcıda kalıcıdır -----
+function deviceId(){
+  try{
+    let id = localStorage.getItem('deviceId');
+    if(!id){ id = 'd-'+Math.random().toString(36).slice(2,10); localStorage.setItem('deviceId', id); }
+    return id;
+  }catch(e){ return 'd-gecici'; }
+}
+function deviceName(){ try{ return localStorage.getItem('deviceName') || (/Mobi|Android|iPhone/.test(navigator.userAgent) ? 'Telefon' : 'Masaüstü'); }catch(e){ return 'Cihaz'; } }
+function saveDeviceName(){
+  const v = document.getElementById('deviceNameInp').value.trim();
+  try{ localStorage.setItem('deviceName', v || deviceName()); }catch(e){}
+  renderDeviceInfo();
+}
+function renderDeviceInfo(){
+  const n = document.getElementById('deviceNameInp'), s = document.getElementById('deviceIdShow');
+  if(n && document.activeElement !== n) n.value = deviceName();
+  if(s) s.textContent = '· '+deviceId().slice(0,6);
+}
+// Yerel sürüm sayacı: her değişiklikte bir artar. Sunucuya "ben bu sürümdeyim,
+// en son gördüğüm uzak sürüm şuydu" diye gönderilir — çatal tespiti bunun üstüne kurulu.
+function localRev(){ return sget('localRev', 0); }
+function bumpRev(){ const r = localRev()+1; ssetRaw('localRev', r); return r; }
+function lastSeenRemoteRev(){ return sget('lastSeenRemoteRev', 0); }
+
+function scheduleSync(){
+  touch();
+  if(!syncUrl()) return;
+  syncDirty = true;
+  clearTimeout(syncPushTimer);
+  syncPushTimer = setTimeout(pushSync, 8000);
+  setSyncStatus('değişiklik var — eşitlenecek…');
+}
+function collectData(){
+  const d = {};
+  SYNC_KEYS.forEach(k => d[k] = sget(k, null));
+  try{ for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(k && k.startsWith('review-')) d[k]=sget(k,null); } }catch(e){}
+  return d;
+}
+function applyRemote(d){
+  Object.entries(d).forEach(([k,v]) => { if(v!==null && v!==undefined) ssetRaw(k, v); });
+  deadlines=sget('deadlines',[]); schedule=sget('schedule',[]);
+  focusLog=sget('focusLog',{}); tagLog=sget('tagLog',{}); urgeLog=sget('urgeLog',{}); breakLog=sget('breakLog',{}); sleepLog=sget('sleepLog',{}); modeLog=sget('modeLog',{}); calibLog=sget('calibLog',[]); tierLog=sget('tierLog',{}); reviews=sget('reviews',[]); mistakes=sget('mistakes',[]); triage=sget('triage',{}); settings=Object.assign({},SET0,sget('settings',{})||{}); renderSettings();
+  prio=sget('prio',null)||PRIO0(); if(!Array.isArray(prio.items)||prio.items.length!==3) prio=PRIO0(); prio.items.forEach(x=>{if(typeof x.w!=='string')x.w='';}); prioRoll();
+  ch=sget('chrono',null)||CH0(); if(ch.day!==ymd()) ch=CH0(); ch.u=ch.u||0; ch.su=ch.su||0; ch.bl=ch.bl||10; if(typeof ch.lam!=='number') ch.lam=-1; if(typeof ch.tag!=='string') ch.tag=''; if(typeof ch.auto!=='boolean') ch.auto=true; ch.ls=ch.ls||0; if(ch.mode!=='aktif'&&ch.mode!=='pasif') ch.mode='aktif';
+  renderDeadlines(); renderSchedule(); renderReviews(); renderMistakes(); renderTierBox(); renderPrio(); renderToday(); renderReview(); chLoop(); chRender(); checkBackup();
+}
+// Kaybeden tarafı sessizce silmek yerine dosyaya yedekle
+function downloadJsonSnapshot(label, dataObj){
+  try{
+    const blob = new Blob([JSON.stringify(dataObj, null, 2)], {type:'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'kontrol-paneli-cakisma-'+label+'-'+todayKey()+'.json';
+    a.click();
+  }catch(e){}
+}
+function clearConflictCard(){ const el = document.getElementById('syncConflict'); if(el) el.innerHTML=''; }
+// Gerçek çatal: uzaktaki paket bu cihazın en son gördüğü uzak sürümden değil,
+// başka bir sürümden geliyor VE bu cihazda da yerelde gönderilmemiş değişiklik var.
+// Bu, iki cihazın birbirinden habersiz aynı anda düzenlediği anlamına gelir.
+function showConflict(remote){
+  const el = document.getElementById('syncConflict'); if(!el) return;
+  const localWhen = new Date(sget('dataUpdatedAt', Date.now())).toLocaleString('tr-TR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+  const remoteWhen = new Date(remote.updatedAt||Date.now()).toLocaleString('tr-TR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+  const remoteDev = esc(remote.deviceName || 'diğer cihaz');
+  el.innerHTML = `<div class="card" style="border-color:var(--danger);">
+    <div class="muted" style="font-size:11px; letter-spacing:.08em; color:var(--danger);">İKİ CİHAZ AYNI ANDA DEĞİŞTİRDİ</div>
+    <div style="margin-top:6px; font-size:13px;">Bu cihaz (<b>${esc(deviceName())}</b>) en son <b>${localWhen}</b> değişti. <b>${remoteDev}</b> ise <b>${remoteWhen}</b> değişti. İkisi de bulutta aynı anda duramaz — hangisi kalsın?</div>
+    <div class="row" style="margin-top:10px; gap:8px;">
+      <button class="btn" style="flex:1;" onclick="resolveConflict('local')">Bu cihazınkini tut</button>
+      <button class="btn ghost" style="flex:1;" onclick="resolveConflict('remote')">${remoteDev} sürümünü al</button>
+    </div>
+    <div class="muted" style="margin-top:8px; font-size:12px;">Hangisini seçersen seç, kaybeden sürüm önce bir yedek dosyası olarak inecek — hiçbir şey sessizce silinmez.</div>
+  </div>`;
+}
+function resolveConflict(pick){
+  const remote = window.__pendingRemote || null;
+  if(pick === 'remote' && remote){
+    downloadJsonSnapshot('bu-cihaz-'+esc(deviceName()).replace(/\s+/g,'_'), {updatedAt: sget('dataUpdatedAt',0), deviceName: deviceName(), data: collectData()});
+    applyRemote(remote.data);
+    ssetRaw('dataUpdatedAt', remote.updatedAt);
+    ssetRaw('lastSeenRemoteRev', remote.rev||0);
+    ssetRaw('localRev', remote.rev||0);
+    setSyncStatus(esc(remote.deviceName||'diğer cihaz')+' sürümü alındı ✓', true);
+  } else if(remote){
+    downloadJsonSnapshot((remote.deviceName||'diger').replace(/\s+/g,'_'), remote);
+    pushSync(true);
+  }
+  clearConflictCard();
+  window.__pendingRemote = null;
+}
+async function pushSync(force){
+  const url = syncUrl(); if(!url) return;
+  try{
+    setSyncStatus('gönderiliyor…');
+    const rev = force ? localRev() : bumpRev();
+    const payload = JSON.stringify({
+      updatedAt: sget('dataUpdatedAt', Date.now()),
+      rev, baseRev: lastSeenRemoteRev(),
+      deviceId: deviceId(), deviceName: deviceName(),
+      data: collectData()
+    });
+    await fetch(url, {method:'POST', headers:{'Content-Type':'text/plain'}, body: payload});
+    syncDirty = false;
+    ssetRaw('lastSeenRemoteRev', rev);
+    ssetRaw('lastSync', todayKey()); checkBackup();
+    setSyncStatus('eşitlendi ✓ '+esc(deviceName())+' · '+new Date().toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'}), true);
+  }catch(e){ setSyncStatus('eşitleme hatası — internet/URL kontrol et', false); }
+}
+async function pullSync(auto){
+  const url = syncUrl(); if(!url){ setSyncStatus('senkronizasyon kapalı — URL girilmemiş'); return; }
+  try{
+    setSyncStatus('bulut kontrol ediliyor…');
+    const res = await fetch(url);
+    const j = await res.json();
+    if(!j || !j.data){ setSyncStatus('bulut boş — ilk gönderim yapılıyor'); pushSync(); return; }
+    const sameDevice = j.deviceId === deviceId();
+    const localT = sget('dataUpdatedAt', 0);
+    const remoteRev = j.rev || 0;
+    const seen = lastSeenRemoteRev();
+    if(sameDevice || remoteRev === seen){
+      if(j.updatedAt > localT){
+        applyRemote(j.data); ssetRaw('dataUpdatedAt', j.updatedAt); ssetRaw('lastSeenRemoteRev', remoteRev);
+        setSyncStatus((sameDevice?'':esc(j.deviceName||'diğer cihaz')+'\'dan ')+'güncellendi ✓', true);
+      } else setSyncStatus('eşitlendi ✓', true);
+      return;
+    }
+    if(!syncDirty && localRev() === seen){
+      applyRemote(j.data); ssetRaw('dataUpdatedAt', j.updatedAt); ssetRaw('lastSeenRemoteRev', remoteRev); ssetRaw('localRev', remoteRev);
+      setSyncStatus(esc(j.deviceName||'diğer cihaz')+'\'dan güncellendi ✓', true);
+    } else {
+      window.__pendingRemote = j;
+      showConflict(j);
+      setSyncStatus('çakışma — aşağıdan seç', false);
+    }
+  }catch(e){ setSyncStatus(auto ? 'çevrimdışı — yerel modda' : 'eşitleme hatası — URL doğru mu?', false); }
+}
+function saveSyncUrl(){
+  const v = document.getElementById('syncUrlInp').value.trim();
+  try{ localStorage.setItem('syncUrl', v); }catch(e){}
+  renderDeviceInfo();
+  if(v) pullSync(); else setSyncStatus('senkronizasyon kapalı');
+}
+document.addEventListener('visibilitychange', ()=>{
+  if(document.hidden){ if(syncDirty && syncUrl()){ clearTimeout(syncPushTimer); pushSync(); } }
+  else if(syncUrl()) pullSync(true);
+});
+if('serviceWorker' in navigator && location.protocol === 'https:'){
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+
+// ---------- Enter tuşu ----------
+[['dlTitle', addDeadline], ['dlDate', addDeadline], ['dlTotal', addDeadline], ['dlDays', addDeadline], ['slHours', saveSleep], ['slWake', saveSleep], ['rvTopic', addReview], ['rvCourse', addReview],
+ ['scTitle', addClass], ['scLoc', addClass], ['mCourse', addMistake], ['mNote', addMistake], ['mWhy', addMistake]
+].forEach(([id, fn]) => {
+  const el = document.getElementById(id);
+  if(el) el.addEventListener('keydown', ev => { if(ev.key === 'Enter'){ ev.preventDefault(); fn(); } });
+});
+
+// ---------- Init ----------
+prioRoll(); renderPrio(); renderSettings();
+renderDeadlines(); renderSchedule(); renderReviews(); renderMistakes(); renderTierBox(); renderToday(); renderReview(); chRender(); chLoop(); checkBackup();
+setInterval(renderWindow, 60000);   // pencere saat ilerledikçe küçülür
+renderDeviceInfo();
+try{ const su = localStorage.getItem('syncUrl'); if(su){ document.getElementById('syncUrlInp').value = su; pullSync(true); } }catch(e){}
+</script>
+</body>
+</html>
