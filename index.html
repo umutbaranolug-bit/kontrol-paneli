@@ -17,6 +17,9 @@
   --surface: oklch(26% 0.018 264);
   --surface2: oklch(30% 0.019 264);
   --border: oklch(37% 0.02 264);
+  /* Form kontrolleri ve ikon butonları için: kart zeminine karşı 3.48:1 (WCAG 1.4.11).
+     Dekoratif kart kenarlıkları --border'da kalıyor; onlar bu eşiğe tabi değil. */
+  --border-input: oklch(57% 0.02 264);
   --border-soft: oklch(32.5% 0.018 264);
   --text: oklch(93% 0.008 264);
   --muted: oklch(69% 0.02 264);
@@ -25,6 +28,7 @@
   --teal: oklch(77% 0.11 195);
   --teal-ink: oklch(20% 0.035 195);
   --danger: oklch(68% 0.16 25);
+  color-scheme: dark;
   --radius:16px;
   --shadow-sm: 0 1px 2px oklch(0% 0 0 / 0.22), 0 1px 0 oklch(100% 0 0 / 0.03) inset;
   --shadow-md: 0 10px 28px oklch(0% 0 0 / 0.24);
@@ -34,7 +38,7 @@ body{background:
     radial-gradient(1100px 700px at 12% -8%, oklch(80% 0.16 78 / .09), transparent 60%),
     radial-gradient(900px 650px at 100% 4%, oklch(77% 0.11 195 / .08), transparent 58%),
     var(--bg);
-  background-attachment:fixed; color:var(--text); font-family:'Inter',system-ui,sans-serif; font-size:15px; line-height:1.5; min-height:100vh; -webkit-font-smoothing:antialiased;}
+  background-attachment:fixed; overscroll-behavior-y:contain; color:var(--text); font-family:'Inter',system-ui,sans-serif; font-size:15px; line-height:1.5; min-height:100vh; -webkit-font-smoothing:antialiased;}
 .wrap{max-width:980px; margin:0 auto; padding:28px 20px 90px;}
 
 /* Header */
@@ -58,6 +62,12 @@ h1 span{color:var(--accent); font-weight:500;}
 .gauge-now{position:absolute; top:0; bottom:0; width:2px; background:var(--accent); box-shadow:0 0 6px var(--accent); z-index:2;}
 .gauge-hint{font-size:12px; color:var(--muted); margin-top:10px;}
 
+/* Günaydın kartı */
+.morning{background:linear-gradient(135deg, rgba(242,169,59,.10), rgba(69,184,174,.06)); border:1px solid var(--border); border-radius:var(--radius); padding:12px 16px; margin-bottom:14px; font-size:14px; display:none;}
+.morning.show{display:block;}
+.morning b{color:var(--accent);}
+.morning .sep{color:var(--muted); margin:0 6px;}
+
 /* Tabs */
 nav{display:flex; gap:3px; margin-bottom:22px; flex-wrap:wrap; background:var(--surface); border:1px solid var(--border); padding:4px; border-radius:12px;}
 nav button{background:transparent; border:none; color:var(--muted); padding:9px 15px; border-radius:9px; cursor:pointer; font-family:'Space Grotesk',sans-serif; font-weight:500; font-size:13.5px; white-space:nowrap; transition:background .15s ease, color .15s ease;}
@@ -74,21 +84,22 @@ h2{font-family:'Space Grotesk',sans-serif; font-size:16.5px; font-weight:700; le
 .spacer{flex:1;}
 
 /* Forms */
-input,select,textarea{background:var(--surface2); border:1px solid var(--border); color:var(--text); border-radius:9px; padding:9px 11px; font-family:inherit; font-size:14px; transition:border-color .15s ease;}
+input,select,textarea{background:var(--surface2); border:1px solid var(--border-input); color:var(--text); border-radius:9px; padding:9px 11px; font-family:inherit; font-size:14px; transition:border-color .15s ease;}
 input:focus,select:focus,textarea:focus{outline:none; border-color:var(--teal); box-shadow:0 0 0 3px oklch(77% 0.11 195 / .2);}
 button.btn{background:var(--teal); color:var(--teal-ink); border:none; padding:9px 16px; border-radius:9px; font-weight:600; cursor:pointer; font-size:14px; box-shadow:var(--shadow-sm); transition:filter .15s ease;}
 button.btn:hover{filter:brightness(1.08);}
 button.btn.warn{background:var(--danger); color:oklch(97% 0.01 25);}
-button.btn.ghost{background:transparent; color:var(--muted); border:1px solid var(--border); box-shadow:none;}
+button.btn.ghost{background:transparent; color:var(--muted); border:1px solid var(--border-input); box-shadow:none;}
 button.btn.ghost:hover{border-color:var(--teal); color:var(--text);}
 button.btn:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
 
 /* Lists */
 .item{display:flex; align-items:center; gap:10px; padding:11px 14px; background:var(--surface2); border:1px solid var(--border); border-radius:11px; margin-bottom:8px;}
-.item .tag{font-family:'JetBrains Mono',monospace; font-size:11px; padding:2px 8px; border-radius:20px; background:var(--surface); border:1px solid var(--border); color:var(--muted); white-space:nowrap;}
-.item .tag.exam{color:var(--danger); border-color:var(--danger);}
-.item .tag.hw{color:var(--accent); border-color:var(--accent);}
-.item .tag.lab{color:var(--teal); border-color:var(--teal);}
+.tag{font-family:'JetBrains Mono',monospace; font-size:11px; padding:2px 8px; border-radius:20px; background:var(--surface); border:1px solid var(--border); color:var(--muted); white-space:nowrap;}
+.tag.exam{color:var(--danger); border-color:var(--danger);}
+.tag.hw{color:var(--accent); border-color:var(--accent);}
+.tag.lab{color:var(--teal); border-color:var(--teal);}
+.tag.other{color:var(--muted); border-color:var(--border-input);}
 .countdown{font-family:'JetBrains Mono',monospace; font-weight:700; font-size:15px; min-width:64px; text-align:right; font-variant-numeric:tabular-nums;}
 .countdown.urgent{color:var(--danger);}
 .countdown.soon{color:var(--accent);}
@@ -96,6 +107,16 @@ button.btn:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
 .done{opacity:.4; text-decoration:line-through;}
 .del{background:none; border:none; color:var(--muted); cursor:pointer; font-size:16px; padding:2px 6px;}
 .del:hover{color:var(--danger);}
+.del:focus-visible,.chip-btn:focus-visible,.chip-x:focus-visible,.linkish:focus-visible{outline:2px solid var(--teal); outline-offset:2px; border-radius:6px;}
+
+/* Triyaj rozeti: durum artık yalnızca renkle değil doluluk sembolüyle de taşınıyor
+   (● çalışılmadı · ◑ kısmen · ○ oturdu). Renk körlüğünde ve gri baskıda da ayırt edilir. */
+.chip{display:inline-flex; align-items:center; margin:2px; border-radius:20px; overflow:hidden; border:1px solid;}
+.chip-btn{background:none; border:none; font:inherit; font-size:12px; padding:6px 4px 6px 11px; cursor:pointer; color:inherit; display:inline-flex; align-items:center; gap:6px;}
+.chip-x{background:none; border:none; color:inherit; opacity:.6; cursor:pointer; font-size:12px; padding:6px 10px 6px 6px;}
+.chip-x:hover{opacity:1;}
+.chip-mark{font-size:10px; line-height:1;}
+.linkish{background:none; border:none; padding:0; font:inherit; color:inherit; cursor:pointer; border-bottom:1px dashed var(--muted);}
 
 /* Timer */
 .timer-box{text-align:center; padding:34px 18px;}
@@ -111,7 +132,7 @@ button.btn:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
 .prio-row{display:flex; align-items:center; gap:10px; padding:7px 0 2px;}
 .prio-row input[type=checkbox]{width:18px; height:18px; accent-color:var(--teal); cursor:pointer; flex:none;}
 .prio-row input[type=text]{flex:1; background:transparent; border:none; padding:4px 0; font-size:15px;}
-.prio-row input[type=text]:focus{outline:none; border-bottom:1px solid var(--teal); box-shadow:none;}
+.prio-row input[type=text]:focus{outline:none; border-bottom:2px solid var(--teal); box-shadow:0 2px 0 0 oklch(77% 0.11 195 / .3);}
 .prio-row.on input[type=text]{opacity:.4; text-decoration:line-through;}
 .prio-num{font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--muted); width:12px; flex:none;}
 /* [ÖZELLİK 6] if-then tetikleyici satırı */
@@ -142,6 +163,8 @@ footer{margin-top:34px; display:flex; gap:10px; flex-wrap:wrap; align-items:cent
 </header>
 <div id="dateline"></div>
 
+<div class="morning" id="morningCard"></div>
+
 <div class="gauge">
   <div class="gauge-label"><span>07:00</span><span>GÜNÜN AKIŞI</span><span>02:00</span></div>
   <div class="gauge-track" id="gaugeTrack"><div class="gauge-fill" id="gaugeFill"></div></div>
@@ -149,22 +172,22 @@ footer{margin-top:34px; display:flex; gap:10px; flex-wrap:wrap; align-items:cent
   <div class="gauge-hint" id="gaugeHint">Turkuaz bloklar bugünkü derslerin. Amber çizgi şu anki saatin.</div>
 </div>
 
-<nav id="tabs">
-  <button data-tab="today" class="active">Bugün</button>
-  <button data-tab="deadlines">Deadlineler</button>
-  <button data-tab="tekrar">Tekrar</button>
-  <button data-tab="hatadefteri">Hata Defteri</button>
-  <button data-tab="kronometre">Kronometre</button>
-  <button data-tab="review">Review</button>
-  <button data-tab="kurulum">Kurulum</button>
+<nav id="tabs" role="tablist" aria-label="Panel bölümleri">
+  <button data-tab="today" id="tab-today" role="tab" aria-controls="today" aria-selected="true" tabindex="0" class="active">Bugün</button>
+  <button data-tab="deadlines" id="tab-deadlines" role="tab" aria-controls="deadlines" aria-selected="false" tabindex="-1">Deadlineler</button>
+  <button data-tab="tekrar" id="tab-tekrar" role="tab" aria-controls="tekrar" aria-selected="false" tabindex="-1">Tekrar</button>
+  <button data-tab="hatadefteri" id="tab-hatadefteri" role="tab" aria-controls="hatadefteri" aria-selected="false" tabindex="-1">Hata Defteri</button>
+  <button data-tab="kronometre" id="tab-kronometre" role="tab" aria-controls="kronometre" aria-selected="false" tabindex="-1">Kronometre</button>
+  <button data-tab="review" id="tab-review" role="tab" aria-controls="review" aria-selected="false" tabindex="-1">Review</button>
+  <button data-tab="kurulum" id="tab-kurulum" role="tab" aria-controls="kurulum" aria-selected="false" tabindex="-1">Kurulum</button>
 </nav>
 
-<div id="sleepWarn" class="card" style="display:none; border-color:var(--danger); color:var(--danger); font-size:13px;"></div>
-<div id="lateWarn" class="card" style="display:none; border-color:var(--accent); color:var(--accent); font-size:13px;"></div>
-<div id="backupWarn" class="card" style="display:none; border-color:var(--danger); color:var(--danger); font-size:13px;"></div>
+<div id="sleepWarn" class="card" role="status" aria-live="polite" style="display:none; border-color:var(--danger); color:var(--danger); font-size:13px;"></div>
+<div id="lateWarn" class="card" role="status" aria-live="polite" style="display:none; border-color:var(--accent); color:var(--accent); font-size:13px;"></div>
+<div id="backupWarn" class="card" role="status" aria-live="polite" style="display:none; border-color:var(--danger); color:var(--danger); font-size:13px;"></div>
 
 <!-- BUGÜN -->
-<section id="today" class="active">
+<section id="today" role="tabpanel" aria-labelledby="tab-today" tabindex="0" class="active">
   <div class="card" id="prioBox"></div>
   <div id="todayExam"></div>
   <div id="todaySuggest"></div>
@@ -182,9 +205,9 @@ footer{margin-top:34px; display:flex; gap:10px; flex-wrap:wrap; align-items:cent
   <h2>Uyku</h2>
   <div class="card">
     <div class="row">
-      <input type="number" id="slHours" step="0.5" min="0" max="14" placeholder="Saat" style="width:76px;">
-      <span class="muted" style="font-size:12px;">yattım</span><input type="time" id="slBed" style="width:104px;">
-      <span class="muted" style="font-size:12px;">kalktım</span><input type="time" id="slWake" style="width:104px;">
+      <input type="number" id="slHours" step="0.5" min="0" max="14" placeholder="Saat" style="width:76px;" aria-label="Dün gece uyunan saat">
+      <span class="muted" style="font-size:12px;">yattım</span><input type="time" id="slBed" style="width:104px;" aria-label="Yatış saati">
+      <span class="muted" style="font-size:12px;">kalktım</span><input type="time" id="slWake" style="width:104px;" aria-label="Kalkış saati">
       <button class="btn" onclick="saveSleep()">Kaydet</button>
     </div>
     <div class="muted" style="margin-top:6px; font-size:12px;">Dün gece kaç saat uyudun? Saatleri girersen süreyi kendi hesaplar — tutarlılık ölçümü için kalkış saati en değerlisi.</div>
@@ -193,12 +216,12 @@ footer{margin-top:34px; display:flex; gap:10px; flex-wrap:wrap; align-items:cent
 </section>
 
 <!-- DEADLINELER -->
-<section id="deadlines">
+<section id="deadlines" role="tabpanel" aria-labelledby="tab-deadlines" tabindex="0">
   <div class="card">
     <div class="row">
-      <input type="text" id="dlTitle" placeholder="Başlık (örn. MATH 219 MT1)" style="flex:2; min-width:160px;">
-      <input type="date" id="dlDate">
-      <select id="dlType">
+      <input type="text" id="dlTitle" placeholder="Başlık (örn. MATH 219 MT1)" style="flex:2; min-width:160px;" aria-label="Başlık (örn. MATH 219 MT1)">
+      <input type="date" id="dlDate" aria-label="Deadline tarihi">
+      <select id="dlType" aria-label="Deadline türü">
         <option value="exam">Sınav</option>
         <option value="hw">Ödev</option>
         <option value="lab">Lab</option>
@@ -209,8 +232,8 @@ footer{margin-top:34px; display:flex; gap:10px; flex-wrap:wrap; align-items:cent
     </div>
     <div class="row" id="dlPlanFields" style="display:none; margin-top:8px;">
       <span class="muted" style="font-size:12px;">Çalışma planı:</span>
-      <input type="number" id="dlTotal" placeholder="Soru" min="1" style="width:78px;">
-      <input type="number" id="dlDays" placeholder="Gün" min="1" style="width:70px;">
+      <input type="number" id="dlTotal" placeholder="Soru" min="1" style="width:78px;" aria-label="Plandaki toplam soru sayısı">
+      <input type="number" id="dlDays" placeholder="Gün" min="1" style="width:70px;" aria-label="Plan kaç güne yayılsın">
       <span class="muted" style="font-size:12px;">toplam soruyu kaç güne yayacaksın</span>
     </div>
   </div>
@@ -218,11 +241,11 @@ footer{margin-top:34px; display:flex; gap:10px; flex-wrap:wrap; align-items:cent
 </section>
 
 <!-- TEKRAR (aralıklı tekrar) -->
-<section id="tekrar">
+<section id="tekrar" role="tabpanel" aria-labelledby="tab-tekrar" tabindex="0">
   <div class="card">
     <div class="row">
-      <input type="text" id="rvTopic" placeholder="Konu (örn. seri yakınsaklık testleri)" style="flex:2; min-width:160px;">
-      <input type="text" id="rvCourse" placeholder="Ders" style="width:100px;">
+      <input type="text" id="rvTopic" placeholder="Konu (örn. seri yakınsaklık testleri)" style="flex:2; min-width:160px;" aria-label="Konu (örn. seri yakınsaklık testleri)">
+      <input type="text" id="rvCourse" placeholder="Ders" style="width:100px;" aria-label="Ders">
       <button class="btn" onclick="addReview()">Ekle</button>
     </div>
     <div class="muted" style="margin-top:8px;">Konu eklenince ilk tekrar yarın düşer. Her tekrarda önce <b>tahmin</b> ver (deftere bakmadan: ne kadarını hatırlıyorum?), sonra boş kağıda dök ve gerçeği işaretle. Aralık ona göre uzar veya kısalır (1 → 3 → 7 → 14 → 30 → 60 gün). Zor = merdivende geri, Kolay = ileri (ilk iki tekrarda tek basamak, sonra iki).</div>
@@ -236,28 +259,28 @@ footer{margin-top:34px; display:flex; gap:10px; flex-wrap:wrap; align-items:cent
 </section>
 
 <!-- HATA DEFTERİ -->
-<section id="hatadefteri">
+<section id="hatadefteri" role="tabpanel" aria-labelledby="tab-hatadefteri" tabindex="0">
   <div class="card">
     <div class="row">
-      <input id="mCourse" placeholder="Ders" style="width:90px;">
-      <input id="mNote" placeholder="Hata neydi, doğrusu ne? (tek cümle)" style="flex:1; min-width:200px;">
+      <input id="mCourse" placeholder="Ders" style="width:90px;" aria-label="Ders">
+      <input id="mNote" placeholder="Hata neydi, doğrusu ne? (tek cümle)" style="flex:1; min-width:200px;" aria-label="Hata neydi, doğrusu ne? (tek cümle)">
     </div>
     <div class="row" style="margin-top:8px;">
       <span class="prio-if" style="flex:none;">neden</span>
-      <input id="mWhy" placeholder="Doğrusu neden bu? hangi prensip/kural devrede? (opsiyonel)" style="flex:1; min-width:200px; font-size:13px;">
+      <input id="mWhy" placeholder="Doğrusu neden bu? hangi prensip/kural devrede? (opsiyonel)" style="flex:1; min-width:200px; font-size:13px;" aria-label="Doğrusu neden bu? hangi prensip/kural devrede? (opsiyonel)">
       <button class="btn" onclick="addMistake()">Ekle</button>
     </div>
     <div class="muted" style="margin-top:8px;">Skill'lerin ürettiği 📓 satırlarını buraya gir. "Neden" alanını doldurmak en çok işe yarayan kısım — hatayı not etmek değil, doğrusunun <b>nedenini kendi cümlenle</b> yazmak kalıcılığı artırıyor. Sınavdan önce dersin filtresini aç ve baştan sona oku. Kronikleşen hatayı ↻ ile Tekrar merdivenine at.</div>
   </div>
-  <div class="row" style="margin-bottom:8px;"><span class="muted">Filtre:</span><select id="mFilter" onchange="renderMistakes()"><option value="">Tümü</option></select><span class="muted spacer" style="text-align:right;" id="mCount"></span></div>
+  <div class="row" style="margin-bottom:8px;"><span class="muted">Filtre:</span><select id="mFilter" onchange="renderMistakes()" aria-label="Hata defteri ders filtresi"><option value="">Tümü</option></select><span class="muted spacer" style="text-align:right;" id="mCount"></span></div>
   <div id="mList"></div>
 
   <!-- [ÖZELLİK 9] Problem çözüm kalibrasyonu — problem-cozum-rehberi skill'inin Step 0/Step 7 çıktısı -->
   <h2>Problem Kalibrasyonu</h2>
   <div class="card">
     <div class="row">
-      <input id="pcCourse" placeholder="Ders" style="width:90px;">
-      <input id="pcTip" placeholder="Soru tipi (örn. Gauss yüzeyi seçimi)" style="flex:1; min-width:160px;">
+      <input id="pcCourse" placeholder="Ders" style="width:90px;" aria-label="Kalibrasyon dersi">
+      <input id="pcTip" placeholder="Soru tipi (örn. Gauss yüzeyi seçimi)" style="flex:1; min-width:160px;" aria-label="Kalibrasyon soru tipi">
     </div>
     <div class="row" style="margin-top:8px;">
       <span class="muted" style="font-size:12px;">Tahmin (Step 0, roadmap görmeden):</span>
@@ -278,7 +301,7 @@ footer{margin-top:34px; display:flex; gap:10px; flex-wrap:wrap; align-items:cent
 </section>
 
 <!-- KRONOMETRE (serbest sayaç) -->
-<section id="kronometre">
+<section id="kronometre" role="tabpanel" aria-labelledby="tab-kronometre" tabindex="0">
   <div class="card timer-box" style="padding:22px 16px;">
     <div id="chBadge" class="tag" style="font-size:12px; margin-bottom:10px; display:inline-block;">Hazır</div>
     <div id="chClock" style="font-family:'JetBrains Mono',monospace; font-size:56px; font-weight:700; letter-spacing:-0.03em;">00:00</div>
@@ -316,10 +339,10 @@ footer{margin-top:34px; display:flex; gap:10px; flex-wrap:wrap; align-items:cent
     </div>
     <div class="muted" style="font-size:11px; margin-top:5px;">Aktif = soru çözme, tekrar, boş kağıda dökme · Pasif = okuma, izleme, not alma. Çalışırken moda basarsan blok orada kapanır.</div>
     <div class="row" style="justify-content:center; margin-top:10px; gap:10px;">
-      <input id="chTag" list="chTagList" placeholder="Ders / konu" style="width:132px; font-size:13px;" onchange="chSetTag()">
+      <input id="chTag" list="chTagList" placeholder="Ders / konu" style="width:132px; font-size:13px;" onchange="chSetTag()" aria-label="Çalışılan ders veya konu">
       <datalist id="chTagList"></datalist>
-      <label class="muted" style="font-size:12px;">Mola limiti <input type="number" id="chBrkLimit" min="1" max="120" style="width:54px; font-size:13px;" onchange="chSetLimit()"> dk</label>
-      <label class="muted" style="font-size:12px;" title="Çalışma süresine göre mola limitini otomatik ayarla"><input type="checkbox" id="chAuto" onchange="chToggleAuto()" style="width:14px; height:14px; accent-color:var(--teal); vertical-align:-2px;"> oto</label>
+      <label class="muted" style="font-size:12px;">Mola limiti <input type="number" id="chBrkLimit" min="1" max="120" style="width:54px; font-size:13px;" onchange="chSetLimit()" aria-label="Mola limiti (dakika)"> dk</label>
+      <label class="muted" style="font-size:12px;" title="Çalışma süresine göre mola limitini otomatik ayarla"><input type="checkbox" id="chAuto" onchange="chToggleAuto()" style="width:14px; height:14px; accent-color:var(--teal); vertical-align:-2px;" aria-label="Mola limitini otomatik ayarla"> oto</label>
     </div>
   </div>
   <div class="row" style="gap:10px; align-items:stretch;">
@@ -332,37 +355,37 @@ footer{margin-top:34px; display:flex; gap:10px; flex-wrap:wrap; align-items:cent
   <div class="row" style="gap:8px; margin-bottom:10px;">
     <button class="btn ghost" onclick="chManual('study')" style="flex:1; font-size:13px;">+ çalışma dk</button>
     <button class="btn ghost" onclick="chManual('break')" style="flex:1; font-size:13px;">+ mola dk</button>
-    <button class="btn ghost" onclick="chReset()" style="flex:1; font-size:13px;">Günü sıfırla</button>
+    <button class="btn ghost" id="chResetBtn" onclick="chReset()" style="flex:1; font-size:13px;" title="Kronometreyi ve bugünkü oturum listesini sıfırlar. İşlenmiş odak dakikaları silinmez.">Sayacı sıfırla</button>
   </div>
   <h2>Bugünkü oturumlar</h2>
   <div id="chHist"></div>
 </section>
 
 <!-- REVIEW -->
-<section id="review">
+<section id="review" role="tabpanel" aria-labelledby="tab-review" tabindex="0">
   <div class="card">
     <div class="muted" id="reviewWeekLabel"></div>
     <div id="reviewPatterns"></div>
     <h2 style="margin-top:6px;">Pazar akşamı kontrol listesi</h2>
     <div id="reviewChecks"></div>
     <h2>Haftanın notu</h2>
-    <textarea id="reviewNote" placeholder="Bu hafta ne iyi gitti, ne gitmedi? Gelecek haftanın 3 önceliği ne?" onchange="saveReview()"></textarea>
+    <textarea id="reviewNote" placeholder="Bu hafta ne iyi gitti, ne gitmedi? Gelecek haftanın 3 önceliği ne?" onchange="saveReview()" aria-label="Haftanın notu"></textarea>
   </div>
 </section>
 
 <!-- KURULUM -->
-<section id="kurulum">
+<section id="kurulum" role="tabpanel" aria-labelledby="tab-kurulum" tabindex="0">
   <h2 style="margin-top:0;">Ders programı</h2>
   <div class="card">
     <div class="row">
-      <select id="scDay">
+      <select id="scDay" aria-label="Ders günü">
         <option value="1">Pazartesi</option><option value="2">Salı</option><option value="3">Çarşamba</option>
         <option value="4">Perşembe</option><option value="5">Cuma</option><option value="6">Cumartesi</option><option value="0">Pazar</option>
       </select>
-      <input type="time" id="scStart" value="09:40">
-      <input type="time" id="scEnd" value="10:30">
-      <input type="text" id="scTitle" placeholder="Ders / etkinlik" style="flex:2; min-width:140px;">
-      <input type="text" id="scLoc" placeholder="Yer" style="width:90px;">
+      <input type="time" id="scStart" value="09:40" aria-label="Ders başlangıç saati">
+      <input type="time" id="scEnd" value="10:30" aria-label="Ders bitiş saati">
+      <input type="text" id="scTitle" placeholder="Ders / etkinlik" style="flex:2; min-width:140px;" aria-label="Ders / etkinlik">
+      <input type="text" id="scLoc" placeholder="Yer" style="width:90px;" aria-label="Yer">
       <button class="btn" onclick="addClass()">Ekle</button>
     </div>
   </div>
@@ -371,13 +394,13 @@ footer{margin-top:34px; display:flex; gap:10px; flex-wrap:wrap; align-items:cent
   <h2>Yoğun dönem — staj, sınav haftası, iş</h2>
   <div class="card">
     <div class="row">
-      <input type="text" id="stjTitle" value="" placeholder="örn. TP-OTC Stajı, Final Haftası" style="flex:1; min-width:160px;">
+      <input type="text" id="stjTitle" value="" placeholder="örn. TP-OTC Stajı, Final Haftası" style="flex:1; min-width:160px;" aria-label="örn. TP-OTC Stajı, Final Haftası">
       <span class="muted" style="font-size:12px;">tarih</span>
-      <input type="date" id="stjFrom"><input type="date" id="stjTo">
+      <input type="date" id="stjFrom" aria-label="Yoğun dönem başlangıç tarihi"><input type="date" id="stjTo" aria-label="Yoğun dönem bitiş tarihi">
     </div>
     <div class="row" style="margin-top:8px;">
       <span class="muted" style="font-size:12px;">saat</span>
-      <input type="time" id="stjStart" value="08:00"><input type="time" id="stjEnd" value="17:00">
+      <input type="time" id="stjStart" value="08:00" aria-label="Yoğun dönem günlük başlangıç saati"><input type="time" id="stjEnd" value="17:00" aria-label="Yoğun dönem günlük bitiş saati">
       <button class="btn" onclick="seedStaj()">Pzt–Cum bloğu ekle</button>
     </div>
     <div class="muted" style="margin-top:6px;">Aynı mekanizma her yoğun dönem için geçerli — staj, sınav haftası, tam günlük iş. Bloklar yalnızca bu tarih aralığında sayılır; gün çubuğunu ve akşam penceresi hesabını doldurur. Bitiş tarihi geçince kendiliğinden düşer, silmeyi hatırlaman gerekmez.</div>
@@ -386,29 +409,47 @@ footer{margin-top:34px; display:flex; gap:10px; flex-wrap:wrap; align-items:cent
   <h2>Akşam penceresi</h2>
   <div class="card">
     <div class="row">
-      <span class="muted" style="font-size:12px;">Hedef yatış</span><input type="time" id="stBed" onchange="saveSettings()" style="width:104px;">
-      <span class="muted" style="font-size:12px;">Yol + yemek + toparlanma</span><input type="number" id="stPay" min="0" max="360" step="15" onchange="saveSettings()" style="width:70px;"><span class="muted" style="font-size:12px;">dk</span>
+      <span class="muted" style="font-size:12px;">Hedef yatış</span><input type="time" id="stBed" onchange="saveSettings()" style="width:104px;" aria-label="Hedef yatış saati">
+      <span class="muted" style="font-size:12px;">Yol + yemek + toparlanma</span><input type="number" id="stPay" min="0" max="360" step="15" onchange="saveSettings()" style="width:70px;" aria-label="Yol, yemek ve toparlanma payı (dakika)"><span class="muted" style="font-size:12px;">dk</span>
     </div>
     <div class="row" style="margin-top:8px;">
-      <span class="muted" style="font-size:12px;">Soru başına</span><input type="number" id="stSoru" min="1" max="120" onchange="saveSettings()" style="width:64px;"><span class="muted" style="font-size:12px;">dk</span>
-      <span class="muted" style="font-size:12px;">Tekrar başına</span><input type="number" id="stTekrar" min="1" max="60" onchange="saveSettings()" style="width:64px;"><span class="muted" style="font-size:12px;">dk</span>
+      <span class="muted" style="font-size:12px;">Soru başına</span><input type="number" id="stSoru" min="1" max="120" onchange="saveSettings()" style="width:64px;" aria-label="Soru başına süre (dakika)"><span class="muted" style="font-size:12px;">dk</span>
+      <span class="muted" style="font-size:12px;">Tekrar başına</span><input type="number" id="stTekrar" min="1" max="60" onchange="saveSettings()" style="width:64px;" aria-label="Tekrar başına süre (dakika)"><span class="muted" style="font-size:12px;">dk</span>
     </div>
     <div class="muted" style="margin-top:6px;">Bugün sekmesindeki pencere kartı bu değerlerle hesaplanır: kalan saatten bloklar ve pay düşülür, iş yükü soru/tekrar sayısından çıkar. Süreler kabaca doğru olsun yeter — kartın işi kesin dakika vermek değil, işin akşama sığıp sığmadığını söylemek.</div>
   </div>
 
+  <h2>Claude özeti</h2>
+  <div class="card">
+    <div class="muted" style="font-size:12px; margin-bottom:8px;">Güncel durumu (bugünkü öncelikler, yaklaşan deadlinelar, D-14 triage, kalibrasyon) tek metin olarak kopyalar — Claude'a yapıştır.</div>
+    <button class="btn" onclick="copyClaudeSummary()">📋 Özeti kopyala</button>
+    <div class="muted" id="claudeSummaryStatus" role="status" aria-live="polite" style="margin-top:6px; font-size:12px;"></div>
+  </div>
+
+  <h2>Claude'dan yapıştır</h2>
+  <div class="card">
+    <div class="muted" style="font-size:12px; margin-bottom:8px;">Claude'un verdiği JSON komut bloğunu buraya yapıştır — deadline, D-14 konusu, hata defteri veya tekrar ekler. Hiçbir şey silmez, sadece ekler.</div>
+    <textarea id="claudeApplyInp" placeholder='{"action":"add_deadline","title":"...","date":"YYYY-MM-DD","type":"exam"}' style="min-height:80px; font-family:'JetBrains Mono',monospace; font-size:12px;" aria-label="Claude JSON komut bloğu"></textarea>
+    <div class="row" style="margin-top:8px;">
+      <button class="btn" onclick="applyClaudeAction()">Uygula</button>
+    </div>
+    <div class="muted" id="claudeApplyStatus" role="status" aria-live="polite" style="margin-top:6px; font-size:12px;"></div>
+  </div>
+
   <h2>Bilgisayar ↔ telefon senkronu</h2>
   <div class="card">
+
     <div class="row">
-      <input id="syncUrlInp" placeholder="Apps Script Web App URL (bkz. KURULUM.md)" style="flex:1; min-width:200px;">
+      <input id="syncUrlInp" placeholder="Apps Script Web App URL (bkz. KURULUM.md)" style="flex:1; min-width:200px;" aria-label="Apps Script Web App URL (bkz. KURULUM.md)">
       <button class="btn ghost" onclick="saveSyncUrl()">Kaydet</button>
       <button class="btn" onclick="pullSync()">Şimdi eşitle</button>
     </div>
     <div class="row" style="margin-top:8px;">
       <span class="muted" style="font-size:12px;">Bu cihazın adı</span>
-      <input id="deviceNameInp" placeholder="Masaüstü / Telefon" style="width:140px;" onchange="saveDeviceName()">
+      <input id="deviceNameInp" placeholder="Masaüstü / Telefon" style="width:140px;" onchange="saveDeviceName()" aria-label="Masaüstü / Telefon">
       <span class="muted" style="font-size:12px;" id="deviceIdShow"></span>
     </div>
-    <div class="muted" id="syncStatus" style="margin-top:6px;">senkronizasyon kapalı — URL girilmemiş</div>
+    <div class="muted" id="syncStatus" role="status" aria-live="polite" style="margin-top:6px;">senkronizasyon kapalı — URL girilmemiş</div>
     <div class="muted" style="margin-top:6px; font-size:12px;">İki cihaz da aynı anda düzenlerse aynı satırı sessizce ezmez — hangi cihazın hangi değişikliği yaptığını gösterip seçim ister; kaybeden taraf otomatik yedeklenir.</div>
   </div>
   <div id="syncConflict"></div>
@@ -418,7 +459,7 @@ footer{margin-top:34px; display:flex; gap:10px; flex-wrap:wrap; align-items:cent
     <div class="row">
       <button class="btn ghost" onclick="exportData()">Verileri dışa aktar</button>
       <button class="btn ghost" onclick="document.getElementById('importFile').click()">Yedekten geri yükle</button>
-      <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+      <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)" aria-label="Yedek dosyası seç">
     </div>
     <div class="muted" style="margin-top:6px;">Veriler bu tarayıcıda saklanır. Sync kuruluysa bulut da yedek sayılır — uyarı kartı ikisinden yenisine bakar.</div>
   </div>
@@ -435,7 +476,17 @@ function esc(v){ return String(v==null?'':v).replace(/[&<>"']/g, c=>ESC_MAP[c]);
 
 // ---------- Storage (localStorage + in-memory fallback) ----------
 const mem = {};
-function sget(k, def){ try{ const v = localStorage.getItem(k); return v===null?def:JSON.parse(v);}catch(e){ return k in mem ? mem[k] : def; } }
+// Tip koruması: bozuk bir kayıt (dizi beklenen yerde string vb.) tüm render zincirini
+// düşürüyordu — "schedule.filter is not a function". Varsayılanın tipi sözleşme sayılır.
+function sget(k, def){
+  let v;
+  try{ const raw = localStorage.getItem(k); v = raw===null?def:JSON.parse(raw); }
+  catch(e){ v = k in mem ? mem[k] : def; }
+  if(Array.isArray(def)) return Array.isArray(v) ? v : def;
+  if(def !== null && typeof def === 'object')
+    return (v !== null && typeof v === 'object' && !Array.isArray(v)) ? v : def;
+  return v;
+}
 function ssetRaw(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){ mem[k]=v; } }
 function sset(k, v){ ssetRaw(k, v); scheduleSync(); }
 
@@ -496,11 +547,13 @@ function tickClock(){
 // Pencere 07:00 → ertesi gün 02:00. Gece yarısından sonraki saatler gün sonuna düşer,
 // yoksa 01:00'de çizgi sola kaçıp 07:00'yi gösteriyordu.
 const G_START = 7*60, G_END = 26*60, G_SPAN = G_END - G_START;
-function gMin(h, m){ const t = h*60 + (m||0); return h < 5 ? t + 1440 : t; }
+// Eşik 5 iken 03:00–04:59 pencere sonunun ötesine taşıyor, çizgiyi %100'e yapıştırıyordu
+// (04:00'te 02:00 gösteriyordu). 3 ile bu saatler pencere öncesine düşüyor.
+function gMin(h, m){ const t = h*60 + (m||0); return h < 3 ? t + 1440 : t; }
 function gPct(t){ return Math.min(100, Math.max(0, (t - G_START)/G_SPAN*100)); }
 function renderGauge(now){
   const cur = gMin(now.getHours(), now.getMinutes());
-  document.getElementById('gaugeFill').style.width = gPct(cur)+'%';
+  document.getElementById('gaugeFill').style.width = ((cur >= G_START && cur <= G_END) ? gPct(cur) : 0)+'%';
   const track = document.getElementById('gaugeTrack');
   track.querySelectorAll('.gauge-block, .gauge-now').forEach(b=>b.remove());
   todaySched(now).forEach(s=>{
@@ -514,11 +567,19 @@ function renderGauge(now){
     if(b < cur) div.dataset.past='1';
     track.appendChild(div);
   });
-  const nowLine = document.createElement('div');
-  nowLine.className = 'gauge-now';
-  nowLine.style.left = gPct(cur)+'%';
-  nowLine.title = pad(now.getHours())+':'+pad(now.getMinutes());
-  track.appendChild(nowLine);
+  // Pencere dışındayken (03:00–07:00) çizgiyi uydurma bir yere koymak yerine kaldır.
+  const inWindow = cur >= G_START && cur <= G_END;
+  if(inWindow){
+    const nowLine = document.createElement('div');
+    nowLine.className = 'gauge-now';
+    nowLine.style.left = gPct(cur)+'%';
+    nowLine.title = pad(now.getHours())+':'+pad(now.getMinutes());
+    track.appendChild(nowLine);
+  }
+  const gHint = document.getElementById('gaugeHint');
+  if(gHint) gHint.textContent = inWindow
+    ? 'Turkuaz bloklar bugünkü derslerin. Amber çizgi şu anki saatin.'
+    : 'Pencere 07:00–02:00 arası; şu an dışındasın. Çubuk bugünün bloklarını gösteriyor.';
   const ticks = document.getElementById('gaugeTicks');
   if(ticks && !ticks.dataset.done){
     ticks.innerHTML = [10,13,16,19,22].map(h =>
@@ -529,12 +590,31 @@ function renderGauge(now){
 setInterval(tickClock, 10000); tickClock();
 
 // ---------- Tabs ----------
+const tabButtons = () => [...document.querySelectorAll('#tabs button')];
+function activateTab(btn, moveFocus){
+  if(!btn || !btn.dataset.tab) return;
+  tabButtons().forEach(b=>{
+    const on = b === btn;
+    b.classList.toggle('active', on);
+    b.setAttribute('aria-selected', on ? 'true' : 'false');
+    b.tabIndex = on ? 0 : -1;              // roving tabindex: Tab tuşu şeritte takılmasın
+  });
+  document.querySelectorAll('section[role="tabpanel"]').forEach(x=>x.classList.remove('active'));
+  document.getElementById(btn.dataset.tab).classList.add('active');
+  if(moveFocus) btn.focus();
+}
 document.getElementById('tabs').addEventListener('click', e=>{
-  if(e.target.tagName!=='BUTTON') return;
-  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
-  document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));
-  e.target.classList.add('active');
-  document.getElementById(e.target.dataset.tab).classList.add('active');
+  const b = e.target.closest('button'); if(b) activateTab(b);
+});
+document.getElementById('tabs').addEventListener('keydown', e=>{
+  const bs = tabButtons(), i = bs.indexOf(document.activeElement);
+  if(i < 0) return;
+  let j = null;
+  if(e.key==='ArrowRight'||e.key==='ArrowDown') j = (i+1) % bs.length;
+  else if(e.key==='ArrowLeft'||e.key==='ArrowUp') j = (i-1+bs.length) % bs.length;
+  else if(e.key==='Home') j = 0;
+  else if(e.key==='End') j = bs.length-1;
+  if(j !== null){ e.preventDefault(); activateTab(bs[j], true); }
 });
 
 // ---------- Bugünün 3 önceliği ----------
@@ -562,18 +642,18 @@ function prioReuse(idx){
 function renderPrio(){
   const rows = prio.items.map((x,i) =>
     `<div class="prio-row ${x.d?'on':''}">
-      <input type="checkbox" ${x.d?'checked':''} onchange="prioToggle(${i})">
-      <span class="prio-num">${i+1}</span>
-      <input type="text" value="${esc(x.t)}" placeholder="—" oninput="prioSet(${i}, this.value)">
+      <input type="checkbox" ${x.d?'checked':''} onchange="prioToggle(${i})" aria-label="${i+1}. öncelik tamamlandı">
+      <span class="prio-num" aria-hidden="true">${i+1}</span>
+      <input type="text" value="${esc(x.t)}" placeholder="—" aria-label="${i+1}. öncelik" oninput="prioSet(${i}, this.value)">
     </div>
     <div class="prio-when ${x.d?'on':''}">
       <span class="prio-num"></span>
       <span class="prio-if">eğer</span>
-      <input type="text" value="${esc(x.w)}" placeholder="… olursa → o zaman bunu yaparım" oninput="prioSetWhen(${i}, this.value)">
+      <input type="text" value="${esc(x.w)}" placeholder="… olursa → o zaman bunu yaparım" aria-label="${i+1}. öncelik için eğer-o zaman tetikleyicisi" oninput="prioSetWhen(${i}, this.value)">
     </div>`).join('');
   const prev = (prio.prev||[]).length
     ? `<div class="muted" style="font-size:12px; margin-top:8px;">Dünden kalan: ` +
-      prio.prev.map((t,i)=>`<span onclick="prioReuse(${i})" style="cursor:pointer; border-bottom:1px dashed var(--muted);">${esc(t)}</span>`).join(' · ') +
+      prio.prev.map((t,i)=>`<button type="button" class="linkish" onclick="prioReuse(${i})" aria-label="${esc(t)} — bugünün önceliklerine taşı">${esc(t)}</button>`).join(' · ') +
       ` <span style="opacity:.7;">— hâlâ önemliyse dokun, yukarı taşınsın</span></div>` : '';
   document.getElementById('prioBox').innerHTML =
     `<div class="muted" style="font-size:11px; letter-spacing:.08em; margin-bottom:4px;">BUGÜNÜN 3 ÖNCELİĞİ</div>${rows}${prev}`;
@@ -594,7 +674,12 @@ function addDeadline(){
   }
   deadlines.push(item);
   document.getElementById('dlTitle').value='';
+  // Tarih bilerek temizleniyor: kalırsa bir sonraki "Ekle" sessizce eski tarihi kullanır.
+  document.getElementById('dlDate').value='';
   document.getElementById('dlTotal').value=''; document.getElementById('dlDays').value='';
+  const pf = document.getElementById('dlPlanFields');
+  if(pf && pf.style.display !== 'none'){ pf.style.display='none'; document.getElementById('dlPlanToggle').textContent='+ plan'; }
+  document.getElementById('dlTitle').focus();
   sset('deadlines', deadlines); renderDeadlines(); renderToday();
 }
 function togglePlanFields(){
@@ -612,11 +697,11 @@ function dlRow(d, showDel){
   const cls = n<=2?'urgent':(n<=7?'soon':'ok');
   const label = n<0?(-n)+'g geçti':(n===0?'BUGÜN':n+' gün');
   return `<div class="item ${d.done?'done':''}">
-    <input type="checkbox" ${d.done?'checked':''} onchange="toggleDl(${d.id})" style="accent-color:var(--teal); width:16px; height:16px; cursor:pointer;">
+    <input type="checkbox" ${d.done?'checked':''} onchange="toggleDl(${d.id})" aria-label="${esc(d.title)} tamamlandı" style="accent-color:var(--teal); width:16px; height:16px; cursor:pointer;">
     <span class="tag ${d.type}">${TYPE_LABEL[d.type]}</span>
     <span style="flex:1;">${esc(d.title)}<div class="muted">${new Date(d.date+'T00:00').toLocaleDateString('tr-TR',{day:'numeric',month:'long',weekday:'short'})}</div></span>
     <span class="countdown ${cls}">${label}</span>
-    ${showDel?`<button class="del" onclick="delDl(${d.id})" title="Sil">✕</button>`:''}
+    ${showDel?`<button class="del" onclick="delDl(${d.id})" title="Sil" aria-label="${esc(d.title)} deadline'ını sil">✕</button>`:''}
   </div>`;
 }
 function renderDeadlines(){
@@ -739,21 +824,21 @@ function renderReviews(){
          <button class="btn ghost" style="padding:5px 9px;font-size:12px;" onclick="rateReview(${r.id},0)">Orta</button>
          <button class="btn" style="padding:5px 9px;font-size:12px;" onclick="rateReview(${r.id},1)">Kolay</button>
          <button class="del" onclick="clearJOL(${r.id})" title="Tahmini geri al">↺</button>`
-      : `<button class="btn ghost" style="padding:5px 8px;font-size:11px;" onclick="setJOL(${r.id},0)">%0</button>
-         <button class="btn ghost" style="padding:5px 8px;font-size:11px;" onclick="setJOL(${r.id},35)">%35</button>
-         <button class="btn ghost" style="padding:5px 8px;font-size:11px;" onclick="setJOL(${r.id},70)">%70</button>
-         <button class="btn ghost" style="padding:5px 8px;font-size:11px;" onclick="setJOL(${r.id},100)">%100</button>`;
+      : `<button class="btn ghost" style="padding:5px 8px;font-size:11px;" onclick="setJOL(${r.id},0)" aria-label="Tahmin: yüzde 0 hatırlıyorum">%0</button>
+         <button class="btn ghost" style="padding:5px 8px;font-size:11px;" onclick="setJOL(${r.id},35)" aria-label="Tahmin: yüzde 35 hatırlıyorum">%35</button>
+         <button class="btn ghost" style="padding:5px 8px;font-size:11px;" onclick="setJOL(${r.id},70)" aria-label="Tahmin: yüzde 70 hatırlıyorum">%70</button>
+         <button class="btn ghost" style="padding:5px 8px;font-size:11px;" onclick="setJOL(${r.id},100)" aria-label="Tahmin: yüzde 100 hatırlıyorum">%100</button>`;
     const hint = (typeof j === 'number') ? 'şimdi boş kağıda dök, sonra gerçeği işaretle' : 'önce tahmin et: ne kadarını hatırlıyorsun?';
     return `<div class="item"><span class="tag">${esc(r.course||'—')}</span>
-    <span style="flex:1;">${esc(r.topic)}<div class="muted">${r.count}. tekrar · ${hint}</div></span>
+    <span style="flex:1;">${esc(r.topic)}<div class="muted">${r.count+1}. tekrar · ${hint}</div></span>
     ${step}
-    <button class="del" onclick="delReview(${r.id})" title="Sil">✕</button></div>`; }).join('')
+    <button class="del" onclick="delReview(${r.id})" title="Sil" aria-label="${esc(r.topic)} konusunu tekrar listesinden sil">✕</button></div>`; }).join('')
     : '<div class="card muted">Bugün tekrar yok. Yeni öğrendiğin her önemli konuyu yukarıdan ekle.</div>';
   renderCalib();
   document.getElementById('rvUpcoming').innerHTML = up.length ? up.map(r=>`
     <div class="item"><span class="tag">${esc(r.course||'—')}</span><span style="flex:1;">${esc(r.topic)}</span>
     <span class="countdown ok">${new Date(r.due+'T00:00').toLocaleDateString('tr-TR',{day:'numeric',month:'short'})}</span>
-    <button class="del" onclick="delReview(${r.id})" title="Sil">✕</button></div>`).join('')
+    <button class="del" onclick="delReview(${r.id})" title="Sil" aria-label="${esc(r.topic)} konusunu tekrar listesinden sil">✕</button></div>`).join('')
     : '<div class="card muted">Sırada konu yok.</div>';
 }
 // [ÖZELLİK 8] Kalibrasyon kartı — nerede kendine fazla/az güveniyorsun
@@ -812,8 +897,8 @@ function renderMistakes(){
   document.getElementById('mList').innerHTML = list.length ? list.map(m=>`
     <div class="item"><span class="tag">${esc(m.course||'—')}</span>
     <span style="flex:1;">${esc(mText(m))}${m.se?`<div class="muted" style="font-size:12px; color:var(--teal); margin-top:2px;">↳ ${esc(m.se)}</div>`:''}<div class="muted" style="font-size:11px;">${esc(m.date||'')}</div></span>
-    <button class="btn ghost" style="padding:4px 8px; font-size:11px; white-space:nowrap;" onclick="mistakeToReview(${m.id})" title="Tekrar listesine ekle">↻ Tekrara</button>
-    <button class="del" onclick="delMistake(${m.id})" title="Sil">✕</button></div>`).join('')
+    <button class="btn ghost" style="padding:4px 8px; font-size:11px; white-space:nowrap;" onclick="mistakeToReview(${m.id})" title="Tekrar listesine ekle" aria-label="${esc(mText(m))} — tekrar listesine ekle">↻ Tekrara</button>
+    <button class="del" onclick="delMistake(${m.id})" title="Sil" aria-label="${esc(mText(m))} kaydını sil">✕</button></div>`).join('')
     : '<div class="card muted">Kayıt yok. Tek cümle yeterli: hata neydi, doğrusu ne — ve mümkünse neden.</div>';
 }
 
@@ -860,8 +945,23 @@ function renderTierBox(){
 
 // ---------- [ÖZELLİK 2] Çalışma planı: çok günlük soru/görev takibi ----------
 function dayDiff(a, b){ return Math.round((new Date(b+'T00:00') - new Date(a+'T00:00'))/86400000); }
+// Import / sync / elle düzenlenmiş veride plan alanları eksik gelebiliyor. Eksik bir
+// plan.log tüm renderToday zincirini düşürdüğü için (Bugün sekmesi boş kalıyordu),
+// plan nesnesi okunmadan önce buradan geçirilir.
+function normPlan(p){
+  if(!p || typeof p !== 'object') return null;
+  if(!p.log || typeof p.log !== 'object' || Array.isArray(p.log)) p.log = {};
+  Object.keys(p.log).forEach(k => { const v = Number(p.log[k]); if(Number.isFinite(v)) p.log[k] = v; else delete p.log[k]; });
+  if(!(p.total > 0)) p.total = Math.max(1, Math.round(Number(p.total)) || 1);
+  if(!(p.days  > 0)) p.days  = 1;
+  if(!(p.perDay > 0)) p.perDay = Math.ceil(p.total/p.days);
+  if(typeof p.start !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(p.start)) p.start = ymd();
+  return p;
+}
+function normalizePlans(){ (deadlines||[]).forEach(d => { if(d && d.plan) normPlan(d.plan); }); }
 function planTotals(p){
-  const done = Object.values(p.log||{}).reduce((a,b)=>a+b, 0);
+  p = normPlan(p) || {total:1, days:1, perDay:1, start:ymd(), log:{}};
+  const done = Object.values(p.log).reduce((a,b)=>a+b, 0);
   const today = p.log[ymd()] || 0;
   const dayIdx = Math.max(1, Math.min(p.days, dayDiff(p.start, ymd())+1));
   return {done, today, dayIdx, pct: Math.min(100, Math.round(done/p.total*100))};
@@ -877,6 +977,7 @@ function planAddNew(id){
 }
 function planCount(id, n){
   const d = deadlines.find(x=>x.id===id); if(!d || !d.plan) return;
+  normPlan(d.plan);
   const k = ymd();
   d.plan.log[k] = Math.max(0, (d.plan.log[k]||0) + n);
   sset('deadlines', deadlines); renderDeadlines(); renderToday();
@@ -908,9 +1009,9 @@ function planPanel(d){
       <div style="height:100%; width:${t.pct}%; background:${t.pct>=100?'var(--teal)':'var(--accent)'};"></div>
     </div>
     <div class="row" style="gap:8px;">
-      <button class="btn ghost" style="flex:1; padding:10px;" onclick="planCount(${d.id},-1)">−1</button>
-      <button class="btn" style="flex:2; padding:10px;" onclick="planCount(${d.id},1)">+1 soru</button>
-      <button class="btn ghost" style="flex:1; padding:10px;" onclick="planCount(${d.id},5)">+5</button>
+      <button class="btn ghost" style="flex:1; padding:10px;" onclick="planCount(${d.id},-1)" aria-label="${esc(d.title)}: bir soru geri al">−1</button>
+      <button class="btn" style="flex:2; padding:10px;" onclick="planCount(${d.id},1)" aria-label="${esc(d.title)}: bir soru işle">+1 soru</button>
+      <button class="btn ghost" style="flex:1; padding:10px;" onclick="planCount(${d.id},5)" aria-label="${esc(d.title)}: beş soru işle">+5</button>
     </div>
   </div>`;
 }
@@ -932,16 +1033,53 @@ function delTri(dlId, tid){
   triage[dlId] = (triage[dlId]||[]).filter(x=>x.id!==tid);
   sset('triage', triage); renderDeadlines(); renderToday();
 }
+const TRI_MARK = {r:'●', y:'◑', g:'○'};
+const TRI_NAME = {r:'çalışılmadı', y:'kısmen oturdu', g:'oturdu'};
 function triPanel(d){
   const arr = triage[d.id] || [];
   const col = {r:['rgba(226,101,78,.18)','var(--danger)'], y:['rgba(242,169,59,.18)','var(--accent)'], g:['rgba(69,184,174,.18)','var(--teal)']};
-  const chips = arr.map(t=>`<span onclick="cycleTri(${d.id},${t.id})" style="cursor:pointer; padding:3px 10px; border-radius:20px; font-size:12px; margin:2px; display:inline-block; background:${col[t.color][0]}; color:${col[t.color][1]}; border:1px solid ${col[t.color][1]};">${esc(t.topic)} <span onclick="event.stopPropagation();delTri(${d.id},${t.id})" style="opacity:.6;">✕</span></span>`).join('');
+  const chips = arr.map(t=>{
+    const c = col[t.color];
+    return `<span class="chip" style="background:${c[0]}; color:${c[1]}; border-color:${c[1]};">
+      <button type="button" class="chip-btn" onclick="cycleTri(${d.id},${t.id})" aria-label="${esc(t.topic)} — ${TRI_NAME[t.color]}. Durumu ilerletmek için etkinleştir."><span class="chip-mark" aria-hidden="true">${TRI_MARK[t.color]}</span>${esc(t.topic)}</button>
+      <button type="button" class="chip-x" onclick="delTri(${d.id},${t.id})" aria-label="${esc(t.topic)} konusunu sil">✕</button>
+    </span>`;
+  }).join('');
   const n = c => arr.filter(t=>t.color===c).length;
   return `<div class="card" style="margin:-4px 0 10px; padding:10px 12px;">
-    <div class="muted" style="margin-bottom:6px;">Triyaj — konuya tıkla: kırmızı→sarı→yeşil · ${n('r')} kırmızı / ${n('y')} sarı / ${n('g')} yeşil · zaman dağılımı %70/%25/%5</div>
+    <div class="muted" style="margin-bottom:6px;">Triyaj — konuya bas, durum ilerlesin: ● çalışılmadı → ◑ kısmen → ○ oturdu · ${n('r')} ● / ${n('y')} ◑ / ${n('g')} ○ · zaman dağılımı %70/%25/%5</div>
     <div>${chips || '<span class="muted">Konu listesini gir, hepsi kırmızı başlar. Hedef: her gün 1 kırmızıyı sarıya çevir.</span>'}</div>
-    <div class="row" style="margin-top:8px;"><input id="tri-inp-${d.id}" placeholder="Konu" style="flex:1;" onkeydown="if(event.key==='Enter')addTriTopic(${d.id})"><button class="btn ghost" style="padding:5px 10px;" onclick="addTriTopic(${d.id})">Ekle</button></div>
+    <div class="row" style="margin-top:8px;"><input id="tri-inp-${d.id}" placeholder="Konu" aria-label="${esc(d.title)} için triyaj konusu ekle" style="flex:1;" onkeydown="if(event.key==='Enter')addTriTopic(${d.id})"><button class="btn ghost" style="padding:5px 10px;" onclick="addTriTopic(${d.id})">Ekle</button></div>
   </div>`;
+}
+
+// ---------- Günaydın kartı ----------
+function renderMorning(){
+  const el = document.getElementById('morningCard'); if(!el) return;
+  const parts = [];
+
+  // En yakın sınav + en kritik kırmızı konu
+  const exams = deadlines.filter(d=>d.type==='exam'&&!d.done&&daysLeft(d.date)>=0&&daysLeft(d.date)<=14).sort((a,b)=>a.date.localeCompare(b.date));
+  if(exams.length){
+    const e = exams[0]; const dl = daysLeft(e.date);
+    const reds = (triage[e.id]||[]).filter(t=>t.color==='r');
+    if(reds.length) parts.push(`<b>${esc(e.title)}</b> ${dl===0?'BUGÜN':'D-'+dl} · en kritik: <b>${esc(reds[0].topic)}</b>`);
+    else parts.push(`<b>${esc(e.title)}</b> ${dl===0?'BUGÜN':'D-'+dl} · kırmızı konu yok`);
+  }
+
+  // Bugün tekrar
+  const dueCount = reviews.filter(r=>r.due<=isoToday()).length;
+  if(dueCount>0) parts.push(`<b style="color:var(--danger)">${dueCount} tekrar</b> bekliyor`);
+
+  // Kalibrasyon uyarısı — en çok şişirdiğin ders (yeterli veri varsa)
+  const cs = calibStats(40);
+  if(cs && cs.worst && cs.worst.n>=3 && cs.worst.b>=15){
+    parts.push(`kalibrasyon: <b>${esc(cs.worst.c)}</b>'de kendine fazla güveniyorsun (+${Math.round(cs.worst.b)})`);
+  }
+
+  if(!parts.length){ el.classList.remove('show'); return; }
+  el.innerHTML = parts.join('<span class="sep">·</span>');
+  el.classList.add('show');
 }
 
 // ---------- Today ----------
@@ -964,7 +1102,7 @@ function renderToday(){
   const week = Object.entries(focusLog).filter(([k])=>daysAgo(k)<7).reduce((a,[,v])=>a+v,0);
   const dueCount = reviews.filter(r=>r.due<=isoToday()).length;
   const rvLine = dueCount>0 ? ` · <b style="color:var(--danger)">${dueCount} tekrar bekliyor</b> (Tekrar sekmesi)` : ' · Tekrar listesi temiz';
-  renderSuggest(); renderWindow(); renderPlans(); renderWeekChart(); renderSleep();
+  renderSuggest(); renderWindow(); renderPlans(); renderWeekChart(); renderSleep(); renderMorning();
   const md = modeSpan(1), mdw = modeSpan(7);
   let mdLine = '';
   if(md.tot){
@@ -980,13 +1118,25 @@ function daysAgo(dateStr){ return Math.round((new Date().setHours(0,0,0,0) - new
 // ---------- Ortak yardımcılar ----------
 const todayKey = ()=> ymd();
 function fmt(s){ return pad(Math.floor(s/60))+':'+pad(s%60); }
-function beep(){
+// Tek bir AudioContext yeniden kullanılır. Eski sürüm her beep'te yeni context
+// yaratıp hiç kapatmıyordu; Chrome doküman başına ~6 context'e izin verdiği için
+// mola aşımının 90. saniyesinde new AudioContext() throw ediyor, boş catch yutuyor
+// ve alarm sayfa yenilenene kadar bir daha hiç çalmıyordu.
+let audioCtx = null;
+function beep(n){
   try{
-    const ctx=new (window.AudioContext||window.webkitAudioContext)();
-    const o=ctx.createOscillator(), g=ctx.createGain();
-    o.connect(g); g.connect(ctx.destination);
-    o.frequency.value=880; g.gain.value=0.15;
-    o.start(); o.stop(ctx.currentTime+0.4);
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if(!AC) return;
+    if(!audioCtx || audioCtx.state === 'closed') audioCtx = new AC();
+    if(audioCtx.state === 'suspended') audioCtx.resume();
+    const times = n || 1;
+    for(let i=0;i<times;i++){
+      const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+      o.connect(g); g.connect(audioCtx.destination);
+      o.frequency.value=880; g.gain.value=0.18;
+      const t0 = audioCtx.currentTime + i*0.28;
+      o.start(t0); o.stop(t0+0.18);
+    }
   }catch(e){}
 }
 
@@ -1025,8 +1175,8 @@ function chSetMode(m){
   }
   ch.mode = m; chSave(); chRender(); renderToday();
 }
-function chSetLimit(){ const v = parseInt(document.getElementById('chBrkLimit').value,10); ch.bl = (v>0 && v<=120) ? v : 10; ch.auto = false; ch.lam = -1; chSave(); askNotify(); chRender(); }
-function chToggleAuto(){ ch.auto = document.getElementById('chAuto').checked; if(ch.auto && ch.ls) ch.bl = recBreak(ch.ls).min; ch.lam = -1; chSave(); chRender(); }
+function chSetLimit(){ const v = parseInt(document.getElementById('chBrkLimit').value,10); ch.bl = (v>0 && v<=120) ? v : 10; ch.auto = false; ch.lam = -1; chSave(); askNotify(); chRender(); scheduleBreakAlarm(); }
+function chToggleAuto(){ ch.auto = document.getElementById('chAuto').checked; if(ch.auto && ch.ls) ch.bl = recBreak(ch.ls).min; ch.lam = -1; chSave(); chRender(); scheduleBreakAlarm(); }
 
 async function askNotify(){
   try{ if('Notification' in window && Notification.permission === 'default') await Notification.requestPermission(); }catch(e){}
@@ -1062,6 +1212,7 @@ function chLog(type, dur, tag){
 // [ÖZELLİK 1] Dürtü: tek dokunuşla sayılır, ikinci dokunuşla sebebi etiketlenir
 const URGE_LBL = {kacis:'kaçış', yorgun:'yorgunluk', anlamadim:'anlamıyorum', rastgele:'rastgele', '?':'sebepsiz'};
 let urgeChipTimer = null;
+let urgeAckUntil = 0;
 function chUrge(){
   if(ch.phase !== 'study') return;
   ch.u++; ch.su++; chSave();
@@ -1073,9 +1224,8 @@ function chUrge(){
   el.style.display = 'block';
   clearTimeout(urgeChipTimer);
   urgeChipTimer = setTimeout(()=>{ el.style.display='none'; }, 9000);
-  const b = document.getElementById('chUrgeBtn');
-  b.textContent = '✔ yakalandı — devam';
-  setTimeout(chRender, 900);
+  urgeAckUntil = Date.now() + 2500;   // chRender saniyede bir eziyordu; süreyi artık o okur
+  chRender();
   renderToday();
 }
 function chUrgeReason(r){
@@ -1150,9 +1300,21 @@ function chMeal(){
   const e = chElapsed();
   if(e > 0){ ch.b += e; chLog('break', e); }
   ch.kind='yemek'; ch.lam=-1; ch.start=Date.now();
-  chSave(); chRender();
+  chSave(); chRender(); scheduleBreakAlarm();
 }
+// Buton "Günü sıfırla" diyordu ama focusLog'a dokunmuyordu — sadece kronometre state'ini
+// siliyordu. İsim dürüstleştirildi; bugünkü oturum listesi geri gelmediği için iki adımlı.
+let chResetArm = 0;
 function chReset(){
+  const btn = document.getElementById('chResetBtn');
+  if(Date.now() > chResetArm){
+    chResetArm = Date.now() + 4000;
+    if(btn){ btn.textContent = 'Emin misin? tekrar bas';
+      setTimeout(()=>{ if(Date.now() > chResetArm && btn) btn.textContent = 'Sayacı sıfırla'; }, 4200); }
+    return;
+  }
+  chResetArm = 0;
+  if(btn) btn.textContent = 'Sayacı sıfırla';
   if(ch.phase === 'study'){ const e = chElapsed(); if(e >= 60) creditFocus(e, ch.tag); }
   const keepTag = ch.tag, keepBl = ch.bl, keepAuto = ch.auto;
   ch = CH0(); ch.tag = keepTag; ch.bl = keepBl; ch.auto = keepAuto;
@@ -1199,7 +1361,27 @@ function chRollDay(prevKey){
   if(ph !== 'idle'){ ch.phase = ph; ch.kind = kind; ch.start = Date.now(); }
   chSave(); chLoop(); chRender();
 }
-function chLoop(){ if(chTimer) clearInterval(chTimer); if(ch.phase !== 'idle') chTimer = setInterval(chRender, 1000); }
+function chLoop(){ if(chTimer) clearInterval(chTimer); if(ch.phase !== 'idle') chTimer = setInterval(chRender, 1000); scheduleBreakAlarm(); }
+
+// Mola alarmı saniyelik chRender döngüsüne bağlıydı. Sekme arka plana düşünce
+// Chrome timer'ları dakikada bire indiriyor, yani alarm tam da yakalaması gereken
+// anda (telefona geçtiğinde) susuyordu. Onun yerine mola başlarken limit anına
+// tek bir setTimeout kurulur — throttled olsa bile hedefi ıskalamaz, en fazla
+// bir dakika gecikir. Sayfa tamamen dondurulursa web'de yapılabilecek bir şey yok.
+let breakAlarmTimer = null;
+function cancelBreakAlarm(){ if(breakAlarmTimer){ clearTimeout(breakAlarmTimer); breakAlarmTimer = null; } }
+function scheduleBreakAlarm(){
+  cancelBreakAlarm();
+  if(ch.phase !== 'break' || ch.kind === 'yemek' || !ch.start) return;
+  const left = ch.start + (ch.bl||10)*60000 - Date.now();
+  if(left <= 0) return;   // limit zaten aşılmış, chRender'ın tick mantığı devrede
+  breakAlarmTimer = setTimeout(()=>{
+    breakAlarmTimer = null;
+    if(ch.phase !== 'break' || ch.kind === 'yemek') return;
+    beep(2);
+    notify('Mola bitti ⏰', 'Limit '+ch.bl+' dk doldu. Telefonu bırak, çalışmaya dön.');
+  }, left);
+}
 
 function chRender(){
   const e = chElapsed();
@@ -1233,7 +1415,8 @@ function chRender(){
     label.textContent = e > 5400 ? '90 dakikayı geçtin — mola şart · önerilen: '+pv.min+' dk'
       : (e > 1200 ? 'Şimdi mola verirsen önerilen süre: '+pv.min+' dk' : 'Mola için "Mola Ver", günü kapatmak için "Bitir"');
     main.textContent='❙❙ Mola Ver'; meal.style.display='none';
-    urge.style.display='inline-block'; urge.textContent='📱 Dürtü geldi'+(ch.su>0?' ('+ch.su+')':'');
+    urge.style.display='inline-block';
+    urge.textContent = Date.now() < urgeAckUntil ? '✔ yakalandı — devam' : ('📱 Dürtü geldi'+(ch.su>0?' ('+ch.su+')':''));
   } else if(ch.phase === 'break'){
     badge.textContent = isMeal ? '🍽 Yemekteyim' : (over ? '⏰ Mola aşıldı' : '☕ Moladayım');
     badge.style.color = over ? 'var(--danger)' : 'var(--accent)';
@@ -1245,11 +1428,17 @@ function chRender(){
     main.textContent='▶ Çalışmaya Dön'; meal.style.display = isMeal ? 'none' : 'inline-block';
     urge.style.display='none';
     if(over){
-      const mn = Math.floor(e/60);
-      if(ch.lam !== mn){
-        ch.lam = mn; chSave(); beep();
-        const first = Math.floor(lim/60)+1;
-        if(mn === first || (mn - first) % 5 === 0) notify('Mola uzadı ⏰', 'Molan '+mn+' dakika oldu (limit '+ch.bl+' dk). Çalışmaya dön.');
+      const overSec = e - lim;
+      // İlk 2 dakika: 15sn'de bir bip. Sonrası: dakikada bir, aşım arttıkça bip sayısı artar (1,2,3... max 5).
+      const tickSec = overSec <= 120 ? 15 : 60;
+      const tick = Math.floor(overSec / tickSec);
+      if(ch.lam !== tick){
+        ch.lam = tick; chSave();
+        const mn = Math.floor(overSec/60);
+        beep(Math.min(5, 1 + mn));
+        if(tickSec===60){
+          notify('Mola uzadı ⏰', 'Molan '+Math.floor(e/60)+' dakika oldu (limit '+ch.bl+' dk). Çalışmaya dön.');
+        }
       }
     }
   } else {
@@ -1381,7 +1570,7 @@ function renderPlans(){
     return `<div class="item"><span class="tag ${d.type}">PLAN</span>
       <span style="flex:1;">${esc(d.title)}<div class="muted">Gün ${t.dayIdx}/${d.plan.days} · ${t.done}/${d.plan.total} soru</div></span>
       <span class="countdown ${hit?'ok':'soon'}">${t.today}/${d.plan.perDay}</span>
-      <button class="btn" style="padding:6px 10px; font-size:12px;" onclick="planCount(${d.id},1)">+1</button></div>`;
+      <button class="btn" style="padding:6px 10px; font-size:12px;" onclick="planCount(${d.id},1)" aria-label="${esc(d.title)}: bir soru işle">+1</button></div>`;
   }).join('') : '';
 }
 function renderWeekChart(){
@@ -1539,15 +1728,28 @@ function renderWindow(){
 }
 
 // ---------- [ÖZELLİK 4] Uyku takibi ----------
-function hm(t){ const [h,m] = (t||'').split(':').map(Number); return (isNaN(h)?null:h*60+(m||0)); }
+// Boş string 00:00 değildir. Eski sürüm ''.split(':') → [''] → Number('') → 0 döndürdüğü
+// için, sadece "Saat" alanı doldurulup kalkış saati girilmemiş günler 00:00 kalkış
+// sayılıyordu; sleepWeek() bunu gerçek veriyle karıştırıp sahte "sosyal jetlag" uyarısı veriyordu.
+function hm(t){
+  if(typeof t !== 'string') return null;
+  const p = t.split(':');
+  if(p.length < 2) return null;
+  const h = Number(p[0]), m = Number(p[1]);
+  if(p[0].trim() === '' || !Number.isFinite(h) || !Number.isFinite(m)) return null;
+  return h*60 + m;
+}
 function saveSleep(){
   const hIn = parseFloat(document.getElementById('slHours').value);
   const bed = document.getElementById('slBed').value;
   const wake = document.getElementById('slWake').value;
   let h = (hIn > 0 && hIn <= 14) ? hIn : null;
   if(h === null && bed && wake){                 // saatlerden süreyi hesapla (gece yarısını aşan durum dahil)
-    let diff = hm(wake) - hm(bed); if(diff <= 0) diff += 1440;
-    h = Math.round(diff/6)/10;
+    const wm = hm(wake), bm = hm(bed);
+    if(wm !== null && bm !== null){
+      let diff = wm - bm; if(diff <= 0) diff += 1440;
+      h = Math.round(diff/6)/10;
+    }
   }
   if(h === null && !bed && !wake) return;
   sleepLog[ymd()] = {h: h, bed: bed || '', wake: wake || ''};
@@ -1605,6 +1807,169 @@ function checkBackup(){
 }
 
 // ---------- Export / import ----------
+// ---------- Claude özeti ----------
+// Ham JSON değil — okunur, yoğun bir Türkçe metin. Claude bunu yapıştırınca
+// direkt "bugün ne var" sorusuna gerçek veriyle cevap verebiliyor.
+function buildClaudeSummary(){
+  const lines = [];
+  const now = new Date();
+  lines.push('KONTROL PANELİ ÖZETİ — '+now.toLocaleString('tr-TR',{day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'}));
+  lines.push('');
+
+  // Bugünkü 3 öncelik
+  lines.push('BUGÜNKÜ 3 ÖNCELİK ('+(prio.date||'?')+'):');
+  if(Array.isArray(prio.items) && prio.items.some(x=>x.t)){
+    prio.items.forEach((x,i)=>{
+      if(!x.t) return;
+      lines.push('  '+(i+1)+'. ['+(x.d?'✓':' ')+'] '+x.t+(x.w?'  — engel: '+x.w:''));
+    });
+  } else lines.push('  (boş)');
+  lines.push('');
+
+  // Yaklaşan deadlinelar (bitmemiş, tarihe göre sıralı, ilk 8)
+  const upcoming = (deadlines||[]).filter(d=>!d.done).slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'')).slice(0,8);
+  lines.push('YAKLAŞAN DEADLINE\'LAR:');
+  if(upcoming.length){
+    upcoming.forEach(d=>{
+      const dl = daysLeft(d.date);
+      lines.push('  - '+d.title+' ('+(d.type||'')+') — '+d.date+'  [D-'+dl+']'+(d.plan?'  plan: '+d.plan.perDay+'/gün':''));
+    });
+  } else lines.push('  (yok)');
+  lines.push('');
+
+  // D-14 triage — sadece kırmızı (yüksek risk) kalemler
+  lines.push('D-14 TRIAGE (kırmızı / bitmemiş konular):');
+  let anyTriage = false;
+  (deadlines||[]).filter(d=>!d.done).forEach(d=>{
+    const items = (triage[d.id]||[]).filter(t=>t.color==='r');
+    if(items.length){
+      anyTriage = true;
+      lines.push('  '+d.title+':');
+      items.forEach(t=>lines.push('    - '+t.topic));
+    }
+  });
+  if(!anyTriage) lines.push('  (kırmızı kalem yok)');
+  lines.push('');
+
+  // Kalibrasyon — son 10 kayıt, ortalama sapma
+  if(Array.isArray(calibLog) && calibLog.length){
+    const recent = calibLog.slice(0,10);
+    const avgGap = recent.reduce((s,r)=>s+Math.abs((r.p||0)-(r.a||0)),0)/recent.length;
+    lines.push('KALİBRASYON (son '+recent.length+' kayıt, ort. sapma '+avgGap.toFixed(0)+' puan):');
+    recent.forEach(r=>lines.push('  - '+r.d+' '+(r.c?'['+r.c+'] ':'')+r.t+': tahmin '+r.p+' → gerçek '+r.a));
+  } else {
+    lines.push('KALİBRASYON: (kayıt yok)');
+  }
+  lines.push('');
+
+  // Hata defteri — son 5
+  if(Array.isArray(mistakes) && mistakes.length){
+    lines.push('HATA DEFTERİ (son '+Math.min(5,mistakes.length)+'):');
+    mistakes.slice(0,5).forEach(m=>lines.push('  - '+m.date+' ['+m.course+'] '+m.note+(m.se?'  (kendi açıklaması var)':'')));
+  }
+  lines.push('');
+
+  // Son yedek/sync durumu
+  const lastExp = sget('lastExport', null);
+  lines.push('SON YEDEK: '+(lastExp||'hiç'));
+
+  return lines.join('\n');
+}
+async function copyClaudeSummary(){
+  const txt = buildClaudeSummary();
+  const statusEl = document.getElementById('claudeSummaryStatus');
+  try{
+    await navigator.clipboard.writeText(txt);
+    if(statusEl){ statusEl.textContent = 'Kopyalandı ✓ — Claude\'a yapıştır.'; statusEl.style.color = 'var(--teal)'; }
+  }catch(e){
+    // Panoya erişim yoksa (bazı tarayıcı/izin durumları) metni göster, elle kopyalasın.
+    if(statusEl){ statusEl.textContent = 'Otomatik kopyalanamadı — aşağıdan elle kopyala.'; statusEl.style.color = 'var(--danger)'; }
+    let pre = document.getElementById('claudeSummaryFallback');
+    if(!pre){
+      pre = document.createElement('textarea');
+      pre.id = 'claudeSummaryFallback';
+      pre.style.cssText = 'width:100%; height:220px; margin-top:8px; font-size:12px; font-family:monospace;';
+      statusEl.after(pre);
+    }
+    pre.value = txt;
+    pre.style.display = 'block';
+    pre.select();
+  }
+}
+
+// ---------- Claude'dan yapıştır ----------
+// Sabit, dar bir şema: dört eylem tipi, her biri var olan add-fonksiyonlarının
+// aynı veri şeklini üretir. Hiçbir alan doğrudan HTML'e basılmaz (esc() ile geçer),
+// hiçbir eylem var olan veriyi silmez veya değiştirmez — sadece ekler.
+function claudeApplyStatus(msg, ok){
+  const el = document.getElementById('claudeApplyStatus');
+  if(!el) return;
+  el.textContent = msg;
+  el.style.color = ok===false ? 'var(--danger)' : (ok ? 'var(--teal)' : 'var(--muted)');
+}
+function findDeadlineByTitle(title){
+  const t = (title||'').trim().toLowerCase();
+  if(!t) return null;
+  return deadlines.find(d => !d.done && d.title.trim().toLowerCase() === t) || null;
+}
+function applyClaudeAction(){
+  const raw = document.getElementById('claudeApplyInp').value.trim();
+  if(!raw){ claudeApplyStatus('Boş — önce Claude\'un verdiği JSON\'u yapıştır.', false); return; }
+  let cmd;
+  try{ cmd = JSON.parse(raw); }
+  catch(e){ claudeApplyStatus('Geçersiz JSON — Claude\'dan aldığın bloğu eksiksiz yapıştırdığından emin ol.', false); return; }
+  const cmds = Array.isArray(cmd) ? cmd : [cmd];
+  let applied = 0, errors = [];
+  cmds.forEach(c=>{
+    try{
+      switch(c.action){
+        case 'add_deadline': {
+          const title = (c.title||'').trim(), date = (c.date||'').trim();
+          if(!title || !/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Error('title/date eksik veya date formatı YYYY-MM-DD değil');
+          const type = ['exam','hw','lab','other'].includes(c.type) ? c.type : 'other';
+          const item = {id:Date.now()+applied, title, date, type, done:false};
+          deadlines.push(item); sset('deadlines', deadlines); applied++;
+          break;
+        }
+        case 'add_triage': {
+          const dl = findDeadlineByTitle(c.deadline_title);
+          if(!dl) throw new Error('deadline bulunamadı: '+(c.deadline_title||'?')+' — önce deadline\'ı ekle veya başlığı tam eşleştir');
+          const topic = (c.topic||'').trim();
+          if(!topic) throw new Error('topic eksik');
+          (triage[dl.id] = triage[dl.id] || []).push({id:Date.now()+applied, topic, color:'r'});
+          sset('triage', triage); applied++;
+          break;
+        }
+        case 'add_mistake': {
+          const note = (c.note||'').trim();
+          if(!note) throw new Error('note eksik');
+          mistakes.unshift({id:Date.now()+applied, course:(c.course||'').trim(), note, se:(c.why||'').trim(), date:ymd()});
+          sset('mistakes', mistakes); applied++;
+          break;
+        }
+        case 'add_review': {
+          const topic = (c.topic||'').trim();
+          if(!topic) throw new Error('topic eksik');
+          reviews.push({id:Date.now()+applied, topic, course:(c.course||'').trim(), level:0, due:ymdPlus(1), count:0});
+          sset('reviews', reviews); applied++;
+          break;
+        }
+        default:
+          throw new Error('bilinmeyen action: '+c.action);
+      }
+    }catch(err){ errors.push(err.message); }
+  });
+  if(applied) { renderDeadlines(); renderReviews(); renderMistakes(); renderToday(); }
+  if(applied && !errors.length){
+    document.getElementById('claudeApplyInp').value = '';
+    claudeApplyStatus(applied+' eylem uygulandı ✓', true);
+  } else if(applied && errors.length){
+    claudeApplyStatus(applied+' uygulandı, '+errors.length+' hata: '+errors.join(' · '), false);
+  } else {
+    claudeApplyStatus('Hiçbiri uygulanamadı: '+errors.join(' · '), false);
+  }
+}
+
 function exportData(){
   const keys=['deadlines','schedule','prio','focusLog','reviews','mistakes','triage','chrono','tagLog','urgeLog','breakLog','sleepLog','modeLog','calibLog','tierLog','settings'];
   const dump={};
@@ -1624,6 +1989,7 @@ function importData(ev){
     deadlines=sget('deadlines',[]); schedule=sget('schedule',[]); focusLog=sget('focusLog',{}); tagLog=sget('tagLog',{}); urgeLog=sget('urgeLog',{}); breakLog=sget('breakLog',{}); sleepLog=sget('sleepLog',{}); modeLog=sget('modeLog',{}); calibLog=sget('calibLog',[]); tierLog=sget('tierLog',{}); reviews=sget('reviews',[]); mistakes=sget('mistakes',[]); triage=sget('triage',{}); settings=Object.assign({},SET0,sget('settings',{})||{}); renderSettings();
     prio=sget('prio',null)||PRIO0(); if(!Array.isArray(prio.items)||prio.items.length!==3) prio=PRIO0(); prio.items.forEach(x=>{if(typeof x.w!=='string')x.w='';}); prioRoll();
     ch=sget('chrono',null)||CH0(); if(ch.day!==ymd()) ch=CH0(); chLoop(); chRender();
+    normalizePlans();
     renderDeadlines(); renderSchedule(); renderReviews(); renderMistakes(); renderTierBox(); renderPrio(); renderToday(); renderReview(); tickClock(); checkBackup();
     alert('Yedek geri yüklendi.');
   }catch(e){ alert('Dosya okunamadı: geçerli bir yedek dosyası seç.'); } };
@@ -1690,6 +2056,7 @@ function applyRemote(d){
   focusLog=sget('focusLog',{}); tagLog=sget('tagLog',{}); urgeLog=sget('urgeLog',{}); breakLog=sget('breakLog',{}); sleepLog=sget('sleepLog',{}); modeLog=sget('modeLog',{}); calibLog=sget('calibLog',[]); tierLog=sget('tierLog',{}); reviews=sget('reviews',[]); mistakes=sget('mistakes',[]); triage=sget('triage',{}); settings=Object.assign({},SET0,sget('settings',{})||{}); renderSettings();
   prio=sget('prio',null)||PRIO0(); if(!Array.isArray(prio.items)||prio.items.length!==3) prio=PRIO0(); prio.items.forEach(x=>{if(typeof x.w!=='string')x.w='';}); prioRoll();
   ch=sget('chrono',null)||CH0(); if(ch.day!==ymd()) ch=CH0(); ch.u=ch.u||0; ch.su=ch.su||0; ch.bl=ch.bl||10; if(typeof ch.lam!=='number') ch.lam=-1; if(typeof ch.tag!=='string') ch.tag=''; if(typeof ch.auto!=='boolean') ch.auto=true; ch.ls=ch.ls||0; if(ch.mode!=='aktif'&&ch.mode!=='pasif') ch.mode='aktif';
+  normalizePlans();
   renderDeadlines(); renderSchedule(); renderReviews(); renderMistakes(); renderTierBox(); renderPrio(); renderToday(); renderReview(); chLoop(); chRender(); checkBackup();
 }
 // Kaybeden tarafı sessizce silmek yerine dosyaya yedekle
@@ -1724,12 +2091,12 @@ function showConflict(remote){
 function resolveConflict(pick){
   const remote = window.__pendingRemote || null;
   if(pick === 'remote' && remote){
-    downloadJsonSnapshot('bu-cihaz-'+esc(deviceName()).replace(/\s+/g,'_'), {updatedAt: sget('dataUpdatedAt',0), deviceName: deviceName(), data: collectData()});
+    downloadJsonSnapshot('bu-cihaz-'+deviceName().replace(/\s+/g,'_'), {updatedAt: sget('dataUpdatedAt',0), deviceName: deviceName(), data: collectData()});
     applyRemote(remote.data);
     ssetRaw('dataUpdatedAt', remote.updatedAt);
     ssetRaw('lastSeenRemoteRev', remote.rev||0);
     ssetRaw('localRev', remote.rev||0);
-    setSyncStatus(esc(remote.deviceName||'diğer cihaz')+' sürümü alındı ✓', true);
+    setSyncStatus((remote.deviceName||'diğer cihaz')+' sürümü alındı ✓', true);
   } else if(remote){
     downloadJsonSnapshot((remote.deviceName||'diger').replace(/\s+/g,'_'), remote);
     pushSync(true);
@@ -1748,12 +2115,22 @@ async function pushSync(force){
       deviceId: deviceId(), deviceName: deviceName(),
       data: collectData()
     });
-    await fetch(url, {method:'POST', headers:{'Content-Type':'text/plain'}, body: payload});
+    // Cevabı doğrulamadan "eşitlendi" demek en tehlikeli sessiz hata: lastSync
+    // işaretlenir, yedek uyarısı susar, veri aslında hiç gitmemiştir. Apps Script
+    // hata verdiğinde çoğu zaman 200 + HTML hata sayfası döner, o yüzden gövdeye de bakılır.
+    const res = await fetch(url, {method:'POST', headers:{'Content-Type':'text/plain'}, body: payload});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const body = (await res.text()).trim();
+    if(body.startsWith('<')) throw new Error('sunucu HTML döndü — Web App dağıtımı/erişim ayarını kontrol et');
     syncDirty = false;
     ssetRaw('lastSeenRemoteRev', rev);
     ssetRaw('lastSync', todayKey()); checkBackup();
-    setSyncStatus('eşitlendi ✓ '+esc(deviceName())+' · '+new Date().toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'}), true);
-  }catch(e){ setSyncStatus('eşitleme hatası — internet/URL kontrol et', false); }
+    setSyncStatus('eşitlendi ✓ '+deviceName()+' · '+new Date().toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'}), true);
+  }catch(e){
+    syncDirty = true;   // denemeye devam: sekme gizlenince yeniden gönderilir
+    checkBackup();      // yedek uyarısı sahte "eşitlendi" yüzünden susmasın
+    setSyncStatus('EŞİTLENMEDİ — '+(e && e.message ? e.message : 'internet/URL kontrol et')+' · veri yalnızca bu cihazda', false);
+  }
 }
 async function pullSync(auto){
   const url = syncUrl(); if(!url){ setSyncStatus('senkronizasyon kapalı — URL girilmemiş'); return; }
@@ -1769,13 +2146,13 @@ async function pullSync(auto){
     if(sameDevice || remoteRev === seen){
       if(j.updatedAt > localT){
         applyRemote(j.data); ssetRaw('dataUpdatedAt', j.updatedAt); ssetRaw('lastSeenRemoteRev', remoteRev);
-        setSyncStatus((sameDevice?'':esc(j.deviceName||'diğer cihaz')+'\'dan ')+'güncellendi ✓', true);
+        setSyncStatus((sameDevice?'':(j.deviceName||'diğer cihaz')+'\'dan ')+'güncellendi ✓', true);
       } else setSyncStatus('eşitlendi ✓', true);
       return;
     }
     if(!syncDirty && localRev() === seen){
       applyRemote(j.data); ssetRaw('dataUpdatedAt', j.updatedAt); ssetRaw('lastSeenRemoteRev', remoteRev); ssetRaw('localRev', remoteRev);
-      setSyncStatus(esc(j.deviceName||'diğer cihaz')+'\'dan güncellendi ✓', true);
+      setSyncStatus((j.deviceName||'diğer cihaz')+'\'dan güncellendi ✓', true);
     } else {
       window.__pendingRemote = j;
       showConflict(j);
@@ -1790,8 +2167,9 @@ function saveSyncUrl(){
   if(v) pullSync(); else setSyncStatus('senkronizasyon kapalı');
 }
 document.addEventListener('visibilitychange', ()=>{
+  scheduleBreakAlarm();   // gizlenirken hedefi tazele, dönerken gecikmişse hemen ateşle
   if(document.hidden){ if(syncDirty && syncUrl()){ clearTimeout(syncPushTimer); pushSync(); } }
-  else if(syncUrl()) pullSync(true);
+  else { chRender(); if(syncUrl()) pullSync(true); }
 });
 if('serviceWorker' in navigator && location.protocol === 'https:'){
   navigator.serviceWorker.register('sw.js').catch(()=>{});
@@ -1806,6 +2184,7 @@ if('serviceWorker' in navigator && location.protocol === 'https:'){
 });
 
 // ---------- Init ----------
+normalizePlans();
 prioRoll(); renderPrio(); renderSettings();
 renderDeadlines(); renderSchedule(); renderReviews(); renderMistakes(); renderTierBox(); renderToday(); renderReview(); chRender(); chLoop(); checkBackup();
 setInterval(renderWindow, 60000);   // pencere saat ilerledikçe küçülür
