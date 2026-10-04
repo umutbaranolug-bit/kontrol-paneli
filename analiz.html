@@ -150,6 +150,9 @@ select{background:var(--surface2); border:1px solid oklch(57% 0.02 264); color:v
     </div>
   </div>
 
+  <h2>Telefon nerede → ne kadar çalıştın <small>son 4 hafta · blok başında verdiğin cevaba göre</small></h2>
+  <div class="card" id="phone"></div>
+
   <div class="grid2">
     <div>
       <h2>Hata defteri <small>derse göre</small></h2>
@@ -179,7 +182,7 @@ function load(){
     focus: get('focusLog', {}), tag: get('tagLog', {}), mode: get('modeLog', {}), urge: get('urgeLog', {}),
     sleep: get('sleepLog', {}), brk: get('breakLog', {}), deadlines: get('deadlines', []), reviews: get('reviews', []),
     mistakes: get('mistakes', []), calib: get('calibLog', []), courses: get('courses', []), term: get('term', {}),
-    triage: get('triage', {}), updated: get('dataUpdatedAt', null)
+    triage: get('triage', {}), phone: get('phoneLog', {}), settings: get('settings', {}), updated: get('dataUpdatedAt', null)
   };
 }
 
@@ -406,6 +409,25 @@ function renderSleep(){
   return B;
 }
 
+// ---------- Telefon taahhüdü ----------
+const PH = [['uzak','🚪 başka odada'], ['sessiz','🔕 yanında, sessiz'], ['yanimda','📲 yanında']];
+function renderPhone(){
+  const t = today0(), agg = {};
+  PH.forEach(([k]) => agg[k] = {n:0, min:0, u:0});
+  for(let i=0;i<28;i++){ const r = D.phone[ymd(addDays(t,-i))] || {};
+    PH.forEach(([k]) => { const x = r[k]; if(x){ agg[k].n += +x.n||0; agg[k].min += +x.min||0; agg[k].u += +x.u||0; } }); }
+  const el = document.getElementById('phone'), tot = PH.reduce((s,[k])=>s+agg[k].n, 0);
+  if(!tot){ el.innerHTML = '<div class="empty">Henüz veri yok. Ana paneldeki ▶ Başla ya da Kronometre her blok başında telefonun nerede olduğunu sorar; birkaç hafta sonra burada hangisinde gerçekten daha uzun ve daha az dürtüyle çalıştığın görünür.</div>'; return null; }
+  const mx = Math.max(1, ...PH.map(([k]) => agg[k].n ? agg[k].min/agg[k].n : 0));
+  el.innerHTML = `<table><thead><tr><th>Telefon</th><th style="text-align:right">blok</th><th>dk / blok</th><th style="text-align:right">dürtü / saat</th><th class="hide-sm" style="text-align:right">toplam</th></tr></thead><tbody>` +
+    PH.map(([k, l]) => { const a = agg[k], avg = a.n ? a.min/a.n : null, uph = a.min >= 30 ? a.u/(a.min/60) : null;
+      return `<tr><td style="white-space:nowrap">${l}</td><td class="num">${a.n}</td>
+        <td><div style="display:flex; align-items:center; gap:6px;"><span style="flex:1; height:10px; background:var(--surface2); border-radius:3px; overflow:hidden; min-width:50px;"><span style="display:block; height:100%; width:${avg?100*avg/mx:0}%; background:${k==='uzak'?'var(--teal)':k==='sessiz'?'var(--accent)':'var(--danger)'};"></span></span><span class="num" style="font-family:'JetBrains Mono',monospace; font-size:12px;">${avg===null?'—':Math.round(avg)}</span></div></td>
+        <td class="num">${uph===null?'—':uph.toFixed(1)}</td><td class="num hide-sm">${hrs(a.min)}s</td></tr>`; }).join('') +
+    `</tbody></table><div class="muted" style="font-size:12px; margin-top:8px;">${Math.round(100*agg.uzak.n/tot)}% blokta telefon başka odadaydı. n &lt; 3 olan satırlar henüz anlamlı değil.</div>`;
+  return agg;
+}
+
 // ---------- Hata defteri + kalibrasyon ----------
 function renderMist(){
   const el = document.getElementById('mist'), t = today0();
@@ -473,6 +495,13 @@ function renderInsights(ctx){
       else if(a - b2 >= 30) out.push(['🌙', `Az uyuduğun günler daha çok çalışmışsın (${hrs(a)}s vs ${hrs(b2)}s) — muhtemelen sınav öncesi günler; bu veri tek başına uykudan kısmayı haklı çıkarmaz.`]);
     }
   }
+  if(ctx.phone){
+    const u = ctx.phone.uzak, y = ctx.phone.yanimda, s2 = ctx.phone.sessiz, near = {n: y.n + s2.n, min: y.min + s2.min, u: y.u + s2.u};
+    if(u.n >= 3 && near.n >= 3){
+      const au = u.min/u.n, an = near.min/near.n;
+      if(au - an >= 8) out.push(['🚪', `Telefon başka odadayken blok başına <b class="up">${Math.round(au)} dk</b>, yanındayken (sessiz dahil) <b class="down">${Math.round(an)} dk</b> çalışmışsın. Kendi verin: telefonu çıkarmak bloğu ~%${Math.round(100*(au-an)/an)} uzatıyor.`]);
+    } else if(near.n >= 5 && u.n === 0) out.push(['🚪', `Son 4 haftada ${near.n} blokta telefon hep yanındaydı — bir kez başka odaya koymayı dene, karşılaştıracak veri olsun.`]);
+  }
   const m4 = modeRange(addDays(t,-27), 28);
   if(m4.pct !== null && m4.pct < 45 && m4.a + m4.p >= 300) out.push(['✍', `Son 4 haftada aktif oran <b class="down">%${m4.pct}</b>. Senin zorlandığın yer problem kurulumu; o ancak soru çözerken çalışılır — okuma bunu taşımıyor.`]);
   const rv7 = D.reviews.filter(r => r.due && dayDiff(t, parse(r.due)) <= 7).length;
@@ -494,6 +523,7 @@ function renderAll(){
   ctx.crunch = renderCal();
   ctx.urge = renderUrge();
   ctx.sleep = renderSleep();
+  ctx.phone = renderPhone();
   renderMist();
   ctx.calib = renderCalib();
   renderInsights(ctx);
