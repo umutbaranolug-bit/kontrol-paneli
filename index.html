@@ -154,6 +154,36 @@ footer{margin-top:34px; display:flex; gap:10px; flex-wrap:wrap; align-items:cent
 .tab-badge{display:inline-block; min-width:17px; height:17px; line-height:17px; padding:0 5px; margin-left:6px; border-radius:9px; background:var(--danger); color:oklch(97% 0.01 25); font-family:'JetBrains Mono',monospace; font-size:10.5px; font-weight:700; text-align:center; vertical-align:1px;}
 nav button.active .tab-badge{background:var(--accent-ink); color:var(--accent);}
 .tab-badge:empty{display:none;}
+/* Zincir kartı: günlük minimum + ardışık gün sayacı. Saat ilerledikçe tonu sertleşir. */
+.chain{display:flex; align-items:center; gap:12px; flex-wrap:wrap; background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:10px 14px; margin-bottom:14px; box-shadow:var(--shadow-sm);}
+.chain.ok{border-color:var(--teal);}
+.chain.warn{border-color:var(--accent);}
+.chain.late{border-color:var(--danger); background:linear-gradient(135deg, oklch(68% 0.16 25 / .10), var(--surface) 70%);}
+.chain-n{font-family:'JetBrains Mono',monospace; font-size:22px; font-weight:700; line-height:1; font-variant-numeric:tabular-nums;}
+.chain-n small{font-family:'Inter',sans-serif; font-size:11px; font-weight:500; color:var(--muted); display:block; margin-top:3px; letter-spacing:.04em;}
+.chain-mid{flex:1; min-width:170px;}
+.chain-bar{height:6px; background:var(--surface2); border-radius:3px; overflow:hidden; margin:5px 0 4px;}
+.chain-bar i{display:block; height:100%; background:var(--teal); border-radius:3px;}
+.chain.warn .chain-bar i{background:var(--accent);} .chain.late .chain-bar i{background:var(--danger);}
+.chain-dots{display:flex; gap:3px; margin-top:2px;}
+.chain-dots i{width:9px; height:9px; border-radius:3px; background:var(--surface2); border:1px solid var(--border-soft);}
+.chain-dots i.on{background:var(--teal); border-color:var(--teal);}
+.chain-dots i.sk{background:transparent; border:1px dashed var(--muted);}
+.chain-dots i.td{outline:1.5px solid var(--accent); outline-offset:1px;}
+/* Tek dokunuşla başla */
+.qs{display:flex; align-items:center; gap:14px; background:linear-gradient(135deg, oklch(77% 0.11 195 / .14), var(--surface) 65%); border:1px solid var(--teal); border-radius:var(--radius); padding:14px 16px; margin-bottom:12px; box-shadow:var(--shadow-sm);}
+.qs-btn{flex:none; width:64px; height:64px; border-radius:50%; border:none; background:var(--teal); color:var(--teal-ink); font-size:24px; cursor:pointer; box-shadow:0 6px 18px oklch(77% 0.11 195 / .35); transition:transform .12s ease;}
+.qs-btn:active{transform:scale(.94);}
+.qs-btn:focus-visible{outline:2px solid var(--accent); outline-offset:3px;}
+.qs.run{border-color:var(--accent); background:linear-gradient(135deg, oklch(80% 0.16 78 / .12), var(--surface) 65%);}
+.qs.run .qs-btn{background:var(--accent); color:var(--accent-ink); box-shadow:0 6px 18px oklch(80% 0.16 78 / .3);}
+/* Telefon taahhüdü */
+dialog#phoneDlg{margin:auto; background:var(--surface); color:var(--text); border:1px solid var(--border-input); border-radius:16px; padding:20px; max-width:360px; width:calc(100% - 32px); box-shadow:var(--shadow-md);}
+dialog#phoneDlg::backdrop{background:oklch(0% 0 0 / .55); backdrop-filter:blur(2px);}
+.ph-opt{display:flex; align-items:center; gap:10px; width:100%; text-align:left; background:var(--surface2); border:1px solid var(--border); color:var(--text); border-radius:11px; padding:12px 14px; margin-top:8px; cursor:pointer; font:inherit; font-size:14px;}
+.ph-opt:hover, .ph-opt:focus-visible{border-color:var(--teal); outline:none;}
+.ph-opt b{display:block;} .ph-opt span.muted{font-size:12px;}
+.ph-opt.best{border-color:var(--teal);}
 /* Analiz paneli bağlantısı */
 .analiz-link{display:flex; align-items:center; gap:10px; text-decoration:none; color:var(--text);}
 .analiz-link:hover{border-color:var(--teal);}
@@ -185,6 +215,8 @@ nav button.active .tab-badge{background:var(--accent-ink); color:var(--accent);}
 </header>
 <div id="dateline"></div>
 
+<div class="chain" id="chainCard" role="status" aria-live="polite"></div>
+
 <div class="morning" id="morningCard"></div>
 
 <div class="gauge">
@@ -211,6 +243,7 @@ nav button.active .tab-badge{background:var(--accent-ink); color:var(--accent);}
 
 <!-- BUGÜN -->
 <section id="today" role="tabpanel" aria-labelledby="tab-today" tabindex="0" class="active">
+  <div id="quickStart"></div>
   <div class="card" id="prioBox"></div>
   <div id="todayExam"></div>
   <div id="todaySuggest"></div>
@@ -454,6 +487,14 @@ nav button.active .tab-badge{background:var(--accent-ink); color:var(--accent);}
     <div class="muted" style="margin-top:6px;">Aynı mekanizma her yoğun dönem için geçerli — staj, sınav haftası, tam günlük iş. Bloklar yalnızca bu tarih aralığında sayılır; gün çubuğunu ve akşam penceresi hesabını doldurur. Bitiş tarihi geçince kendiliğinden düşer, silmeyi hatırlaman gerekmez.</div>
   </div>
 
+  <h2>Günlük minimum (zincir)</h2>
+  <div class="card">
+    <div class="row">
+      <span class="muted" style="font-size:12px;">Her gün en az</span><input type="number" id="stMin" min="5" max="240" step="5" onchange="saveSettings()" style="width:70px;" aria-label="Günlük minimum çalışma (dakika)"><span class="muted" style="font-size:12px;">dk odak</span>
+    </div>
+    <div class="muted" style="margin-top:6px; font-size:12px;">Zincir bu eşiğe bakar. Bilerek küçük tutuldu: amaç her gün masaya oturmak — 25 dk'yı geçen gün zaten çoğunlukla uzar. Haftada 1 kaçırma zinciri kırmaz (atlama hakkı); arka arkaya ikinci kaçırma kırar.</div>
+  </div>
+
   <h2>Akşam penceresi</h2>
   <div class="card">
     <div class="row">
@@ -529,6 +570,15 @@ nav button.active .tab-badge{background:var(--accent-ink); color:var(--accent);}
 
 </div>
 
+<dialog id="phoneDlg" aria-labelledby="phoneDlgT">
+  <div id="phoneDlgT" style="font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:17px;">📱 Telefon nerede?</div>
+  <div class="muted" style="font-size:12.5px; margin-top:4px;">Bloğa başlamadan önce tek dokunuş. Cevapların kaydediliyor — Analiz paneli hangisinde gerçekten daha çok çalıştığını gösterecek.</div>
+  <button class="ph-opt best" onclick="phonePick('uzak')"><span style="font-size:20px;">🚪</span><span><b>Başka odada</b><span class="muted">en güçlü seçenek — dürtü gelince ulaşamazsın</span></span></button>
+  <button class="ph-opt" onclick="phonePick('sessiz')"><span style="font-size:20px;">🔕</span><span><b>Yanımda, sessiz / ters</b><span class="muted">görüş alanında kalan telefon dikkati yine çeker</span></span></button>
+  <button class="ph-opt" onclick="phonePick('yanimda')"><span style="font-size:20px;">📲</span><span><b>Yanımda</b><span class="muted">dürüst cevap da veri — yine de başlar</span></span></button>
+  <div style="text-align:right; margin-top:10px;"><button class="btn ghost" style="padding:6px 12px; font-size:12px;" onclick="document.getElementById('phoneDlg').close()">Vazgeç</button></div>
+</dialog>
+
 <script>
 // ---------- HTML kaçışı ----------
 // innerHTML'e giren her kullanıcı metni buradan geçer. Aksi halde "T < 0" veya
@@ -562,9 +612,10 @@ let tagLog = sget('tagLog', {});     // {yyyy-mm-dd: {ders: minutes}}
 let urgeLog = sget('urgeLog', {});   // [ÖZELLİK 1] {yyyy-mm-dd: [{r:sebep, g:ders, t:zaman}]}
 let breakLog = sget('breakLog', {}); // [ÖZELLİK 3] {yyyy-mm-dd: [{o:aşım dk, r:sebep}]}
 let sleepLog = sget('sleepLog', {}); // [ÖZELLİK 4] {yyyy-mm-dd: {h:saat, bed:'23:30', wake:'07:00'}}
+let phoneLog = sget('phoneLog', {}); // {yyyy-mm-dd: {uzak|sessiz|yanimda: {n:blok, min:dk, u:dürtü}}}
 let modeLog = sget('modeLog', {});   // [ÖZELLİK 5] {yyyy-mm-dd: {aktif:dk, pasif:dk}} — retrieval practice oranı
 // [ÖZELLİK 10] Akşam penceresi ayarları — staj/ders bloklarından sonra gerçekten kalan süre
-const SET0 = {bed:'23:30', pay:90, dkSoru:8, dkTekrar:6};
+const SET0 = {bed:'23:30', pay:90, dkSoru:8, dkTekrar:6, minDay:25};
 let settings = Object.assign({}, SET0, sget('settings', {}) || {});
 
 // [ÖZELLİK 10] Blok tarih aralığı: staj blokları bitiş tarihinden sonra kendiliğinden düşer
@@ -1147,6 +1198,112 @@ function renderMorning(){
 }
 
 // ---------- Today ----------
+// ---------- Telefon taahhüdü ----------
+let phoneOk = false, phonePending = null;
+const PH_LBL = {uzak:'başka odada', sessiz:'yanında, sessiz', yanimda:'yanında'};
+function phoneRec(k, p){ phoneLog[k] = phoneLog[k] || {}; return (phoneLog[k][p] = phoneLog[k][p] || {n:0, min:0, u:0}); }
+function phoneAsk(then){
+  phonePending = then;
+  const d = document.getElementById('phoneDlg');
+  try{ d.showModal(); const b = d.querySelector('.ph-opt'); if(b) b.focus(); }
+  catch(e){ phonePick('yanimda'); }       // <dialog> desteklenmiyorsa başlatmayı engelleme
+}
+function phonePick(p){
+  const d = document.getElementById('phoneDlg'); if(d && d.open) d.close();
+  if(!PH_LBL[p]) return;
+  ch.ph = p; phoneRec(ymd(), p).n++; sset('phoneLog', phoneLog); chSave();
+  const f = phonePending; phonePending = null; if(f) f();
+}
+
+// ---------- Zincir: günlük minimum + atlama hakkı ----------
+// Haftada 1 kaçırma zinciri kırmaz: "bir kere kaçırdım, zaten bozuldu" kopuşunu önlemek için.
+// Arka arkaya ya da 7 gün içinde ikinci kaçırma kırar.
+function chainStats(){
+  const min = settings.minDay || 25, today = ymd(), tMin = focusLog[today] || 0, met = tMin >= min;
+  let streak = 0, lastSkip = -99; const skips = [];
+  for(let i = met ? 0 : 1; i < 400; i++){
+    const d = new Date(); d.setDate(d.getDate()-i); const k = ymd(d);
+    if((focusLog[k]||0) >= min){ streak++; continue; }
+    if(i - lastSkip >= 7){ lastSkip = i; skips.push(k); continue; }
+    break;
+  }
+  // Zincirin ucundaki (en eski) atlama zincire ait değil — sayılmaz
+  while(skips.length){ const k = skips[skips.length-1]; const d = new Date(k+'T00:00'); d.setDate(d.getDate()-1);
+    if((focusLog[ymd(d)]||0) >= min) break; skips.pop(); }
+  const graceLeft = !skips.some(k => daysAgo(k) < 7);
+  return {min, tMin, met, streak, skips, graceLeft};
+}
+function renderChain(){
+  const el = document.getElementById('chainCard'); if(!el) return;
+  const c = chainStats(), h = new Date().getHours(), running = ch && ch.phase === 'study';
+  const pct = Math.min(100, Math.round(100*c.tMin/c.min));
+  const state = c.met ? 'ok' : running ? 'ok' : (h >= 18 || h < 3) ? 'late' : h >= 12 ? 'warn' : '';
+  el.className = 'chain ' + state;
+  const dots = []; for(let i=13;i>=0;i--){ const d=new Date(); d.setDate(d.getDate()-i); const k=ymd(d);
+    const on = (focusLog[k]||0) >= c.min, sk = c.skips.includes(k);
+    dots.push(`<i class="${on?'on':sk?'sk':''} ${i===0?'td':''}" title="${k} · ${focusLog[k]||0} dk${sk?' (atlama hakkı)':''}"></i>`); }
+  let msg;
+  if(c.met) msg = `<b style="color:var(--teal)">✓ Bugünün minimumu tamam</b> <span class="muted">· ${c.tMin} dk</span>`;
+  else if(running) msg = `<b>⏱ Çalışıyorsun</b> <span class="muted">· blok bitince bugüne işlenir (${c.tMin}/${c.min} dk)</span>`;
+  else if(state === 'late') msg = `<b style="color:var(--danger)">Bugün ${c.tMin} dk.</b> ` + (c.graceLeft
+      ? `${c.streak ? c.streak+' günlük zinciri korumak' : 'Zinciri başlatmak'} için ${c.min - c.tMin} dk yeter.`
+      : `<b>Atlama hakkın yok</b> — bugün kaçarsa ${c.streak ? c.streak+' günlük zincir' : 'zincir'} sıfırlanır. ${c.min - c.tMin} dk yeter.`);
+  else if(state === 'warn') msg = `<b style="color:var(--accent)">Henüz ${c.tMin ? c.tMin+' dk' : 'başlamadın'}.</b> <span class="muted">Minimum ${c.min} dk — öğleden sonra ertelemek akşamı yakar.</span>`;
+  else msg = `<b>Bugünün minimumu: ${c.min} dk</b> <span class="muted">· ilk blok ne kadar erken, o kadar kolay</span>`;
+  const btn = (!c.met && !running) ? `<button class="btn" style="flex:none;" onclick="quickStart()">▶ Başla</button>` : '';
+  el.innerHTML = `<div class="chain-n">🔗 ${c.streak}<small>GÜN ZİNCİR</small></div>
+    <div class="chain-mid"><div style="font-size:13px;">${msg}</div>
+      <div class="chain-bar" aria-hidden="true"><i style="width:${c.met?100:pct}%"></i></div>
+      <div style="display:flex; align-items:center; gap:8px;"><div class="chain-dots" aria-label="Son 14 gün">${dots.join('')}</div>
+      <span class="muted" style="font-size:10.5px;" title="Haftada 1 kaçırma zinciri kırmaz">${c.graceLeft ? 'atlama hakkı ✓' : 'atlama hakkı kullanıldı'}</span></div></div>
+    ${btn}`;
+  el.setAttribute('aria-label', `Zincir ${c.streak} gün, bugün ${c.tMin} / ${c.min} dakika` + (c.graceLeft ? ', atlama hakkı var' : ', atlama hakkı yok'));
+}
+
+// ---------- Tek dokunuşla başla ----------
+// Başlama kararını sıfıra indirir: ne çalışacağın "Şimdi ne yapmalıyım"dan gelir, etiket otomatik dolar.
+let suggestNow = {text:'', tag:''};
+function codeOf(title){
+  const m = String(title||'').match(/^\s*([A-Za-zÇĞİÖŞÜçğıöşü]{2,5})\s?-?\s?(\d{3,4})/);
+  return m ? (m[1].toUpperCase() + ' ' + m[2]) : '';
+}
+function quickStart(){
+  if(ch.phase === 'idle'){
+    if(!ch.tag && suggestNow.tag){ ch.tag = suggestNow.tag; chSave(); }
+    activateTab(document.getElementById('tab-kronometre'));
+    chMain();
+  } else if(ch.phase === 'break'){ chMain(); activateTab(document.getElementById('tab-kronometre')); }
+  else activateTab(document.getElementById('tab-kronometre'));
+  renderQuickStart(); renderChain();
+}
+function renderQuickStart(){
+  const el = document.getElementById('quickStart'); if(!el) return;
+  const st = ch.phase;
+  if(st === 'study'){
+    el.innerHTML = `<div class="qs run"><button class="qs-btn" onclick="quickStart()" aria-label="Kronometreye git">⏱</button>
+      <div style="flex:1;"><b>Çalışıyorsun${ch.tag ? ' — '+esc(ch.tag) : ''}</b><div class="muted">Telefon: ${esc(PH_LBL[ch.ph]||'—')} · dürtü gelirse Kronometre'de 📱'e bas, telefona değil</div></div></div>`;
+    return;
+  }
+  if(st === 'break'){
+    el.innerHTML = `<div class="qs run"><button class="qs-btn" onclick="quickStart()" aria-label="Moladan dön, çalışmaya devam et">▶</button>
+      <div style="flex:1;"><b>Moladasın</b><div class="muted">Dönüş tek dokunuş — limit ${ch.bl||10} dk</div></div></div>`;
+    return;
+  }
+  const what = suggestNow.text || 'En yakın deadline\'a 25 dk';
+  const tag = ch.tag || suggestNow.tag;
+  el.innerHTML = `<div class="qs"><button class="qs-btn" onclick="quickStart()" aria-label="Çalışmaya başla">▶</button>
+    <div style="flex:1; min-width:0;"><div class="muted" style="font-size:11px; letter-spacing:.08em;">TEK DOKUNUŞ · 25 DK</div>
+    <b style="font-size:15px;">${esc(what)}</b><div class="muted" style="font-size:12px;">${tag ? 'etiket: '+esc(tag)+' · ' : ''}önce telefonu sorar, sonra sayaç başlar</div></div></div>`;
+}
+
+let startUiKey = '';
+function syncStartUi(force){
+  const k = [ch.phase, ch.tag, ch.ph, ch.bl, suggestNow.text, suggestNow.tag, focusLog[ymd()]||0, settings.minDay, new Date().getHours()].join('|');
+  if(!force && k === startUiKey) return;
+  startUiKey = k;
+  try{ renderQuickStart(); }catch(e){}
+  try{ renderChain(); }catch(e){}
+}
 function updateTabBadges(){
   const set = (id, n, lbl) => { const el = document.getElementById(id); if(!el) return;
     el.textContent = n > 0 ? String(n) : ''; if(n > 0) el.setAttribute('aria-label', n+' '+lbl); else el.removeAttribute('aria-label'); };
@@ -1173,7 +1330,7 @@ function renderToday(){
   const week = Object.entries(focusLog).filter(([k])=>daysAgo(k)<7).reduce((a,[,v])=>a+v,0);
   const dueCount = reviews.filter(r=>r.due<=isoToday()).length;
   const rvLine = dueCount>0 ? ` · <b style="color:var(--danger)">${dueCount} tekrar bekliyor</b> (Tekrar sekmesi)` : ' · Tekrar listesi temiz';
-  renderSuggest(); renderWindow(); renderPlans(); renderWeekChart(); renderSleep(); renderMorning();
+  renderSuggest(); syncStartUi(true); renderWindow(); renderPlans(); renderWeekChart(); renderSleep(); renderMorning();
   const md = modeSpan(1), mdw = modeSpan(7);
   let mdLine = '';
   if(md.tot){
@@ -1261,9 +1418,10 @@ async function notify(title, body){
   }catch(e){}
 }
 
-function creditFocus(sec, tag, key){
+function creditFocus(sec, tag, key, manual){
   const min = Math.round(sec/60); if(min < 1) return;
   const k = key || ymd();
+  if(!manual && ch && ch.ph){ phoneRec(k, ch.ph).min += min; sset('phoneLog', phoneLog); }
   focusLog[k] = (focusLog[k]||0) + min; sset('focusLog', focusLog);
   const t = (tag||'').trim();
   if(t){ tagLog[k] = tagLog[k] || {}; tagLog[k][t] = (tagLog[k][t]||0) + min; sset('tagLog', tagLog); }
@@ -1289,8 +1447,9 @@ function chUrge(){
   ch.u++; ch.su++; chSave();
   const k = ymd();
   urgeLog[k] = urgeLog[k] || [];
-  urgeLog[k].push({r:'?', g: ch.tag || '', t: Date.now()});
+  urgeLog[k].push({r:'?', g: ch.tag || '', t: Date.now(), p: ch.ph || ''});
   sset('urgeLog', urgeLog);
+  if(ch.ph){ phoneRec(k, ch.ph).u++; sset('phoneLog', phoneLog); }
   const el = document.getElementById('chUrgeChips');
   el.style.display = 'block';
   clearTimeout(urgeChipTimer);
@@ -1336,11 +1495,13 @@ function chManual(kind){
   const label = kind === 'study' ? 'Telefonsuz / dışarıda çalıştığın süre (dakika):' : 'Sayaç dışında geçen mola süresi (dakika):';
   const mm = parseInt(prompt(label), 10);
   if(!mm || mm < 1 || mm > 600) return;
-  if(kind === 'study'){ ch.s += mm*60; chLog('study', mm*60, ch.tag); creditFocus(mm*60, ch.tag); }
+  if(kind === 'study'){ ch.s += mm*60; chLog('study', mm*60, ch.tag); creditFocus(mm*60, ch.tag, undefined, true); }
   else { ch.b += mm*60; chLog('break', mm*60); }
   chSave(); chRender();
 }
 function chMain(){
+  // Boştan çalışmaya geçişte önce telefon taahhüdü; seçim yapılınca aynı fonksiyon kaldığı yerden devam eder
+  if(ch.phase === 'idle' && !phoneOk){ phoneAsk(() => { phoneOk = true; try{ chMain(); } finally { phoneOk = false; } }); return; }
   const e = chElapsed();
   if(ch.phase === 'idle'){ ch.phase='study'; ch.su=0; ch.start=Date.now(); }
   else if(ch.phase === 'study'){
@@ -1455,6 +1616,7 @@ function scheduleBreakAlarm(){
 }
 
 function chRender(){
+  try{ syncStartUi(); }catch(err){}
   const e = chElapsed();
   const isMeal = ch.phase === 'break' && ch.kind === 'yemek';
   const lim = (ch.bl||10)*60;
@@ -1610,27 +1772,28 @@ function saveReview(){
 // ---------- Öneri + haftalık grafik ----------
 function renderSuggest(){
   const el = document.getElementById('todaySuggest');
-  let txt='', sub='';
+  let txt='', sub='', stag='';
   // [ÖZELLİK 2] günlük kotası dolmamış plan en somut iş — ilk sırada
   const behind = deadlines.filter(d=>!d.done && d.plan && daysLeft(d.date)>=0)
     .map(d=>({d, t:planTotals(d.plan)})).filter(x=>x.t.today < x.d.plan.perDay)
     .sort((a,b)=>daysLeft(a.d.date)-daysLeft(b.d.date))[0];
   if(behind){
-    txt = '📋 ' + esc(behind.d.title) + ' · ' + (behind.d.plan.perDay - behind.t.today) + ' soru kaldı';
+    txt = '📋 ' + esc(behind.d.title) + ' · ' + (behind.d.plan.perDay - behind.t.today) + ' soru kaldı'; stag = codeOf(behind.d.title);
     sub = 'Gün ' + behind.t.dayIdx + '/' + behind.d.plan.days + ' · bugünkü hedef ' + behind.d.plan.perDay;
   }
   const exams = deadlines.filter(d=>d.type==='exam'&&!d.done&&daysLeft(d.date)>=0&&daysLeft(d.date)<=14).sort((a,b)=>a.date.localeCompare(b.date));
   if(!txt && exams.length){
     const ex = exams[0], reds = (triage[ex.id]||[]).filter(t=>t.color==='r');
-    if(reds.length){ txt = '🔴 ' + esc(reds[0].topic); sub = esc(ex.title) + ' · kırmızı konu — günün en verimli saatinde bunu çalış'; }
+    if(reds.length){ txt = '🔴 ' + esc(reds[0].topic); sub = esc(ex.title) + ' · kırmızı konu — günün en verimli saatinde bunu çalış'; stag = codeOf(ex.title); }
   }
   const dueRv = reviews.filter(r=>r.due<=isoToday()).length;
-  if(!txt && dueRv){ txt = '↻ ' + dueRv + ' konu tekrar bekliyor'; sub = 'Tekrar sekmesi · defter kapalı, boş kağıda dök'; }
+  if(!txt && dueRv){ txt = '↻ ' + dueRv + ' konu tekrar bekliyor'; sub = 'Tekrar sekmesi · defter kapalı, boş kağıda dök'; const r0 = reviews.find(r=>r.due<=isoToday()); stag = r0 ? (codeOf(r0.course) || r0.course || '') : ''; }
   if(!txt){
     const near = deadlines.filter(d=>!d.done && daysLeft(d.date)>=0).sort((a,b)=>a.date.localeCompare(b.date))[0];
-    if(near){ const n = daysLeft(near.date); txt = '→ ' + esc(near.title); sub = (n===0 ? 'bugün' : n+' gün kaldı'); }
+    if(near){ const n = daysLeft(near.date); txt = '→ ' + esc(near.title); sub = (n===0 ? 'bugün' : n+' gün kaldı'); stag = codeOf(near.title); }
   }
   if(!txt && mistakes.length){ txt = '📓 Hata defterini gözden geçir'; sub = mistakes.length + ' kayıt · en ucuz puan kaynağı'; }
+  { const tmp = document.createElement('div'); tmp.innerHTML = txt; suggestNow = {text: tmp.textContent, tag: stag}; }
   el.innerHTML = txt ? `<div class="card" style="border-color:var(--teal);"><div class="muted" style="font-size:11px; letter-spacing:.08em;">ŞİMDİ NE YAPMALIYIM</div><b style="font-size:15px;">${txt}</b><div class="muted">${sub}</div></div>` : '';
 }
 // [ÖZELLİK 2] Bugün sekmesinde aktif plan ilerlemeleri
@@ -1693,14 +1856,15 @@ function saveSettings(){
     bed,
     pay:      num('stPay',    SET0.pay,      0, 360),
     dkSoru:   num('stSoru',   SET0.dkSoru,   1, 120),
-    dkTekrar: num('stTekrar', SET0.dkTekrar, 1, 60)
+    dkTekrar: num('stTekrar', SET0.dkTekrar, 1, 60),
+    minDay:   num('stMin',    SET0.minDay,   5, 240)
   };
-  sset('settings', settings); renderSettings(); renderWindow();
+  sset('settings', settings); renderSettings(); renderWindow(); renderChain();
 }
 function renderSettings(){
   const set = (id, v) => { const el = document.getElementById(id); if(el && document.activeElement !== el) el.value = v; };
   set('stBed', settings.bed); set('stPay', settings.pay);
-  set('stSoru', settings.dkSoru); set('stTekrar', settings.dkTekrar);
+  set('stSoru', settings.dkSoru); set('stTekrar', settings.dkTekrar); set('stMin', settings.minDay);
   renderTerm();
 }
 function windowToday(){
@@ -2302,7 +2466,7 @@ function applyClaudeAction(){
 }
 
 function exportData(){
-  const keys=['deadlines','schedule','prio','focusLog','reviews','mistakes','triage','chrono','tagLog','urgeLog','breakLog','sleepLog','modeLog','calibLog','tierLog','settings','term','terms','courses','gpaBase'];
+  const keys=['deadlines','schedule','prio','focusLog','reviews','mistakes','triage','chrono','tagLog','urgeLog','breakLog','sleepLog','modeLog','calibLog','tierLog','settings','term','terms','courses','gpaBase','phoneLog'];
   const dump={};
   keys.forEach(k=>dump[k]=sget(k,null));
   try{ for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(k.startsWith('review-')) dump[k]=sget(k,null); } }catch(e){}
@@ -2317,7 +2481,7 @@ function importData(ev){
   r.onload=()=>{ try{
     const dump=JSON.parse(r.result);
     Object.entries(dump).forEach(([k,v])=>{ if(v!==null) sset(k,v); });
-    deadlines=sget('deadlines',[]); schedule=sget('schedule',[]); focusLog=sget('focusLog',{}); tagLog=sget('tagLog',{}); urgeLog=sget('urgeLog',{}); breakLog=sget('breakLog',{}); sleepLog=sget('sleepLog',{}); modeLog=sget('modeLog',{}); calibLog=sget('calibLog',[]); tierLog=sget('tierLog',{}); reviews=sget('reviews',[]); mistakes=sget('mistakes',[]); triage=sget('triage',{}); courses=sget('courses',[]); gpaBase=Object.assign(GB0(),sget('gpaBase',{})||{}); settings=Object.assign({},SET0,sget('settings',{})||{}); renderSettings(); renderCourses();
+    deadlines=sget('deadlines',[]); schedule=sget('schedule',[]); focusLog=sget('focusLog',{}); tagLog=sget('tagLog',{}); urgeLog=sget('urgeLog',{}); breakLog=sget('breakLog',{}); sleepLog=sget('sleepLog',{}); modeLog=sget('modeLog',{}); phoneLog=sget('phoneLog',{}); calibLog=sget('calibLog',[]); tierLog=sget('tierLog',{}); reviews=sget('reviews',[]); mistakes=sget('mistakes',[]); triage=sget('triage',{}); courses=sget('courses',[]); gpaBase=Object.assign(GB0(),sget('gpaBase',{})||{}); settings=Object.assign({},SET0,sget('settings',{})||{}); renderSettings(); renderCourses();
     prio=sget('prio',null)||PRIO0(); if(!Array.isArray(prio.items)||prio.items.length!==3) prio=PRIO0(); prio.items.forEach(x=>{if(typeof x.w!=='string')x.w='';}); prioRoll();
     ch=sget('chrono',null)||CH0(); if(ch.day!==ymd()) ch=CH0(); chLoop(); chRender();
     normalizePlans();
@@ -2334,7 +2498,7 @@ function importData(ev){
 // birbirinin üstüne hangi sürümden geldiğini taşıyor, gerçek bir çatal
 // (fork) varsa otomatik seçmek yerine soruyor ve kaybeden tarafı önce
 // dosyaya yedekliyor.
-const SYNC_KEYS = ['deadlines','schedule','prio','focusLog','reviews','mistakes','triage','chrono','tagLog','urgeLog','breakLog','sleepLog','modeLog','calibLog','tierLog','settings','lastExport','term','terms','courses','gpaBase'];
+const SYNC_KEYS = ['deadlines','schedule','prio','focusLog','reviews','mistakes','triage','chrono','tagLog','urgeLog','breakLog','sleepLog','modeLog','calibLog','tierLog','settings','lastExport','term','terms','courses','gpaBase','phoneLog'];
 let syncPushTimer = null, syncDirty = false;
 
 function syncUrl(){ try{ return localStorage.getItem('syncUrl')||''; }catch(e){ return ''; } }
@@ -2384,7 +2548,7 @@ function collectData(){
 function applyRemote(d){
   Object.entries(d).forEach(([k,v]) => { if(v!==null && v!==undefined) ssetRaw(k, v); });
   deadlines=sget('deadlines',[]); schedule=sget('schedule',[]);
-  focusLog=sget('focusLog',{}); tagLog=sget('tagLog',{}); urgeLog=sget('urgeLog',{}); breakLog=sget('breakLog',{}); sleepLog=sget('sleepLog',{}); modeLog=sget('modeLog',{}); calibLog=sget('calibLog',[]); tierLog=sget('tierLog',{}); reviews=sget('reviews',[]); mistakes=sget('mistakes',[]); triage=sget('triage',{}); courses=sget('courses',[]); gpaBase=Object.assign(GB0(),sget('gpaBase',{})||{}); settings=Object.assign({},SET0,sget('settings',{})||{}); renderSettings(); renderCourses();
+  focusLog=sget('focusLog',{}); tagLog=sget('tagLog',{}); urgeLog=sget('urgeLog',{}); breakLog=sget('breakLog',{}); sleepLog=sget('sleepLog',{}); modeLog=sget('modeLog',{}); phoneLog=sget('phoneLog',{}); calibLog=sget('calibLog',[]); tierLog=sget('tierLog',{}); reviews=sget('reviews',[]); mistakes=sget('mistakes',[]); triage=sget('triage',{}); courses=sget('courses',[]); gpaBase=Object.assign(GB0(),sget('gpaBase',{})||{}); settings=Object.assign({},SET0,sget('settings',{})||{}); renderSettings(); renderCourses();
   prio=sget('prio',null)||PRIO0(); if(!Array.isArray(prio.items)||prio.items.length!==3) prio=PRIO0(); prio.items.forEach(x=>{if(typeof x.w!=='string')x.w='';}); prioRoll();
   ch=sget('chrono',null)||CH0(); if(ch.day!==ymd()) ch=CH0(); ch.u=ch.u||0; ch.su=ch.su||0; ch.bl=ch.bl||10; if(typeof ch.lam!=='number') ch.lam=-1; if(typeof ch.tag!=='string') ch.tag=''; if(typeof ch.auto!=='boolean') ch.auto=true; ch.ls=ch.ls||0; if(ch.mode!=='aktif'&&ch.mode!=='pasif') ch.mode='aktif';
   normalizePlans();
@@ -2518,7 +2682,7 @@ if('serviceWorker' in navigator && location.protocol === 'https:'){
 normalizePlans();
 prioRoll(); renderPrio(); renderSettings(); renderCourses();
 renderDeadlines(); renderSchedule(); renderReviews(); renderMistakes(); renderTierBox(); renderToday(); renderReview(); chRender(); chLoop(); checkBackup();
-setInterval(renderWindow, 60000);   // pencere saat ilerledikçe küçülür
+setInterval(() => { renderWindow(); syncStartUi(); }, 60000);   // pencere saat ilerledikçe küçülür; zincir kartı saate göre sertleşir
 // index.html#review gibi bir bağlantıyla gelinirse o sekme açılır (Analiz panelinden dönüş)
 try{ const h = (location.hash||'').slice(1); if(h){ const b = document.querySelector('#tabs button[data-tab="'+CSS.escape(h)+'"]'); if(b){ activateTab(b); history.replaceState(null, '', location.pathname + location.search); setTimeout(()=>window.scrollTo(0,0), 0); } } }catch(e){}
 renderDeviceInfo();
