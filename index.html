@@ -175,6 +175,7 @@ footer{margin-top:34px; display:flex; gap:10px; flex-wrap:wrap; align-items:cent
 <nav id="tabs" role="tablist" aria-label="Panel bölümleri">
   <button data-tab="today" id="tab-today" role="tab" aria-controls="today" aria-selected="true" tabindex="0" class="active">Bugün</button>
   <button data-tab="deadlines" id="tab-deadlines" role="tab" aria-controls="deadlines" aria-selected="false" tabindex="-1">Deadlineler</button>
+  <button data-tab="dersler" id="tab-dersler" role="tab" aria-controls="dersler" aria-selected="false" tabindex="-1">Dersler</button>
   <button data-tab="tekrar" id="tab-tekrar" role="tab" aria-controls="tekrar" aria-selected="false" tabindex="-1">Tekrar</button>
   <button data-tab="hatadefteri" id="tab-hatadefteri" role="tab" aria-controls="hatadefteri" aria-selected="false" tabindex="-1">Hata Defteri</button>
   <button data-tab="kronometre" id="tab-kronometre" role="tab" aria-controls="kronometre" aria-selected="false" tabindex="-1">Kronometre</button>
@@ -238,6 +239,30 @@ footer{margin-top:34px; display:flex; gap:10px; flex-wrap:wrap; align-items:cent
     </div>
   </div>
   <div id="dlList"></div>
+</section>
+<!-- DERSLER (ders kaydı + GPA simülatörü) -->
+<section id="dersler" role="tabpanel" aria-labelledby="tab-dersler" tabindex="0">
+  <div class="card" id="gpaCard"></div>
+  <div id="crsList"></div>
+  <details class="card" style="display:block;">
+    <summary style="cursor:pointer;"><b>Ders ekle / GPA tabanı</b></summary>
+    <div class="row" style="margin-top:10px;">
+      <input type="text" id="crsCode" placeholder="Kod (örn. MATH 219)" style="width:130px;" aria-label="Ders kodu">
+      <input type="text" id="crsName" placeholder="Ad" style="flex:1; min-width:140px;" aria-label="Ders adı">
+      <input type="number" id="crsCredit" placeholder="Kredi" min="0" max="10" style="width:72px;" aria-label="Kredi">
+      <select id="crsRetake" aria-label="Tekrar alınıyorsa eski not">
+        <option value="">Yeni ders</option><option>AA</option><option>BA</option><option>BB</option><option>CB</option><option>CC</option><option>DC</option><option>DD</option><option>FD</option><option>FF</option>
+      </select>
+      <button class="btn" onclick="addCourseUI()">Ekle</button>
+    </div>
+    <div class="muted" style="margin-top:6px; font-size:12px;">Tekrar alınan derste eski notu seç. Yeni not eskisinin yerine geçer, toplam kredi değişmez.</div>
+    <div class="row" style="margin-top:12px;">
+      <span class="muted" style="font-size:12px;">Dönem öncesi kredi</span><input type="number" id="gbCredits" step="1" style="width:72px;" onchange="saveGpaBase()" aria-label="Dönem öncesi toplam kredi">
+      <span class="muted" style="font-size:12px;">puan</span><input type="number" id="gbPoints" step="0.5" style="width:84px;" onchange="saveGpaBase()" aria-label="Dönem öncesi toplam puan">
+      <span class="muted" style="font-size:12px;">hedef</span><input type="number" id="gbTarget" step="0.01" style="width:70px;" onchange="saveGpaBase()" aria-label="Hedef GPA">
+      <span class="muted" style="font-size:12px;">sonraki dönem(ler) kredisi</span><input type="number" id="gbFuture" step="1" style="width:64px;" onchange="saveGpaBase()" aria-label="Hedef tarihine kadar kalan diğer dönemlerin kredisi">
+    </div>
+  </details>
 </section>
 
 <!-- TEKRAR (aralıklı tekrar) -->
@@ -1829,6 +1854,18 @@ function buildClaudeSummary(){
   { const tm = sget('term', {}); if(tm.label) lines.push('DÖNEM: '+tm.label+(tm.start?' (başlangıç '+tm.start+')':'')); }
   lines.push('');
 
+  // Dersler + GPA projeksiyonu
+  if(courses.length){
+    const pr = gpaProjection();
+    lines.push('DERSLER (GPA: şu an '+fmt2(gpaBase.credits?gpaBase.points/gpaBase.credits:0)+' · dönem sonu beklenen '+fmt2(pr.cum)+' · hedef '+fmt2(gpaBase.target)+' · yeni derslerde gereken ort. '+fmt2(pr.needNow)+'):');
+    courses.forEach(c=>{
+      const st = courseStats(c);
+      const comps = (c.comps||[]).map(x=>x.n+' %'+x.w+(x.s!==null&&x.s!==undefined?'='+x.s:'')+(x.date?' ('+x.date+')':'')).join(', ');
+      lines.push('  - '+c.code+' '+c.credit+'kr'+(c.retake?' [tekrar, eski '+c.retake+']':'')+' · hedef '+(c.target||'—')+' · beklenen '+(c.expect||'—')+' · ort '+(st.avg===null?'—':st.avg.toFixed(1))+' (%'+st.done+' girildi) · bu hafta '+(weekMinutesFor(c.code)/60).toFixed(1)+'s'+(comps?' · '+comps:''));
+    });
+    lines.push('');
+  }
+
   // Bugünkü 3 öncelik
   lines.push('BUGÜNKÜ 3 ÖNCELİK ('+(prio.date||'?')+'):');
   if(Array.isArray(prio.items) && prio.items.some(x=>x.t)){
@@ -1958,7 +1995,8 @@ function newTerm(){
     label: cur.label || 'Önceki dönem', start: cur.start || null, end: today,
     schedule: schedule.filter(s=>!keepSched.includes(s)).map(s=>({day:s.day, start:s.start, end:s.end, title:s.title, loc:s.loc||''})),
     deadlines: dropDl.map(d=>({title:d.title, date:d.date, type:d.type, done:!!d.done})),
-    summary: termSummary(cur.start || null, today, schedule, dropDl)
+    summary: termSummary(cur.start || null, today, schedule, dropDl),
+    courses: courses.map(c=>({code:c.code, credit:c.credit, retake:c.retake||'', expect:c.expect||'', comps:(c.comps||[]).map(x=>({n:x.n,w:x.w,s:x.s}))}))
   });
   sset('terms', terms);
 
@@ -1968,9 +2006,10 @@ function newTerm(){
   Object.keys(triage).forEach(id=>{ if(dropIds.has(String(id))) delete triage[id]; });
   sset('triage', triage);
   sset('term', {label, start: today});
+  courses = []; sset('courses', courses);   // GPA tabanını transkriptten elle güncelle (Dersler → GPA tabanı)
 
   inp.value = '';
-  renderDeadlines(); renderSchedule(); renderToday(); renderTerm(); tickClock();
+  renderDeadlines(); renderSchedule(); renderToday(); renderTerm(); renderCourses(); tickClock();
   alert('"'+label+'" başladı. Şimdi ders programını gir.');
 }
 function renderTerm(){
@@ -1990,6 +2029,148 @@ function renderTerm(){
         ${top?'<br>En çok çalışılan: '+top:''}
       </div></details>`;
   }).join('');
+}
+
+// ---------- Dersler + GPA simülatörü ----------
+// Her ders: {id, code, name, credit, retake (eski harf | ''), expect (beklenen harf | ''), target, note,
+//            comps:[{n, w, date, s}]}  — s: alınan puan (0-100) ya da null.
+// GPA tabanı dönem başındaki kümülatif durum; tekrar alınan ders krediyi değiştirmez, sadece puan farkı ekler.
+const LETTER = {AA:4, BA:3.5, BB:3, CB:2.5, CC:2, DC:1.5, DD:1, FD:0.5, FF:0};
+const GB0 = () => ({credits:40, points:106.5, target:2.8, future:17});
+let courses = sget('courses', []);
+let gpaBase = Object.assign(GB0(), sget('gpaBase', {}) || {});
+const normCode = c => String(c||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+function findCourse(code){ const n = normCode(code); return n ? courses.find(c => normCode(c.code) === n) || null : null; }
+function saveCourses(){ sset('courses', courses); renderCourses(); }
+
+function courseStats(c){
+  let W = 0, WS = 0, T = 0;
+  (c.comps||[]).forEach(x => { const w = +x.w||0; T += w; if(x.s !== null && x.s !== '' && !isNaN(+x.s)){ W += w; WS += w*(+x.s); } });
+  return {done:W, total:T, avg: W ? WS/W : null};
+}
+function courseLetter(c){ return c.expect || c.target || ''; }
+function gpaProjection(){
+  let newCr = 0, newPts = 0, retDelta = 0, termCr = 0, termPts = 0, missing = [];
+  courses.forEach(c => {
+    const cr = +c.credit||0; if(!cr) return;
+    const L = courseLetter(c); if(!(L in LETTER)){ missing.push(c.code); return; }
+    const p = LETTER[L];
+    termCr += cr; termPts += cr*p;
+    if(c.retake && (c.retake in LETTER)) retDelta += cr*(p - LETTER[c.retake]);
+    else { newCr += cr; newPts += cr*p; }
+  });
+  const B = gpaBase, endCr = B.credits + newCr, endPts = B.points + retDelta + newPts;
+  const cum = endCr ? endPts/endCr : null;
+  // Bu dönem sonu hedef: yeni derslerde gereken ortalama (tekrar dersleri beklenen harfiyle sabit)
+  const needNow = newCr ? (B.target*endCr - (B.points + retDelta))/newCr : null;
+  // Hedef tarihine kadar: bu dönem projeksiyonu tutarsa sonraki dönem(ler)de gereken ortalama
+  const futCr = +B.future||0;
+  const needLater = futCr ? (B.target*(endCr+futCr) - endPts)/futCr : null;
+  return {termGpa: termCr ? termPts/termCr : null, cum, needNow, needLater, newCr, missing};
+}
+function weekMinutesFor(code){
+  // Kronometre etiketleri serbest metin: "MATH219", "math 219", "219" hepsi aynı derse sayılır.
+  const n = normCode(code), letters = n.replace(/[0-9]/g,''), digits = n.replace(/[^0-9]/g,'');
+  const match = tag => { const tn = normCode(tag), tl = tn.replace(/[0-9]/g,''), td = tn.replace(/[^0-9]/g,'');
+    if(tn === n) return true;
+    if(td) return td === digits && (!tl || letters.startsWith(tl));
+    return !!tl && tl === letters && courses.filter(c=>normCode(c.code).replace(/[0-9]/g,'')===letters).length === 1; };
+  let m = 0;
+  for(let i=0;i<7;i++){ const d=new Date(); d.setDate(d.getDate()-i); const t = tagLog[ymd(d)]||{};
+    Object.entries(t).forEach(([tag,mn]) => { if(match(tag)) m += (+mn||0); }); }
+  return m;
+}
+const fmt2 = v => v===null || !isFinite(v) ? '—' : v.toFixed(2);
+function renderCourses(){
+  const card = document.getElementById('gpaCard'), list = document.getElementById('crsList');
+  if(!card || !list) return;
+  const pr = gpaProjection(), B = gpaBase, base = B.credits ? B.points/B.credits : 0;
+  const needCls = v => v===null ? '' : (v > 3.2 ? 'color:var(--danger)' : (v > 2.6 ? 'color:var(--accent)' : 'color:var(--teal)'));
+  card.innerHTML = courses.length ? `
+    <div class="row" style="justify-content:space-between; align-items:flex-start;">
+      <div><div class="muted" style="font-size:12px;">Şu an</div><div style="font-size:22px; font-weight:600;">${fmt2(base)}</div></div>
+      <div><div class="muted" style="font-size:12px;">Dönem (beklenen)</div><div style="font-size:22px; font-weight:600;">${fmt2(pr.termGpa)}</div></div>
+      <div><div class="muted" style="font-size:12px;">Kümülatif → dönem sonu</div><div style="font-size:22px; font-weight:600; ${pr.cum!==null && pr.cum>=B.target?'color:var(--teal)':''}">${fmt2(pr.cum)}</div></div>
+      <div><div class="muted" style="font-size:12px;">Hedef</div><div style="font-size:22px; font-weight:600;">${fmt2(B.target)}</div></div>
+    </div>
+    <div class="muted" style="margin-top:10px; line-height:1.7;">
+      Bu dönem sonu ${fmt2(B.target)} için yeni derslerde gereken ortalama: <b style="${needCls(pr.needNow)}">${fmt2(pr.needNow)}</b> (${pr.newCr} kredi)<br>
+      Bu projeksiyon tutarsa sonraki ${B.future} kredide gereken: <b style="${needCls(pr.needLater)}">${fmt2(pr.needLater)}</b>
+      ${pr.missing.length ? '<br><span style="color:var(--danger)">Harf seçilmemiş: '+pr.missing.map(esc).join(', ')+'</span>' : ''}
+    </div>` : '<div class="muted">Henüz ders yok. Claude\'dan <code>add_course</code> JSON\'unu Kurulum → "Claude\'dan yapıştır" kutusuna yapıştır ya da aşağıdan elle ekle.</div>';
+  const opts = sel => ['<option value="">hedef</option>'].concat(Object.keys(LETTER).map(L=>`<option${L===sel?' selected':''}>${L}</option>`)).join('');
+  list.innerHTML = courses.map(c => {
+    const st = courseStats(c), wk = weekMinutesFor(c.code);
+    const comps = (c.comps||[]).map((x,i) => {
+      const dl = x.date ? daysLeft(x.date) : null;
+      return `<div class="row" style="gap:8px; margin-top:6px;">
+        <span style="min-width:74px;">${esc(x.n)}</span><span class="muted" style="width:40px;">%${esc(x.w)}</span>
+        <span class="muted" style="width:120px; font-size:12px;">${x.date ? esc(x.date)+(dl!==null && dl>=0 ? ' · D-'+dl : '') : 'tarih yok'}</span>
+        <input type="number" min="0" max="100" step="0.5" value="${x.s===null||x.s===undefined?'':esc(x.s)}" placeholder="puan" style="width:76px;" aria-label="${esc(c.code)} ${esc(x.n)} puanı" onchange="setCompScore(${c.id},${i},this.value)">
+      </div>`; }).join('');
+    return `<div class="card">
+      <div class="row" style="justify-content:space-between;">
+        <div><b>${esc(c.code)}</b> <span class="muted">${esc(c.name||'')} · ${esc(c.credit)} kr${c.retake ? ' · tekrar (eski '+esc(c.retake)+')' : ''}</span></div>
+        <div class="row" style="gap:6px;">
+          <span class="muted" style="font-size:12px;">beklenen</span>
+          <select aria-label="${esc(c.code)} beklenen harf" onchange="setCourseExpect(${c.id},this.value)">${opts(c.expect)}</select>
+          <button class="btn ghost" style="padding:6px 10px;" onclick="delCourse(${c.id})" aria-label="${esc(c.code)} sil">✕</button>
+        </div>
+      </div>
+      <div class="muted" style="margin-top:6px; font-size:12px;">Hedef ${esc(c.target||'—')} · girilen ağırlık %${st.done}/${st.total} · ortalama ${st.avg===null?'—':st.avg.toFixed(1)} · bu hafta ${(wk/60).toFixed(1)} s</div>
+      ${comps || '<div class="muted" style="margin-top:6px; font-size:12px;">Not bileşeni yok — syllabus gelince ekle.</div>'}
+      ${c.note ? '<div class="muted" style="margin-top:8px; font-size:12px;">⚠ '+esc(c.note)+'</div>' : ''}
+    </div>`;
+  }).join('');
+  const g = id => document.getElementById(id);
+  if(g('gbCredits')){ g('gbCredits').value = B.credits; g('gbPoints').value = B.points; g('gbTarget').value = B.target; g('gbFuture').value = B.future; }
+}
+function setCompScore(id, i, v){
+  const c = courses.find(x=>x.id===id); if(!c || !c.comps[i]) return;
+  c.comps[i].s = (v===''||isNaN(+v)) ? null : Math.max(0, Math.min(100, +v)); saveCourses();
+}
+function setCourseExpect(id, v){ const c = courses.find(x=>x.id===id); if(!c) return; c.expect = (v in LETTER) ? v : ''; saveCourses(); }
+function delCourse(id){ const c = courses.find(x=>x.id===id); if(!c || !confirm(c.code+' silinsin mi? (deadlineleri kalır)')) return; courses = courses.filter(x=>x.id!==id); saveCourses(); }
+function saveGpaBase(){
+  const n = (id, d) => { const v = parseFloat(document.getElementById(id).value); return isNaN(v) ? d : v; };
+  gpaBase = {credits:n('gbCredits',gpaBase.credits), points:n('gbPoints',gpaBase.points), target:n('gbTarget',gpaBase.target), future:n('gbFuture',gpaBase.future)};
+  sset('gpaBase', gpaBase); renderCourses();
+}
+function addCourseUI(){
+  const code = document.getElementById('crsCode').value.trim(); if(!code){ alert('Ders kodu gir.'); return; }
+  try{ upsertCourse({code, name:document.getElementById('crsName').value.trim(), credit:+document.getElementById('crsCredit').value||0, retake:document.getElementById('crsRetake').value}); }
+  catch(e){ alert(e.message); return; }
+  ['crsCode','crsName','crsCredit'].forEach(id=>document.getElementById(id).value=''); document.getElementById('crsRetake').value='';
+  saveCourses();
+}
+// Var olan dersi günceller (kod eşleşmesi), yoksa ekler. Tarihli bileşenler deadline olarak da eklenir (başlık: "KOD BİLEŞEN").
+function upsertCourse(o){
+  const code = String(o.code||'').trim(); if(!code) throw new Error('code eksik');
+  let c = findCourse(code);
+  if(!c){ c = {id:Date.now()+Math.floor(Math.random()*1000), code, name:'', credit:0, retake:'', expect:'', target:'', note:'', comps:[]}; courses.push(c); }
+  if(o.name !== undefined) c.name = String(o.name).trim();
+  if(o.credit !== undefined && !isNaN(+o.credit)) c.credit = +o.credit;
+  if(o.retake !== undefined) c.retake = (o.retake in LETTER) ? o.retake : '';
+  if(o.target !== undefined) c.target = (o.target in LETTER) ? o.target : '';
+  if(o.expect !== undefined) c.expect = (o.expect in LETTER) ? o.expect : '';
+  if(o.note !== undefined) c.note = String(o.note).trim();
+  let addedDl = 0;
+  if(Array.isArray(o.comps)){
+    o.comps.forEach(x => {
+      const n = String(x.n||x.name||'').trim(); if(!n) return;
+      const date = /^\d{4}-\d{2}-\d{2}$/.test(x.date||'') ? x.date : '';
+      let k = c.comps.find(y => y.n.toLowerCase() === n.toLowerCase());
+      if(!k){ k = {n, w:0, date:'', s:null}; c.comps.push(k); }
+      if(x.w !== undefined && !isNaN(+x.w)) k.w = +x.w;
+      if(date) k.date = date;
+      if(k.date){
+        const title = code+' '+n, type = /lab/i.test(n) ? 'lab' : 'exam';
+        if(!findDeadlineByTitle(title)){ deadlines.push({id:Date.now()+Math.floor(Math.random()*100000), title, date:k.date, type, done:false}); addedDl++; }
+      }
+    });
+    if(addedDl) sset('deadlines', deadlines);
+  }
+  return addedDl;
 }
 
 // ---------- Claude'dan yapıştır ----------
@@ -2049,12 +2230,32 @@ function applyClaudeAction(){
           sset('reviews', reviews); applied++;
           break;
         }
+        case 'add_course': {
+          upsertCourse(c); applied++;
+          break;
+        }
+        case 'set_grade': {
+          const crs = findCourse(c.course);
+          if(!crs) throw new Error('ders bulunamadı: '+(c.course||'?')+' — önce add_course');
+          const comp = (crs.comps||[]).find(x => x.n.toLowerCase() === String(c.comp||'').trim().toLowerCase());
+          if(!comp) throw new Error(crs.code+' içinde bileşen yok: '+(c.comp||'?'));
+          if(c.score === undefined || isNaN(+c.score)) throw new Error('score eksik/sayı değil');
+          comp.s = Math.max(0, Math.min(100, +c.score)); applied++;
+          break;
+        }
+        case 'set_expect': {
+          const crs = findCourse(c.course);
+          if(!crs) throw new Error('ders bulunamadı: '+(c.course||'?'));
+          if(!(c.letter in LETTER)) throw new Error('geçersiz harf: '+(c.letter||'?'));
+          crs.expect = c.letter; applied++;
+          break;
+        }
         default:
           throw new Error('bilinmeyen action: '+c.action);
       }
     }catch(err){ errors.push(err.message); }
   });
-  if(applied) { renderDeadlines(); renderReviews(); renderMistakes(); renderToday(); }
+  if(applied) { sset('courses', courses); renderDeadlines(); renderReviews(); renderMistakes(); renderToday(); renderCourses(); }
   if(applied && !errors.length){
     document.getElementById('claudeApplyInp').value = '';
     claudeApplyStatus(applied+' eylem uygulandı ✓', true);
@@ -2066,7 +2267,7 @@ function applyClaudeAction(){
 }
 
 function exportData(){
-  const keys=['deadlines','schedule','prio','focusLog','reviews','mistakes','triage','chrono','tagLog','urgeLog','breakLog','sleepLog','modeLog','calibLog','tierLog','settings','term','terms'];
+  const keys=['deadlines','schedule','prio','focusLog','reviews','mistakes','triage','chrono','tagLog','urgeLog','breakLog','sleepLog','modeLog','calibLog','tierLog','settings','term','terms','courses','gpaBase'];
   const dump={};
   keys.forEach(k=>dump[k]=sget(k,null));
   try{ for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(k.startsWith('review-')) dump[k]=sget(k,null); } }catch(e){}
@@ -2081,7 +2282,7 @@ function importData(ev){
   r.onload=()=>{ try{
     const dump=JSON.parse(r.result);
     Object.entries(dump).forEach(([k,v])=>{ if(v!==null) sset(k,v); });
-    deadlines=sget('deadlines',[]); schedule=sget('schedule',[]); focusLog=sget('focusLog',{}); tagLog=sget('tagLog',{}); urgeLog=sget('urgeLog',{}); breakLog=sget('breakLog',{}); sleepLog=sget('sleepLog',{}); modeLog=sget('modeLog',{}); calibLog=sget('calibLog',[]); tierLog=sget('tierLog',{}); reviews=sget('reviews',[]); mistakes=sget('mistakes',[]); triage=sget('triage',{}); settings=Object.assign({},SET0,sget('settings',{})||{}); renderSettings();
+    deadlines=sget('deadlines',[]); schedule=sget('schedule',[]); focusLog=sget('focusLog',{}); tagLog=sget('tagLog',{}); urgeLog=sget('urgeLog',{}); breakLog=sget('breakLog',{}); sleepLog=sget('sleepLog',{}); modeLog=sget('modeLog',{}); calibLog=sget('calibLog',[]); tierLog=sget('tierLog',{}); reviews=sget('reviews',[]); mistakes=sget('mistakes',[]); triage=sget('triage',{}); courses=sget('courses',[]); gpaBase=Object.assign(GB0(),sget('gpaBase',{})||{}); settings=Object.assign({},SET0,sget('settings',{})||{}); renderSettings(); renderCourses();
     prio=sget('prio',null)||PRIO0(); if(!Array.isArray(prio.items)||prio.items.length!==3) prio=PRIO0(); prio.items.forEach(x=>{if(typeof x.w!=='string')x.w='';}); prioRoll();
     ch=sget('chrono',null)||CH0(); if(ch.day!==ymd()) ch=CH0(); chLoop(); chRender();
     normalizePlans();
@@ -2098,7 +2299,7 @@ function importData(ev){
 // birbirinin üstüne hangi sürümden geldiğini taşıyor, gerçek bir çatal
 // (fork) varsa otomatik seçmek yerine soruyor ve kaybeden tarafı önce
 // dosyaya yedekliyor.
-const SYNC_KEYS = ['deadlines','schedule','prio','focusLog','reviews','mistakes','triage','chrono','tagLog','urgeLog','breakLog','sleepLog','modeLog','calibLog','tierLog','settings','lastExport','term','terms'];
+const SYNC_KEYS = ['deadlines','schedule','prio','focusLog','reviews','mistakes','triage','chrono','tagLog','urgeLog','breakLog','sleepLog','modeLog','calibLog','tierLog','settings','lastExport','term','terms','courses','gpaBase'];
 let syncPushTimer = null, syncDirty = false;
 
 function syncUrl(){ try{ return localStorage.getItem('syncUrl')||''; }catch(e){ return ''; } }
@@ -2148,7 +2349,7 @@ function collectData(){
 function applyRemote(d){
   Object.entries(d).forEach(([k,v]) => { if(v!==null && v!==undefined) ssetRaw(k, v); });
   deadlines=sget('deadlines',[]); schedule=sget('schedule',[]);
-  focusLog=sget('focusLog',{}); tagLog=sget('tagLog',{}); urgeLog=sget('urgeLog',{}); breakLog=sget('breakLog',{}); sleepLog=sget('sleepLog',{}); modeLog=sget('modeLog',{}); calibLog=sget('calibLog',[]); tierLog=sget('tierLog',{}); reviews=sget('reviews',[]); mistakes=sget('mistakes',[]); triage=sget('triage',{}); settings=Object.assign({},SET0,sget('settings',{})||{}); renderSettings();
+  focusLog=sget('focusLog',{}); tagLog=sget('tagLog',{}); urgeLog=sget('urgeLog',{}); breakLog=sget('breakLog',{}); sleepLog=sget('sleepLog',{}); modeLog=sget('modeLog',{}); calibLog=sget('calibLog',[]); tierLog=sget('tierLog',{}); reviews=sget('reviews',[]); mistakes=sget('mistakes',[]); triage=sget('triage',{}); courses=sget('courses',[]); gpaBase=Object.assign(GB0(),sget('gpaBase',{})||{}); settings=Object.assign({},SET0,sget('settings',{})||{}); renderSettings(); renderCourses();
   prio=sget('prio',null)||PRIO0(); if(!Array.isArray(prio.items)||prio.items.length!==3) prio=PRIO0(); prio.items.forEach(x=>{if(typeof x.w!=='string')x.w='';}); prioRoll();
   ch=sget('chrono',null)||CH0(); if(ch.day!==ymd()) ch=CH0(); ch.u=ch.u||0; ch.su=ch.su||0; ch.bl=ch.bl||10; if(typeof ch.lam!=='number') ch.lam=-1; if(typeof ch.tag!=='string') ch.tag=''; if(typeof ch.auto!=='boolean') ch.auto=true; ch.ls=ch.ls||0; if(ch.mode!=='aktif'&&ch.mode!=='pasif') ch.mode='aktif';
   normalizePlans();
@@ -2280,7 +2481,7 @@ if('serviceWorker' in navigator && location.protocol === 'https:'){
 
 // ---------- Init ----------
 normalizePlans();
-prioRoll(); renderPrio(); renderSettings();
+prioRoll(); renderPrio(); renderSettings(); renderCourses();
 renderDeadlines(); renderSchedule(); renderReviews(); renderMistakes(); renderTierBox(); renderToday(); renderReview(); chRender(); chLoop(); checkBackup();
 setInterval(renderWindow, 60000);   // pencere saat ilerledikçe küçülür
 renderDeviceInfo();
