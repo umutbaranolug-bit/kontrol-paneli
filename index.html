@@ -150,11 +150,33 @@ button.btn:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
 textarea{width:100%; min-height:90px; resize:vertical;}
 
 footer{margin-top:34px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
+/* Sekme rozetleri: bekleyen tekrar / 3 gün içindeki deadline sayısı — sekmeyi açmadan görünür */
+.tab-badge{display:inline-block; min-width:17px; height:17px; line-height:17px; padding:0 5px; margin-left:6px; border-radius:9px; background:var(--danger); color:oklch(97% 0.01 25); font-family:'JetBrains Mono',monospace; font-size:10.5px; font-weight:700; text-align:center; vertical-align:1px;}
+nav button.active .tab-badge{background:var(--accent-ink); color:var(--accent);}
+.tab-badge:empty{display:none;}
+/* Analiz paneli bağlantısı */
+.analiz-link{display:flex; align-items:center; gap:10px; text-decoration:none; color:var(--text);}
+.analiz-link:hover{border-color:var(--teal);}
+.analiz-link b{color:var(--teal);}
 @media (prefers-reduced-motion:reduce){ *{transition:none!important; animation:none!important;} }
+@media (max-width:600px){
+  /* Telefonda sekme şeridi tek satır, yatay kaydırmalı ve üstte sabit: 2 satırlık şerit ekranın %15'ini yiyordu
+     ve aşağı kaydırınca sekme değiştirmek için en tepeye dönmek gerekiyordu. */
+  nav{position:sticky; top:0; z-index:20; flex-wrap:nowrap; overflow-x:auto; scrollbar-width:none; -webkit-overflow-scrolling:touch; scroll-snap-type:x proximity;
+      background:oklch(26% 0.018 264 / .92); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); margin-left:-4px; margin-right:-4px;}
+  nav::-webkit-scrollbar{display:none;}
+  nav button{scroll-snap-align:center; flex:none;}
+  nav{-webkit-mask-image:linear-gradient(90deg, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%); mask-image:linear-gradient(90deg, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%);}
+  /* Bugün dışındaki sekmelerde gün çubuğu sıkışık: kronometre/hata defteri ekranın altına itilmesin */
+  body:not(.tab-today) .gauge{padding:10px 14px 8px; margin-bottom:14px;}
+  body:not(.tab-today) .gauge-hint, body:not(.tab-today) .gauge-ticks{display:none;}
+  body:not(.tab-today) .gauge-track{height:14px;}
+  body:not(.tab-today) .gauge-label{margin-bottom:5px;}
+}
 @media (max-width:600px){ #chClock{font-size:50px;} h1{font-size:18px;} #clock{font-size:18px;} nav button{padding:8px 12px; font-size:13px;} }
 </style>
 </head>
-<body>
+<body class="tab-today">
 <div class="wrap">
 
 <header>
@@ -174,9 +196,9 @@ footer{margin-top:34px; display:flex; gap:10px; flex-wrap:wrap; align-items:cent
 
 <nav id="tabs" role="tablist" aria-label="Panel bölümleri">
   <button data-tab="today" id="tab-today" role="tab" aria-controls="today" aria-selected="true" tabindex="0" class="active">Bugün</button>
-  <button data-tab="deadlines" id="tab-deadlines" role="tab" aria-controls="deadlines" aria-selected="false" tabindex="-1">Deadlineler</button>
+  <button data-tab="deadlines" id="tab-deadlines" role="tab" aria-controls="deadlines" aria-selected="false" tabindex="-1">Deadlineler<span class="tab-badge" id="bdgDl"></span></button>
   <button data-tab="dersler" id="tab-dersler" role="tab" aria-controls="dersler" aria-selected="false" tabindex="-1">Dersler</button>
-  <button data-tab="tekrar" id="tab-tekrar" role="tab" aria-controls="tekrar" aria-selected="false" tabindex="-1">Tekrar</button>
+  <button data-tab="tekrar" id="tab-tekrar" role="tab" aria-controls="tekrar" aria-selected="false" tabindex="-1">Tekrar<span class="tab-badge" id="bdgRv"></span></button>
   <button data-tab="hatadefteri" id="tab-hatadefteri" role="tab" aria-controls="hatadefteri" aria-selected="false" tabindex="-1">Hata Defteri</button>
   <button data-tab="kronometre" id="tab-kronometre" role="tab" aria-controls="kronometre" aria-selected="false" tabindex="-1">Kronometre</button>
   <button data-tab="review" id="tab-review" role="tab" aria-controls="review" aria-selected="false" tabindex="-1">Review</button>
@@ -388,6 +410,7 @@ footer{margin-top:34px; display:flex; gap:10px; flex-wrap:wrap; align-items:cent
 
 <!-- REVIEW -->
 <section id="review" role="tabpanel" aria-labelledby="tab-review" tabindex="0">
+  <a class="card analiz-link" href="analiz.html"><span style="font-size:20px;">📊</span><span style="flex:1;"><b>Analiz paneli</b><div class="muted" style="font-size:12px;">12 haftalık trend, ders başına zaman vs kredi, dürtü saatleri, uyku → odak. Review'a başlamadan bak.</div></span><span class="muted">→</span></a>
   <div class="card">
     <div class="muted" id="reviewWeekLabel"></div>
     <div id="reviewPatterns"></div>
@@ -454,6 +477,9 @@ footer{margin-top:34px; display:flex; gap:10px; flex-wrap:wrap; align-items:cent
     <div class="muted" style="margin-top:6px; font-size:12px;">Önce tam yedek indirir, sonra biten dönemi arşivler: ders programı, geçmiş/tamamlanmış deadlineler ve triyajları temizlenir. <b>Kalır:</b> hata defteri, tekrar kartları, kalibrasyon, odak/uyku geçmişi, henüz gelmemiş deadlineler ve süren yoğun dönem blokları — eski dönemin hataları yeni derslerin temeli.</div>
     <div id="termList" style="margin-top:8px;"></div>
   </div>
+
+  <h2>Analiz</h2>
+  <a class="card analiz-link" href="analiz.html"><span style="font-size:20px;">📊</span><span style="flex:1;"><b>Analiz panelini aç</b><div class="muted" style="font-size:12px;">Salt okunur — bu cihazdaki veriyi okur, hiçbir şeyi değiştirmez.</div></span><span class="muted">→</span></a>
 
   <h2>Claude özeti</h2>
   <div class="card">
@@ -637,6 +663,8 @@ function activateTab(btn, moveFocus){
   });
   document.querySelectorAll('section[role="tabpanel"]').forEach(x=>x.classList.remove('active'));
   document.getElementById(btn.dataset.tab).classList.add('active');
+  document.body.className = document.body.className.replace(/\btab-\S+/g,'').trim() + ' tab-' + btn.dataset.tab;
+  try{ btn.scrollIntoView({block:'nearest', inline:'center', behavior:'smooth'}); }catch(e){}
   if(moveFocus) btn.focus();
 }
 document.getElementById('tabs').addEventListener('click', e=>{
@@ -1119,7 +1147,14 @@ function renderMorning(){
 }
 
 // ---------- Today ----------
+function updateTabBadges(){
+  const set = (id, n, lbl) => { const el = document.getElementById(id); if(!el) return;
+    el.textContent = n > 0 ? String(n) : ''; if(n > 0) el.setAttribute('aria-label', n+' '+lbl); else el.removeAttribute('aria-label'); };
+  set('bdgRv', (reviews||[]).filter(r=>r.due<=isoToday()).length, 'tekrar bekliyor');
+  set('bdgDl', (deadlines||[]).filter(d=>!d.done && daysLeft(d.date)>=0 && daysLeft(d.date)<=3).length, 'deadline 3 gün içinde');
+}
 function renderToday(){
+  try{ updateTabBadges(); }catch(e){}
   const now = new Date(); const day = now.getDay();
   const exams = deadlines.filter(d=>d.type==='exam'&&!d.done&&daysLeft(d.date)>=0&&daysLeft(d.date)<=14).sort((a,b)=>a.date.localeCompare(b.date));
   if(exams.length){
@@ -2484,6 +2519,8 @@ normalizePlans();
 prioRoll(); renderPrio(); renderSettings(); renderCourses();
 renderDeadlines(); renderSchedule(); renderReviews(); renderMistakes(); renderTierBox(); renderToday(); renderReview(); chRender(); chLoop(); checkBackup();
 setInterval(renderWindow, 60000);   // pencere saat ilerledikçe küçülür
+// index.html#review gibi bir bağlantıyla gelinirse o sekme açılır (Analiz panelinden dönüş)
+try{ const h = (location.hash||'').slice(1); if(h){ const b = document.querySelector('#tabs button[data-tab="'+CSS.escape(h)+'"]'); if(b){ activateTab(b); history.replaceState(null, '', location.pathname + location.search); setTimeout(()=>window.scrollTo(0,0), 0); } } }catch(e){}
 renderDeviceInfo();
 try{ const su = localStorage.getItem('syncUrl'); if(su){ document.getElementById('syncUrlInp').value = su; pullSync(true); } }catch(e){}
 </script>
