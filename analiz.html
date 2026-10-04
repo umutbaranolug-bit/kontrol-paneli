@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Analiz — Kontrol Paneli</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0F141B">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<!--
+  Analiz paneli — ana panelin ikinci ekranı.
+  SALT OKUNUR: localStorage'dan okur, hiçbir anahtara yazmaz, sync'e karışmaz.
+  Ana panel 7 günlük pencereye bakıyor; burası haftalar ölçeğinde örüntüleri gösteriyor:
+  trend, ders başına zaman ↔ kredi, dürtü saatleri, uyku → odak, önümüzdeki 4 haftanın yükü.
+-->
+<style>
+:root{
+  --bg: oklch(21.5% 0.017 264);
+  --surface: oklch(26% 0.018 264);
+  --surface2: oklch(30% 0.019 264);
+  --border: oklch(37% 0.02 264);
+  --border-soft: oklch(32.5% 0.018 264);
+  --text: oklch(93% 0.008 264);
+  --muted: oklch(69% 0.02 264);
+  --accent: oklch(80% 0.16 78);
+  --teal: oklch(77% 0.11 195);
+  --danger: oklch(68% 0.16 25);
+  --h0: oklch(30% 0.019 264);
+  --h1: oklch(42% 0.06 195);
+  --h2: oklch(55% 0.085 195);
+  --h3: oklch(67% 0.10 195);
+  --h4: oklch(80% 0.12 195);
+  color-scheme: dark;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+body{background:
+    radial-gradient(1100px 700px at 12% -8%, oklch(80% 0.16 78 / .07), transparent 60%),
+    radial-gradient(900px 650px at 100% 4%, oklch(77% 0.11 195 / .08), transparent 58%),
+    var(--bg);
+  background-attachment:fixed; color:var(--text); font-family:'Inter',system-ui,sans-serif; font-size:15px; line-height:1.5; min-height:100vh; -webkit-font-smoothing:antialiased;}
+.wrap{max-width:980px; margin:0 auto; padding:24px 16px 80px;}
+header{display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:4px;}
+h1{font-family:'Space Grotesk',sans-serif; font-size:21px; font-weight:700; letter-spacing:-0.02em;}
+h1 span{color:var(--teal); font-weight:500;}
+a.back{color:var(--muted); text-decoration:none; font-size:13px; border:1px solid var(--border); border-radius:9px; padding:7px 12px; background:var(--surface);}
+a.back:hover{color:var(--text); border-color:var(--teal);}
+a:focus-visible, select:focus-visible{outline:2px solid var(--teal); outline-offset:2px;}
+.sub{color:var(--muted); font-size:12.5px; margin-bottom:18px;}
+h2{font-family:'Space Grotesk',sans-serif; font-size:16px; font-weight:700; letter-spacing:-0.01em; margin:26px 0 10px; display:flex; align-items:baseline; gap:8px; flex-wrap:wrap;}
+h2 small{font-family:'Inter',sans-serif; font-weight:400; font-size:12px; color:var(--muted);}
+.card{background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:16px 18px; margin-bottom:12px; box-shadow:0 1px 2px oklch(0% 0 0 / .22);}
+.muted{color:var(--muted); font-size:13px;}
+.kpis{display:grid; grid-template-columns:repeat(4,1fr); gap:10px;}
+.kpi{background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:12px 14px;}
+.kpi .l{font-size:11px; color:var(--muted); letter-spacing:.06em; text-transform:uppercase;}
+.kpi .v{font-family:'JetBrains Mono',monospace; font-size:22px; font-weight:700; font-variant-numeric:tabular-nums; margin-top:2px;}
+.kpi .d{font-size:12px; color:var(--muted);}
+.up{color:var(--teal);} .down{color:var(--danger);} .warn{color:var(--accent);}
+.ins{display:flex; gap:10px; padding:9px 0; border-bottom:1px solid var(--border-soft); font-size:14px;}
+.ins:last-child{border-bottom:none;}
+.ins .ic{flex:none; width:22px; text-align:center;}
+.ins b{color:var(--text);}
+svg{display:block; width:100%; height:auto;}
+svg text{font-family:'JetBrains Mono',monospace; fill:var(--muted);}
+.legend{display:flex; gap:12px; flex-wrap:wrap; font-size:12px; color:var(--muted); margin-top:8px; align-items:center;}
+.sw{display:inline-block; width:10px; height:10px; border-radius:3px; vertical-align:-1px; margin-right:4px;}
+table{width:100%; border-collapse:collapse; font-size:13.5px;}
+th{font-size:11px; font-weight:500; color:var(--muted); text-align:left; letter-spacing:.05em; text-transform:uppercase; padding:0 6px 8px;}
+td{padding:8px 6px; border-top:1px solid var(--border-soft); vertical-align:middle;}
+td.num{font-family:'JetBrains Mono',monospace; font-variant-numeric:tabular-nums; text-align:right; white-space:nowrap;}
+.bar2{position:relative; height:16px; min-width:90px;}
+.bar2 i{position:absolute; left:0; height:6px; border-radius:3px;}
+.bar2 i.cr{top:1px; background:var(--border);}
+.bar2 i.tm{top:9px; background:var(--teal);}
+.bar2 i.tm.low{background:var(--danger);}
+.cal{display:grid; grid-template-columns:repeat(7,1fr) 56px; gap:4px;}
+.cal .hd{font-size:10.5px; color:var(--muted); text-align:center; font-family:'JetBrains Mono',monospace;}
+.cal .c{min-height:52px; background:var(--surface2); border:1px solid var(--border-soft); border-radius:8px; padding:4px 5px; font-size:10.5px; position:relative; overflow:hidden;}
+.cal .c.past{opacity:.35;}
+.cal .c.today{border-color:var(--accent);}
+.cal .c .n{font-family:'JetBrains Mono',monospace; color:var(--muted);}
+.cal .c .ev{display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:10px; line-height:1.35; font-weight:600;}
+.cal .c .ev .sh{display:none;}
+.cal .c .ev.exam{color:var(--danger);} .cal .c .ev.hw{color:var(--accent);} .cal .c .ev.lab{color:var(--teal);} .cal .c .ev.other{color:var(--muted);}
+.cal .c .rv{position:absolute; right:4px; top:3px; font-family:'JetBrains Mono',monospace; font-size:9.5px; color:var(--teal);}
+.cal .wk{font-size:10.5px; color:var(--muted); display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; line-height:1.3;}
+.cal .wk b{font-family:'JetBrains Mono',monospace; font-size:15px;}
+.empty{color:var(--muted); font-size:13px; padding:6px 0;}
+select{background:var(--surface2); border:1px solid oklch(57% 0.02 264); color:var(--text); border-radius:8px; padding:5px 8px; font-family:inherit; font-size:12.5px;}
+.grid2{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+.grid2 > .card{margin-bottom:0;}
+@media (max-width:640px){
+  .kpis{grid-template-columns:repeat(2,1fr);}
+  .grid2{grid-template-columns:1fr;}
+  .cal{grid-template-columns:repeat(7,1fr) 38px; gap:3px;}
+  .cal .c{min-height:46px; padding:3px 3px;}
+  .cal .c .ev{font-size:9px;}
+  .cal .c .ev .lg{display:none;} .cal .c .ev .sh{display:inline;}
+  .cal .c .ev{white-space:normal; line-height:1.15;}
+  table{font-size:12.5px;} td,th{padding-left:3px; padding-right:3px;} .bar2{min-width:60px;}
+  #courses{padding:14px 12px;}
+  .hide-sm{display:none;}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Analiz <span>/ haftalar ölçeğinde</span></h1>
+    <a class="back" href="index.html#review">← Panele dön</a>
+  </header>
+  <div class="sub" id="sub"></div>
+
+  <div class="kpis" id="kpis"></div>
+
+  <h2>Veri ne söylüyor</h2>
+  <div class="card" id="insights"></div>
+
+  <h2>Odak haritası <small>son 16 hafta · günlük çalışma dakikası</small></h2>
+  <div class="card"><div id="heat"></div>
+    <div class="legend"><span>az</span><span><i class="sw" style="background:var(--h0)"></i>0</span><span><i class="sw" style="background:var(--h1)"></i>&lt;1s</span><span><i class="sw" style="background:var(--h2)"></i>1–2s</span><span><i class="sw" style="background:var(--h3)"></i>2–3s</span><span><i class="sw" style="background:var(--h4)"></i>3s+</span><span>çok</span></div>
+  </div>
+
+  <h2>Haftalık trend <small>son 12 hafta · Pzt–Paz</small></h2>
+  <div class="card"><div id="trend"></div>
+    <div class="legend"><span><i class="sw" style="background:var(--teal)"></i>aktif saat (soru/tekrar)</span><span><i class="sw" style="background:var(--h1)"></i>pasif saat (okuma)</span><span><i class="sw" style="background:var(--accent)"></i>aktif oran %</span><span>— — 12 hafta ortalaması</span></div>
+  </div>
+
+  <h2>Ders başına zaman ↔ kredi <small>
+    <select id="crsRange" aria-label="Ders analizi zaman aralığı">
+      <option value="28">son 4 hafta</option><option value="14">son 2 hafta</option><option value="term">dönem başından</option>
+    </select></small></h2>
+  <div class="card" id="courses"></div>
+
+  <h2>Önümüzdeki 4 hafta <small>deadlineler + düşecek tekrarlar</small></h2>
+  <div class="card"><div class="cal" id="cal"></div>
+    <div class="legend"><span style="color:var(--danger)">■ sınav</span><span style="color:var(--accent)">■ ödev</span><span style="color:var(--teal)">■ lab</span><span><span style="color:var(--teal); font-family:'JetBrains Mono',monospace;">↻3</span> o gün düşen tekrar</span></div>
+  </div>
+
+  <div class="grid2">
+    <div>
+      <h2>Dürtüler saate göre <small>son 4 hafta</small></h2>
+      <div class="card" id="urge"></div>
+    </div>
+    <div>
+      <h2>Uyku → o günkü odak <small>son 8 hafta</small></h2>
+      <div class="card" id="sleep"></div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div>
+      <h2>Hata defteri <small>derse göre</small></h2>
+      <div class="card" id="mist"></div>
+    </div>
+    <div>
+      <h2>Kalibrasyon <small>tahmin − gerçek, derse göre</small></h2>
+      <div class="card" id="calib"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ---------- Salt-okunur veri erişimi ----------
+const ESC_MAP = {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'};
+function esc(v){ return String(v==null?'':v).replace(/[&<>"']/g, c=>ESC_MAP[c]); }
+function get(k, def){
+  let v;
+  try{ const raw = localStorage.getItem(k); v = raw===null ? def : JSON.parse(raw); }catch(e){ v = def; }
+  if(Array.isArray(def)) return Array.isArray(v) ? v : def;
+  if(def !== null && typeof def === 'object') return (v && typeof v === 'object' && !Array.isArray(v)) ? v : def;
+  return v;
+}
+let D = {};
+function load(){
+  D = {
+    focus: get('focusLog', {}), tag: get('tagLog', {}), mode: get('modeLog', {}), urge: get('urgeLog', {}),
+    sleep: get('sleepLog', {}), brk: get('breakLog', {}), deadlines: get('deadlines', []), reviews: get('reviews', []),
+    mistakes: get('mistakes', []), calib: get('calibLog', []), courses: get('courses', []), term: get('term', {}),
+    triage: get('triage', {}), updated: get('dataUpdatedAt', null)
+  };
+}
+
+// ---------- Tarih yardımcıları (yerel gün; UTC kayması yok) ----------
+const pad = n => String(n).padStart(2,'0');
+const ymd = d => d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate()+n); return x; };
+const today0 = () => { const d = new Date(); d.setHours(0,0,0,0); return d; };
+const monday = d => { const x = new Date(d); x.setHours(0,0,0,0); x.setDate(x.getDate() - ((x.getDay()+6)%7)); return x; };
+const parse = s => new Date(s+'T00:00');
+const dayDiff = (a, b) => Math.round((b - a)/86400000);
+const MON = ['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
+const DSHORT = ['Pt','Sa','Ça','Pe','Cu','Ct','Pz'];
+const hrs = m => (m/60).toFixed(1);
+function sumRange(log, from, days){ let t = 0; for(let i=0;i<days;i++){ t += +log[ymd(addDays(from,i))] || 0; } return t; }
+function modeRange(from, days){ let a=0,p=0; for(let i=0;i<days;i++){ const r = D.mode[ymd(addDays(from,i))]; if(r){ a += +r.aktif||0; p += +r.pasif||0; } } return {a,p,pct:(a+p)?Math.round(100*a/(a+p)):null}; }
+
+// ---------- Ders eşleme (ana paneldeki weekMinutesFor ile aynı kural) ----------
+const normCode = c => String(c||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+function courseMatcher(code){
+  const n = normCode(code), letters = n.replace(/[0-9]/g,''), digits = n.replace(/[^0-9]/g,'');
+  return tag => { const tn = normCode(tag), tl = tn.replace(/[0-9]/g,''), td = tn.replace(/[^0-9]/g,'');
+    if(!tn) return false;
+    if(tn === n) return true;
+    if(td) return td === digits && (!tl || letters.startsWith(tl));
+    return !!tl && tl === letters && D.courses.filter(c=>normCode(c.code).replace(/[0-9]/g,'')===letters).length === 1; };
+}
+
+// ---------- KPI şeridi ----------
+function renderKpis(){
+  const t = today0();
+  const cur = sumRange(D.focus, addDays(t,-6), 7), prev = sumRange(D.focus, addDays(t,-13), 7);
+  const delta = prev ? Math.round(100*(cur-prev)/prev) : null;
+  const m = modeRange(addDays(t,-6), 7), mp = modeRange(addDays(t,-13), 7);
+  let sl = [], urg = 0, urgP = 0;
+  for(let i=0;i<7;i++){ const r = D.sleep[ymd(addDays(t,-i))]; if(r && +r.h>0) sl.push(+r.h); urg += (D.urge[ymd(addDays(t,-i))]||[]).length; urgP += (D.urge[ymd(addDays(t,-7-i))]||[]).length; }
+  const avgSl = sl.length ? sl.reduce((a,b)=>a+b,0)/sl.length : null;
+  const curH = cur/60;
+  const k = [
+    {l:'Son 7 gün', v: hrs(cur)+'s', d: delta===null ? 'önceki hafta verisi yok' : `<span class="${delta>=0?'up':'down'}">${delta>=0?'▲':'▼'} %${Math.abs(delta)}</span> önceki 7 güne göre`},
+    {l:'Günlük ort.', v: (curH/7).toFixed(1)+'s', d: 'çalışılan gün: '+[...Array(7)].filter((_,i)=>(+D.focus[ymd(addDays(t,-i))]||0)>0).length+'/7'},
+    {l:'Aktif oran', v: m.pct===null?'—':'%'+m.pct, cls: m.pct===null?'':(m.pct>=50?'up':'down'), d: mp.pct===null ? 'hedef ≥ %50' : 'önceki 7 gün %'+mp.pct},
+    {l:'Dürtü · ort. uyku', v: urg+' · '+(avgSl?avgSl.toFixed(1)+'s':'—'), d: 'önceki 7 gün '+urgP+' dürtü'}
+  ];
+  document.getElementById('kpis').innerHTML = k.map(x=>`<div class="kpi"><div class="l">${x.l}</div><div class="v ${x.cls||''}">${x.v}</div><div class="d">${x.d}</div></div>`).join('');
+}
+
+// ---------- Odak haritası (16 hafta × 7 gün) ----------
+function heatColor(m){ return !m ? 'var(--h0)' : m < 60 ? 'var(--h1)' : m < 120 ? 'var(--h2)' : m < 180 ? 'var(--h3)' : 'var(--h4)'; }
+function renderHeat(){
+  const W = 16, cs = 13, gap = 3, left = 22, top = 16;
+  const start = addDays(monday(today0()), -7*(W-1)), t = today0();
+  let cells = '', months = '', lastM = -1;
+  for(let w=0; w<W; w++){
+    const wd = addDays(start, 7*w);
+    if(wd.getMonth() !== lastM){ lastM = wd.getMonth(); months += `<text x="${left + w*(cs+gap)}" y="10" font-size="9">${MON[lastM]}</text>`; }
+    for(let d=0; d<7; d++){
+      const day = addDays(start, 7*w + d); if(day > t) continue;
+      const k = ymd(day), m = +D.focus[k] || 0;
+      const isT = dayDiff(day, t) === 0;
+      cells += `<rect x="${left + w*(cs+gap)}" y="${top + d*(cs+gap)}" width="${cs}" height="${cs}" rx="3" fill="${heatColor(m)}" ${isT?'stroke="var(--accent)" stroke-width="1.5"':''}><title>${k} · ${m} dk</title></rect>`;
+    }
+  }
+  const lbl = [0,2,4].map(d=>`<text x="0" y="${top + d*(cs+gap) + 10}" font-size="9">${DSHORT[d]}</text>`).join('');
+  const w = left + W*(cs+gap), h = top + 7*(cs+gap);
+  const days = Object.keys(D.focus).filter(k => parse(k) >= start && (+D.focus[k]||0) > 0).length;
+  const span = dayDiff(start, t) + 1;
+  // Seri: bugünden geriye kesintisiz çalışılan gün (bugün henüz boşsa dünden başla)
+  let streak = 0, i = (+D.focus[ymd(t)]||0) > 0 ? 0 : 1;
+  while((+D.focus[ymd(addDays(t,-i))]||0) > 0){ streak++; i++; }
+  document.getElementById('heat').innerHTML =
+    `<svg style="max-width:560px" viewBox="0 0 ${w} ${h}" role="img" aria-label="Son 16 haftanın günlük çalışma haritası">${months}${lbl}${cells}</svg>
+     <div class="muted" style="margin-top:8px; font-size:12px;">${span} günün <b style="color:var(--text)">${days}</b>'inde çalışılmış · güncel seri <b style="color:var(--accent)">${streak} gün</b></div>`;
+}
+
+// ---------- Haftalık trend ----------
+function renderTrend(){
+  const N = 12, t = today0(), m0 = monday(t), weeks = [];
+  for(let i=N-1;i>=0;i--){
+    const from = addDays(m0, -7*i), days = i===0 ? dayDiff(m0, t)+1 : 7;
+    const tot = sumRange(D.focus, from, days), md = modeRange(from, days);
+    // modeLog yoksa (eski kayıtlar) toplamı aktif/pasif ayrımı olmadan göster
+    const a = md.a + md.p ? Math.min(tot, md.a) : 0, p = md.a + md.p ? Math.min(tot - a, md.p) : 0, u = Math.max(0, tot - a - p);
+    weeks.push({from, tot, a, p, u, pct: md.pct, partial: i===0, days});
+  }
+  const sm = window.innerWidth < 640, W = sm ? 360 : 600, H = sm ? 200 : 190, L = 30, R = 30, T = 14, B = 26;
+  const maxH = Math.max(5, ...weeks.map(w=>w.tot/60));
+  const step = Math.max(5, Math.ceil(maxH/4/5)*5), top = step*Math.ceil(maxH/step);
+  const bw = (W-L-R)/N, y = v => T + (H-T-B)*(1 - v/top), yp = p => T + (H-T-B)*(1 - p/100);
+  let g = '';
+  for(let v=0; v<=top; v+=step){ g += `<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--border-soft)" stroke-width="1"/><text x="${L-6}" y="${y(v)+3}" font-size="9" text-anchor="end">${v}s</text>`; }
+  g += [0,50,100].map(p=>`<text x="${W-R+6}" y="${yp(p)+3}" font-size="9" fill="var(--accent)">%${p}</text>`).join('');
+  const full = weeks.filter(w=>!w.partial && w.tot>0);
+  const avg = full.length ? full.reduce((s,w)=>s+w.tot,0)/full.length/60 : 0;
+  let bars = '', pts = [];
+  weeks.forEach((w, i) => {
+    const x = L + i*bw + bw*0.18, bwi = bw*0.64;
+    let yy = y(0);
+    [['u','var(--h2)'],['p','var(--h1)'],['a','var(--teal)']].forEach(([k,col]) => {
+      const hgt = (H-T-B)*(w[k]/60)/top; if(hgt <= 0) return;
+      yy -= hgt; bars += `<rect x="${x}" y="${yy}" width="${bwi}" height="${hgt}" fill="${col}" ${w.partial?'opacity=".55"':''}/>`;
+    });
+    bars += `<rect x="${x}" y="${T}" width="${bwi}" height="${H-T-B}" fill="transparent"><title>${ymd(w.from)} haftası · ${hrs(w.tot)} saat${w.pct!==null?' · aktif %'+w.pct:''}${w.partial?' (sürüyor, '+w.days+' gün)':''}</title></rect>`;
+    const lbl = w.from.getDate()+' '+MON[w.from.getMonth()];
+    if((N-1-i) % (sm ? 3 : 2) === 0) bars += `<text x="${x + bwi/2}" y="${H-8}" font-size="9" text-anchor="middle" ${w.partial?'fill="var(--accent)"':''}>${w.partial?'bu hf':lbl}</text>`;
+    if(w.pct !== null) pts.push([x + bwi/2, yp(w.pct)]);
+  });
+  const line = pts.length > 1 ? `<polyline points="${pts.map(p=>p.join(',')).join(' ')}" fill="none" stroke="var(--accent)" stroke-width="1.5"/>` : '';
+  const dots = pts.map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="2.5" fill="var(--accent)"/>`).join('');
+  const avgL = avg ? `<line x1="${L}" x2="${W-R}" y1="${y(avg)}" y2="${y(avg)}" stroke="var(--text)" stroke-opacity=".5" stroke-dasharray="4 4"/><text x="${L+4}" y="${y(avg)-4}" font-size="9" fill="var(--text)">ort ${avg.toFixed(1)}s</text>` : '';
+  document.getElementById('trend').innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Son 12 haftanın haftalık çalışma saatleri">${g}${bars}${avgL}${line}${dots}</svg>`;
+  return {weeks, avg};
+}
+
+// ---------- Ders başına zaman vs kredi ----------
+function courseRows(range){
+  const t = today0();
+  let from;
+  if(range === 'term' && D.term && D.term.start) from = parse(D.term.start);
+  else from = addDays(t, -((+range||28)-1));
+  const days = dayDiff(from, t) + 1;
+  const list = D.courses.filter(c => +c.credit > 0);
+  const totCr = list.reduce((s,c)=>s + (+c.credit||0), 0);
+  const tagsTot = {};
+  for(let i=0;i<days;i++){ const o = D.tag[ymd(addDays(from,i))] || {}; Object.entries(o).forEach(([g,m]) => tagsTot[g] = (tagsTot[g]||0) + (+m||0)); }
+  const used = new Set();
+  const rows = list.map(c => {
+    const mt = courseMatcher(c.code); let m = 0;
+    Object.entries(tagsTot).forEach(([g, v]) => { if(mt(g)){ m += v; used.add(g); } });
+    return {c, m};
+  });
+  const totM = rows.reduce((s,r)=>s+r.m, 0);
+  const other = Object.entries(tagsTot).filter(([g])=>!used.has(g)).reduce((s,[,v])=>s+v, 0);
+  rows.forEach(r => { r.crS = totCr ? r.c.credit/totCr : 0; r.tmS = totM ? r.m/totM : 0; r.low = totM >= 120 && r.tmS < r.crS*0.6; });
+  return {rows, totM, other, days, from};
+}
+function renderCourses(){
+  const el = document.getElementById('courses');
+  if(!D.courses.filter(c=>+c.credit>0).length){ el.innerHTML = '<div class="empty">Dersler sekmesinde kredisiyle ders yok — ekleyince burada kredi payına karşı harcadığın zaman görünür.</div>'; return null; }
+  const sel = document.getElementById('crsRange');
+  if(!(D.term && D.term.start)) [...sel.options].forEach(o => { if(o.value==='term') o.disabled = true; });
+  const R = courseRows(sel.value);
+  const mx = Math.max(...R.rows.map(r=>Math.max(r.crS, r.tmS)), 0.01);
+  const body = R.rows.sort((a,b)=>b.c.credit-a.c.credit || a.c.code.localeCompare(b.c.code)).map(r => `<tr>
+      <td><b style="white-space:nowrap">${esc(r.c.code)}</b>${r.c.retake?' <span class="muted" style="font-size:11px;">tekrar</span>':''}<div class="muted hide-sm" style="font-size:11.5px;">${esc(r.c.name||'')}</div></td>
+      <td class="num">${r.c.credit}</td>
+      <td style="width:38%;"><div class="bar2" title="kredi payı %${Math.round(100*r.crS)} · zaman payı %${Math.round(100*r.tmS)}"><i class="cr" style="width:${100*r.crS/mx}%"></i><i class="tm ${r.low?'low':''}" style="width:${Math.max(1,100*r.tmS/mx)}%"></i></div></td>
+      <td class="num">%${Math.round(100*r.crS)} / <b class="${r.low?'down':''}">%${Math.round(100*r.tmS)}</b></td>
+      <td class="num">${hrs(r.m)}s</td>
+      <td class="num hide-sm">${esc(r.c.expect||r.c.target||'—')}</td></tr>`).join('');
+  el.innerHTML = `<table><thead><tr><th>Ders</th><th style="text-align:right">Kr</th><th>kredi ▬ / zaman ▬</th><th style="text-align:right">pay</th><th style="text-align:right">saat</th><th class="hide-sm" style="text-align:right">beklenen</th></tr></thead><tbody>${body}</tbody></table>
+    <div class="muted" style="margin-top:10px; font-size:12px;">Gri çubuk = dersin toplam krediden payı (GPA'ya ağırlığı). Turkuaz = bu aralıkta kronometreye o ders etiketiyle giren zamanın payı. <span class="down">Kırmızı</span> = zaman payı kredi payının %60'ının altında.
+    ${R.other ? ' Hiçbir derse eşleşmeyen etiketli süre: <b>'+hrs(R.other)+'s</b> (etiketi ders koduyla yazarsan buraya düşer).' : ''}</div>`;
+  return R;
+}
+
+// ---------- Önümüzdeki 4 hafta ----------
+function renderCal(){
+  const t = today0(), start = monday(t), N = 4;
+  const dlBy = {}, rvBy = {};
+  D.deadlines.filter(d => !d.done && d.date).forEach(d => (dlBy[d.date] = dlBy[d.date] || []).push(d));
+  D.reviews.forEach(r => { if(!r.due) return; const k = r.due < ymd(t) ? ymd(t) : r.due; rvBy[k] = (rvBy[k]||0) + 1; });
+  let html = DSHORT.map(d=>`<div class="hd">${d}</div>`).join('') + '<div class="hd">sınav</div>';
+  const crunch = [];
+  for(let w=0; w<N; w++){
+    let ex = 0, any = 0;
+    for(let d=0; d<7; d++){
+      const day = addDays(start, 7*w+d), k = ymd(day), diff = dayDiff(t, day);
+      const evs = (dlBy[k]||[]).sort((a,b)=>(a.type==='exam'?0:1)-(b.type==='exam'?0:1));
+      ex += evs.filter(e=>e.type==='exam').length; any += evs.length;
+      const rv = rvBy[k] && diff >= 0 ? `<span class="rv" title="${rvBy[k]} tekrar">↻${rvBy[k]}</span>` : '';
+      html += `<div class="c ${diff<0?'past':''} ${diff===0?'today':''}" title="${k}${evs.length?' · '+esc(evs.map(e=>e.title).join(', ')):''}"><span class="n">${day.getDate()}${day.getDate()===1||(w===0&&d===0)?' '+MON[day.getMonth()]:''}</span>${rv}
+        ${evs.slice(0,2).map(e=>`<span class="ev ${esc(e.type)}"><span class="lg">${esc(e.title)}</span><span class="sh">${esc(String(e.title).replace(/^[A-Za-zÇĞİÖŞÜçğıöşü]+\s*/,'')||e.title)}</span></span>`).join('')}${evs.length>2?`<span class="ev other">+${evs.length-2}</span>`:''}</div>`;
+    }
+    html += `<div class="wk"><b class="${ex>=2?'down':ex?'warn':''}">${ex}</b>${w===0?'bu hf':''}</div>`;
+    if(ex >= 2) crunch.push({w, ex, from: addDays(start, 7*w)});
+  }
+  document.getElementById('cal').innerHTML = html;
+  return crunch;
+}
+
+// ---------- Dürtüler saate göre ----------
+const URGE_LBL = {kacis:'kaçış', yorgun:'yorgunluk', anlamadim:'anlamıyorum', rastgele:'rastgele', '?':'etiketsiz'};
+function renderUrge(){
+  const t = today0(), bins = Array(24).fill(0), byR = {}, byG = {};
+  let n = 0;
+  for(let i=0;i<28;i++){ (D.urge[ymd(addDays(t,-i))]||[]).forEach(u => {
+    n++; byR[u.r] = (byR[u.r]||0)+1; if(u.g) byG[u.g] = (byG[u.g]||0)+1;
+    if(u.t){ const h = new Date(u.t).getHours(); bins[h]++; } }); }
+  const el = document.getElementById('urge');
+  if(!n){ el.innerHTML = '<div class="empty">Son 4 haftada dürtü kaydı yok. Kronometrede "📱 Dürtü geldi"ye bastıkça hangi saatlerde kaçtığın burada belirir.</div>'; return null; }
+  // 07:00 → 02:00 aralığı (ana paneldeki gün çubuğuyla aynı)
+  const order = [...Array(20)].map((_,i)=>(7+i)%24);
+  const mx = Math.max(1, ...order.map(h=>bins[h]));
+  const W = 300, H = 110, L = 4, B = 18, bw = (W-2*L)/order.length;
+  let s = '';
+  order.forEach((h,i) => { const v = bins[h], hh = (H-B-8)*v/mx;
+    s += `<rect x="${L+i*bw+1}" y="${H-B-hh}" width="${bw-2}" height="${Math.max(v?2:1,hh)}" rx="2" fill="${v===mx?'var(--danger)':'var(--accent)'}" opacity="${v?1:.2}"><title>${pad(h)}:00 · ${v} dürtü</title></rect>`;
+    if(h % 3 === 1) s += `<text x="${L+i*bw+bw/2}" y="${H-5}" font-size="8.5" text-anchor="middle">${pad(h)}</text>`; });
+  const peak = order.reduce((a,h)=>bins[h]>bins[a]?h:a, order[0]);
+  const rs = Object.entries(byR).sort((a,b)=>b[1]-a[1]).map(([r,c])=>`${URGE_LBL[r]||esc(r)} <b>${Math.round(100*c/n)}%</b>`).join(' · ');
+  const g = Object.entries(byG).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([k,c])=>`${esc(k)} (${c})`).join(', ');
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Saate göre dürtü dağılımı">${s}</svg>
+    <div class="muted" style="font-size:12px; margin-top:6px;"><b style="color:var(--text)">${n}</b> dürtü · zirve <b style="color:var(--danger)">${pad(peak)}:00–${pad((peak+1)%24)}:00</b><br>${rs}${g?'<br>en çok: '+g:''}</div>`;
+  return {n, peak, peakN: bins[peak], byR};
+}
+
+// ---------- Uyku → o günkü odak ----------
+function renderSleep(){
+  const t = today0(), B = [{l:'< 6s', lo:0, hi:6}, {l:'6–7s', lo:6, hi:7}, {l:'7–8s', lo:7, hi:8}, {l:'8s+', lo:8, hi:99}];
+  B.forEach(b => { b.n = 0; b.sum = 0; });
+  // sleepLog[gün] = o sabah kaydedilen önceki gece; aynı günün odak dakikasıyla eşlenir. Bugün henüz bitmediği için dahil değil.
+  for(let i=1;i<56;i++){ const k = ymd(addDays(t,-i)), s = D.sleep[k]; if(!s || !(+s.h>0)) continue;
+    const b = B.find(b => s.h >= b.lo && s.h < b.hi); b.n++; b.sum += +D.focus[k] || 0; }
+  const el = document.getElementById('sleep'), tot = B.reduce((s,b)=>s+b.n,0);
+  if(tot < 5){ el.innerHTML = `<div class="empty">Yeterli eşleşme yok (${tot} gün). Bugün sekmesinde uyku girdikçe, kaç saat uyuduğun günler ne kadar çalıştığını gösterecek.</div>`; return null; }
+  B.forEach(b => b.avg = b.n ? b.sum/b.n : null);
+  const mx = Math.max(60, ...B.map(b=>b.avg||0));
+  el.innerHTML = B.map(b => `<div style="display:flex; align-items:center; gap:8px; margin:7px 0; font-size:12.5px;">
+      <span style="width:44px; font-family:'JetBrains Mono',monospace; color:var(--muted);">${b.l}</span>
+      <span style="flex:1; height:14px; background:var(--surface2); border-radius:4px; overflow:hidden;"><span style="display:block; height:100%; width:${b.avg?100*b.avg/mx:0}%; background:${b.n>=3?'var(--teal)':'var(--h1)'};"></span></span>
+      <span style="width:84px; text-align:right; font-family:'JetBrains Mono',monospace;">${b.avg===null?'—':hrs(b.avg)+'s'} <span class="muted" style="font-size:10.5px;">n=${b.n}</span></span></div>`).join('') +
+    '<div class="muted" style="font-size:11.5px; margin-top:6px;">Ortalama çalışma saati, o gece kaç saat uyuduğuna göre. n &lt; 3 olan gruplar soluk — tek tük gün yanıltır.</div>';
+  return B;
+}
+
+// ---------- Hata defteri + kalibrasyon ----------
+function renderMist(){
+  const el = document.getElementById('mist'), t = today0();
+  if(!D.mistakes.length){ el.innerHTML = '<div class="empty">Hata defteri boş.</div>'; return; }
+  const by = {}; D.mistakes.forEach(m => { const c = (m.course||'').trim() || '—'; by[c] = by[c] || {n:0, r:0, why:0}; by[c].n++;
+    if(m.date && dayDiff(parse(m.date), t) < 30) by[c].r++; if(m.se || m.why) by[c].why++; });
+  const rows = Object.entries(by).sort((a,b)=>b[1].n-a[1].n).slice(0,8), mx = rows[0][1].n;
+  el.innerHTML = rows.map(([c,v]) => `<div style="display:flex; align-items:center; gap:8px; margin:6px 0; font-size:12.5px;">
+     <span style="width:76px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${esc(c)}</span>
+     <span style="flex:1; height:12px; background:var(--surface2); border-radius:4px; overflow:hidden;"><span style="display:block; height:100%; width:${100*v.n/mx}%; background:var(--accent);"></span></span>
+     <span style="width:92px; text-align:right; font-family:'JetBrains Mono',monospace;">${v.n} <span class="muted" style="font-size:10.5px;">· 30g ${v.r}</span></span></div>`).join('') +
+    `<div class="muted" style="font-size:11.5px; margin-top:6px;">${D.mistakes.length} kayıt · "neden" alanı dolu: %${Math.round(100*D.mistakes.filter(m=>m.se||m.why).length/D.mistakes.length)}</div>`;
+}
+function renderCalib(){
+  const el = document.getElementById('calib');
+  const rows = D.calib.slice(0, 120);
+  if(rows.length < 5){ el.innerHTML = `<div class="empty">Az veri (${rows.length}). Tekrar kartlarında önce tahmin verdikçe dolar.</div>`; return null; }
+  const by = {}; rows.forEach(r => { const c = (r.c||'').trim() || '—'; by[c] = by[c] || {n:0, b:0}; by[c].n++; by[c].b += (+r.p||0) - (+r.a||0); });
+  const list = Object.entries(by).map(([c,v]) => ({c, n:v.n, b: Math.round(v.b/v.n)})).sort((a,b)=>Math.abs(b.b)-Math.abs(a.b)).slice(0,6);
+  const all = Math.round(rows.reduce((s,r)=>s + (+r.p||0) - (+r.a||0), 0)/rows.length);
+  el.innerHTML = list.map(x => { const w = Math.min(50, Math.abs(x.b)/2);
+    return `<div style="display:flex; align-items:center; gap:8px; margin:6px 0; font-size:12.5px;">
+      <span style="width:76px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${esc(x.c)}</span>
+      <span style="flex:1; height:12px; position:relative; background:var(--surface2); border-radius:4px;"><span style="position:absolute; left:50%; top:-2px; bottom:-2px; width:1px; background:var(--muted);"></span>
+        <span style="position:absolute; top:0; bottom:0; ${x.b>=0?'left:50%':'right:50%'}; width:${w}%; background:${x.b>8?'var(--danger)':x.b<-8?'var(--teal)':'var(--muted)'}; border-radius:3px;"></span></span>
+      <span style="width:72px; text-align:right; font-family:'JetBrains Mono',monospace;">${x.b>0?'+':''}${x.b} <span class="muted" style="font-size:10.5px;">n=${x.n}</span></span></div>`; }).join('') +
+    `<div class="muted" style="font-size:11.5px; margin-top:6px;">Sağa (kırmızı) = bildiğini sandığından az biliyorsun. Genel sapma <b style="color:var(--text)">${all>0?'+':''}${all}</b> puan.</div>`;
+  return {all, list};
+}
+
+// ---------- İçgörüler: sayıları tek cümleye indirger ----------
+function renderInsights(ctx){
+  const out = [], t = today0();
+  const cur = sumRange(D.focus, addDays(t,-6), 7), prev = sumRange(D.focus, addDays(t,-13), 7);
+  if(prev >= 60 && cur >= 0){
+    const d = Math.round(100*(cur-prev)/prev);
+    if(d <= -25) out.push(['📉', `Son 7 gün <b>${hrs(cur)}s</b> — önceki haftadan <b class="down">%${-d} düşük</b>. Hangi gün koptuğunu ısı haritasında bul; Pazar review'da o günün sebebini yaz.`]);
+    else if(d >= 20) out.push(['📈', `Son 7 gün <b>${hrs(cur)}s</b>, önceki haftanın <b class="up">%${d} üstünde</b>. Neyin farklı olduğunu review notuna yaz — tekrarlanabilir kıl.`]);
+  }
+  if(ctx.trend && ctx.trend.avg){
+    const cw = ctx.trend.weeks[ctx.trend.weeks.length-1], el = cw.days, need = ctx.trend.avg*60 - cw.tot;
+    if(el >= 3 && el < 7 && need > 0) out.push(['🎯', `Bu hafta ${hrs(cw.tot)}s; 12 haftalık ortalamanı (${ctx.trend.avg.toFixed(1)}s) yakalamak için kalan ${7-el} günde günde <b>${hrs(need/(7-el))}s</b> lazım.`]);
+  }
+  if(ctx.courses && ctx.courses.rows){
+    const low = ctx.courses.rows.filter(r=>r.low).sort((a,b)=>(b.crS-b.tmS)-(a.crS-a.tmS))[0];
+    if(low){
+      const ex = D.deadlines.filter(d=>!d.done && d.type==='exam' && courseMatcher(low.c.code)(String(d.title).split(/\s+/).slice(0,2).join(''))).map(d=>({d, n: dayDiff(t, parse(d.date))})).filter(x=>x.n>=0).sort((a,b)=>a.n-b.n)[0];
+      out.push(['⚖️', `<b>${esc(low.c.code)}</b> GPA'nın %${Math.round(100*low.crS)}'i ama zamanının sadece <b class="down">%${Math.round(100*low.tmS)}</b>'i ona gidiyor${ex?` — üstelik <b>${esc(ex.d.title)}</b> ${ex.n} gün sonra`:''}. Bu haftanın 3 önceliğinden biri bu ders olsun.`]);
+    }
+  }
+  if(ctx.crunch && ctx.crunch.length){
+    const c = ctx.crunch[0], d14 = addDays(c.from, -14), late = dayDiff(t, d14) < 0;
+    out.push(['🗓️', `${c.from.getDate()} ${MON[c.from.getMonth()]} haftasında <b class="down">${c.ex} sınav</b> üst üste. ${late ? 'D-14 eşiği geçti — triyajı bugün aç, kırmızı konular önce.' : 'D-14 = <b>'+d14.getDate()+' '+MON[d14.getMonth()]+'</b>: triyajı o gün başlat, sınavları tek tek değil birlikte planla.'}`]);
+  }
+  if(ctx.urge && ctx.urge.n >= 8){
+    const share = Math.round(100*ctx.urge.peakN/ctx.urge.n), anl = ctx.urge.byR.anlamadim || 0;
+    if(share >= 15) out.push(['📱', `Dürtülerin <b>%${share}</b>'i ${pad(ctx.urge.peak)}:00 civarında. O saate telefonu başka odaya koyan bir if-then yaz (Bugün → öncelik satırındaki "eğer").`]);
+    if(anl/ctx.urge.n >= 0.3) out.push(['🧠', `Dürtülerin %${Math.round(100*anl/ctx.urge.n)}'i "anlamıyorum" — irade değil kurulum sorunu. Takıldığın soruyu problem-çözüm rehberine götür.`]);
+  }
+  if(ctx.sleep){
+    const lo = ctx.sleep.filter(b=>b.hi<=7 && b.n>=3), hi = ctx.sleep.filter(b=>b.lo>=7 && b.n>=3);
+    if(lo.length && hi.length){
+      const a = lo.reduce((s,b)=>s+b.sum,0)/lo.reduce((s,b)=>s+b.n,0), b2 = hi.reduce((s,b)=>s+b.sum,0)/hi.reduce((s,b)=>s+b.n,0);
+      if(b2 - a >= 30) out.push(['🌙', `7 saatten az uyuduğun günler ortalama <b>${hrs(a)}s</b>, 7+ uyuduğun günler <b class="up">${hrs(b2)}s</b> çalışmışsın. Geç saatte kazandığın dakika ertesi gün geri gidiyor.`]);
+      else if(a - b2 >= 30) out.push(['🌙', `Az uyuduğun günler daha çok çalışmışsın (${hrs(a)}s vs ${hrs(b2)}s) — muhtemelen sınav öncesi günler; bu veri tek başına uykudan kısmayı haklı çıkarmaz.`]);
+    }
+  }
+  const m4 = modeRange(addDays(t,-27), 28);
+  if(m4.pct !== null && m4.pct < 45 && m4.a + m4.p >= 300) out.push(['✍', `Son 4 haftada aktif oran <b class="down">%${m4.pct}</b>. Senin zorlandığın yer problem kurulumu; o ancak soru çözerken çalışılır — okuma bunu taşımıyor.`]);
+  const rv7 = D.reviews.filter(r => r.due && dayDiff(t, parse(r.due)) <= 7).length;
+  if(rv7 >= 10) out.push(['↻', `Önümüzdeki 7 günde <b>${rv7}</b> tekrar düşüyor (gecikenler dahil) — günde ~${Math.ceil(rv7/7)} tane; biriktirme, sabah ilk iş yap.`]);
+  if(ctx.calib && ctx.calib.all > 10) out.push(['◎', `Tahminlerin gerçeğin ortalama <b class="down">+${ctx.calib.all}</b> puan üstünde — "biliyorum" dediğin konuları boş kağıtla doğrula.`]);
+  document.getElementById('insights').innerHTML = out.length
+    ? out.slice(0,6).map(([ic, tx]) => `<div class="ins"><span class="ic">${ic}</span><span>${tx}</span></div>`).join('')
+    : '<div class="empty">Henüz anlamlı bir örüntü çıkaracak kadar veri yok — birkaç hafta kronometre, uyku ve dürtü kaydı biriktikçe burası dolacak.</div>';
+}
+
+function renderAll(){
+  load();
+  const up = D.updated ? new Date(D.updated).toLocaleString('tr-TR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}) : '—';
+  document.getElementById('sub').innerHTML = `Bu cihazdaki veriden · son değişiklik ${esc(up)}${D.term && D.term.label ? ' · '+esc(D.term.label) : ''} · salt okunur`;
+  const ctx = {};
+  renderKpis(); renderHeat();
+  ctx.trend = renderTrend();
+  ctx.courses = renderCourses();
+  ctx.crunch = renderCal();
+  ctx.urge = renderUrge();
+  ctx.sleep = renderSleep();
+  renderMist();
+  ctx.calib = renderCalib();
+  renderInsights(ctx);
+}
+document.getElementById('crsRange').addEventListener('change', renderAll);
+// Ana panel başka sekmede açıkken veri değişirse (ör. sync çekti) burası da tazelenir
+window.addEventListener('storage', () => renderAll());
+let rzT; window.addEventListener('resize', () => { clearTimeout(rzT); rzT = setTimeout(renderAll, 250); });
+document.addEventListener('visibilitychange', () => { if(!document.hidden) renderAll(); });
+renderAll();
+if('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
