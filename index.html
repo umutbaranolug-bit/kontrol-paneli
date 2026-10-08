@@ -236,11 +236,67 @@ body.tab-today .chain .btn, body.tab-kronometre .chain .btn{display:none;}
   body:not(.tab-today) .chain .btn{padding:7px 12px; font-size:13px;}
 }
 @media (max-width:600px){ #chClock{font-size:50px;} h1{font-size:18px;} #clock{font-size:18px;} }
+
+/* ---------- Masaüstü (≥1000px): sol kenar çubuğu + kalıcı mini-sayaç ----------
+   Telefonda ve dar pencerede #side görünmez bir sarmalayıcı (display:contents) — eski düzen aynen sürer. */
+#side{display:contents;}
+#miniCh, .kbd-hint{display:none;}
+@media (min-width:1000px){
+  .wrap{max-width:1320px; padding:24px 28px 60px; display:grid; grid-template-columns:236px minmax(0,1fr); gap:32px; align-items:start;}
+  #side{display:flex; flex-direction:column; gap:14px; position:sticky; top:20px; max-height:calc(100vh - 40px); overflow-y:auto; scrollbar-width:thin;}
+  #mainCol{min-width:0;}
+  #side header{flex-direction:column; align-items:flex-start; gap:0; margin:0;}
+  #side h1{font-size:17px;}
+  #side #clock{font-size:32px; line-height:1.1; margin-top:8px;}
+  #side #dateline{margin:0;}
+  #side .chain{flex-direction:column; align-items:stretch; flex-wrap:nowrap; gap:6px; margin:0; padding:12px 14px;}
+  #side .chain-n{display:flex; align-items:baseline; gap:8px;}
+  #side .chain-n small{display:inline; margin:0;}
+  #side .chain-mid{min-width:0;}
+  #side .chain-mid > div:last-child{flex-wrap:wrap; row-gap:4px;}
+  #side .chain .btn{width:100%;}
+  #side .chain-mid > div:first-child .muted{display:none;}   /* kenar çubuğunda tek satırlık durum yeter; açıklama Bugün'deki kartlarda */
+  #tabbar{display:block;}
+  nav{flex-direction:column; flex-wrap:nowrap; gap:2px; margin:0; padding:6px; border-radius:14px;}
+  nav button{display:flex; align-items:center; gap:10px; width:100%; text-align:left; padding:8px 10px; font-size:14px;}
+  nav button .ti{display:block; width:18px; height:18px; flex:none; opacity:.8;}
+  nav button.active .ti{opacity:1;}
+  nav button .tl{flex:1; min-width:0;}
+  nav button .tab-badge{margin-left:0;}
+  nav button[data-k]::after{content:attr(data-k) / ""; flex:none; font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--muted); border:1px solid var(--border-soft); border-radius:5px; padding:0 5px; line-height:17px; opacity:.75;}
+  .kbd-hint{display:block; font-size:12px; color:var(--muted); line-height:1.8; padding:0 6px;}
+  .kbd-hint kbd, .mini kbd{font-family:'JetBrains Mono',monospace; font-size:10.5px; border:1px solid currentColor; border-radius:4px; padding:0 4px; line-height:15px; opacity:.65;}
+  /* Günün Akışı yalnızca Bugün'de, ince şerit */
+  body:not(.tab-today) .gauge{display:none;}
+  .gauge{padding:12px 18px 8px; margin-bottom:16px;}
+  .gauge-hint{display:none;}
+  .gauge-track{height:20px;}
+  /* Mini-sayaç */
+  #miniCh:not(:empty){display:block;}
+  body.tab-kronometre #miniCh{display:none;}
+  .mini{background:linear-gradient(135deg, oklch(77% 0.11 195 / .12), var(--surface) 70%); border:1px solid var(--teal); border-radius:14px; padding:12px 14px; box-shadow:var(--shadow-sm);}
+  .mini.break{border-color:var(--accent); background:linear-gradient(135deg, oklch(80% 0.16 78 / .10), var(--surface) 70%);}
+  .mini.over{border-color:var(--danger); background:linear-gradient(135deg, oklch(68% 0.16 25 / .14), var(--surface) 70%);}
+  .mini-lbl{font-size:12.5px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .mini-clock{font-family:'JetBrains Mono',monospace; font-size:36px; font-weight:700; letter-spacing:-.02em; line-height:1.15; font-variant-numeric:tabular-nums; color:var(--teal);}
+  .mini.break .mini-clock{color:var(--accent);} .mini.over .mini-clock{color:var(--danger);}
+  .mini-row{display:flex; gap:6px; margin-top:8px;}
+  .mini-row .btn{flex:1; min-width:0; padding:8px 6px; font-size:13px; display:inline-flex; align-items:center; justify-content:center; gap:6px; white-space:nowrap;}
+  .mini-chips{margin-top:10px;}
+  .mini-chips .row{gap:5px; margin-top:5px;}
+  .mini-chips .btn{padding:5px 9px; font-size:12px;}
+  .mini-fin{display:inline-block; margin-top:10px; font-size:12.5px; color:var(--muted);}
+}
+@media (min-width:1200px){
+  .today-grid{display:grid; grid-template-columns:minmax(0,1.05fr) minmax(0,1fr); gap:0 22px; align-items:start;}
+  .today-grid .tcol-b > h2:first-child{margin-top:0;}
+}
 </style>
 </head>
 <body class="tab-today">
 <div class="wrap">
 
+<aside id="side" aria-label="Kenar çubuğu">
 <header>
   <h1>Kontrol Paneli <span>/ Umut<span id="termBadge"></span></span></h1>
   <div id="clock">--:--</div>
@@ -249,25 +305,19 @@ body.tab-today .chain .btn, body.tab-kronometre .chain .btn{display:none;}
 
 <div class="chain" id="chainCard" role="status" aria-live="polite"></div>
 
-<div class="morning" id="morningCard"></div>
-
-<div class="gauge">
-  <div class="gauge-label"><span>07:00</span><span>GÜNÜN AKIŞI</span><span>02:00</span></div>
-  <div class="gauge-track" id="gaugeTrack"><div class="gauge-fill" id="gaugeFill"></div></div>
-  <div class="gauge-ticks" id="gaugeTicks"></div>
-  <div class="gauge-hint" id="gaugeHint">Turkuaz bloklar bugünkü derslerin. Amber çizgi şu anki saatin.</div>
-</div>
+<!-- Masaüstü mini-sayaç: sayaç çalışırken her sekmede görünür -->
+<div id="miniCh" class="mini" role="region" aria-label="Çalışma sayacı"></div>
 
 <div id="tabbar">
 <nav id="tabs" role="tablist" aria-label="Panel bölümleri">
-  <button data-tab="today" id="tab-today" role="tab" aria-controls="today" aria-selected="true" tabindex="0" class="active"><svg class="ti" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg><span class="tl">Bugün</span></button>
-  <button data-tab="deadlines" id="tab-deadlines" role="tab" aria-controls="deadlines" aria-selected="false" tabindex="-1"><svg class="ti" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span class="tl has-s">Deadlineler</span><span class="ts" aria-hidden="true">Deadline</span><span class="tab-badge" id="bdgDl"></span></button>
-  <button data-tab="dersler" id="tab-dersler" role="tab" aria-controls="dersler" aria-selected="false" tabindex="-1" class="ovf"><span class="tl">Dersler</span></button>
-  <button data-tab="tekrar" id="tab-tekrar" role="tab" aria-controls="tekrar" aria-selected="false" tabindex="-1"><svg class="ti" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg><span class="tl">Tekrar</span><span class="tab-badge" id="bdgRv"></span></button>
-  <button data-tab="hatadefteri" id="tab-hatadefteri" role="tab" aria-controls="hatadefteri" aria-selected="false" tabindex="-1"><svg class="ti" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h11a2 2 0 0 1 2 2v16H8a2 2 0 0 1-2-2z"/><path d="M10.5 9.5l4 4M14.5 9.5l-4 4"/></svg><span class="tl has-s">Hata Defteri</span><span class="ts" aria-hidden="true">Hata</span></button>
-  <button data-tab="kronometre" id="tab-kronometre" role="tab" aria-controls="kronometre" aria-selected="false" tabindex="-1" class="ovf"><span class="tl">Kronometre</span></button>
-  <button data-tab="review" id="tab-review" role="tab" aria-controls="review" aria-selected="false" tabindex="-1" class="ovf"><span class="tl">Review</span></button>
-  <button data-tab="kurulum" id="tab-kurulum" role="tab" aria-controls="kurulum" aria-selected="false" tabindex="-1" class="ovf"><span class="tl">Kurulum</span></button>
+  <button data-tab="today" id="tab-today" data-k="1" aria-keyshortcuts="1" role="tab" aria-controls="today" aria-selected="true" tabindex="0" class="active"><svg class="ti" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg><span class="tl">Bugün</span></button>
+  <button data-tab="deadlines" id="tab-deadlines" data-k="2" aria-keyshortcuts="2" role="tab" aria-controls="deadlines" aria-selected="false" tabindex="-1"><svg class="ti" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span class="tl has-s">Deadlineler</span><span class="ts" aria-hidden="true">Deadline</span><span class="tab-badge" id="bdgDl"></span></button>
+  <button data-tab="dersler" id="tab-dersler" data-k="3" aria-keyshortcuts="3" role="tab" aria-controls="dersler" aria-selected="false" tabindex="-1" class="ovf"><svg class="ti" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/></svg><span class="tl">Dersler</span></button>
+  <button data-tab="tekrar" id="tab-tekrar" data-k="4" aria-keyshortcuts="4" role="tab" aria-controls="tekrar" aria-selected="false" tabindex="-1"><svg class="ti" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg><span class="tl">Tekrar</span><span class="tab-badge" id="bdgRv"></span></button>
+  <button data-tab="hatadefteri" id="tab-hatadefteri" data-k="5" aria-keyshortcuts="5" role="tab" aria-controls="hatadefteri" aria-selected="false" tabindex="-1"><svg class="ti" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h11a2 2 0 0 1 2 2v16H8a2 2 0 0 1-2-2z"/><path d="M10.5 9.5l4 4M14.5 9.5l-4 4"/></svg><span class="tl has-s">Hata Defteri</span><span class="ts" aria-hidden="true">Hata</span></button>
+  <button data-tab="kronometre" id="tab-kronometre" data-k="6" aria-keyshortcuts="6" role="tab" aria-controls="kronometre" aria-selected="false" tabindex="-1" class="ovf"><svg class="ti" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9.5 2h5M12 2v3"/></svg><span class="tl">Kronometre</span></button>
+  <button data-tab="review" id="tab-review" data-k="7" aria-keyshortcuts="7" role="tab" aria-controls="review" aria-selected="false" tabindex="-1" class="ovf"><svg class="ti" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span class="tl">Review</span></button>
+  <button data-tab="kurulum" id="tab-kurulum" data-k="8" aria-keyshortcuts="8" role="tab" aria-controls="kurulum" aria-selected="false" tabindex="-1" class="ovf"><svg class="ti" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span class="tl">Kurulum</span></button>
 </nav>
 <button type="button" id="moreBtn" aria-haspopup="true" aria-expanded="false" aria-controls="moreSheet"><svg class="ti" aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg><span id="moreLbl">Daha</span></button>
 </div>
@@ -277,6 +327,19 @@ body.tab-today .chain .btn, body.tab-kronometre .chain .btn{display:none;}
   <button type="button" role="menuitem" data-goto="review">🗓 Haftalık Review</button>
   <button type="button" role="menuitem" data-goto="kurulum">⚙ Kurulum</button>
 </div>
+<div class="kbd-hint" aria-hidden="true"><kbd>1</kbd>–<kbd>8</kbd> sekme · <kbd>S</kbd> başlat / mola<br><kbd>D</kbd> dürtü · <kbd>N</kbd> yeni hata kaydı</div>
+</aside>
+
+<div id="mainCol">
+<div class="morning" id="morningCard"></div>
+
+<div class="gauge">
+  <div class="gauge-label"><span>07:00</span><span>GÜNÜN AKIŞI</span><span>02:00</span></div>
+  <div class="gauge-track" id="gaugeTrack"><div class="gauge-fill" id="gaugeFill"></div></div>
+  <div class="gauge-ticks" id="gaugeTicks"></div>
+  <div class="gauge-hint" id="gaugeHint">Turkuaz bloklar bugünkü derslerin. Amber çizgi şu anki saatin.</div>
+</div>
+
 
 <div id="sleepWarn" class="card" role="status" aria-live="polite" style="display:none; border-color:var(--danger); color:var(--danger); font-size:13px;"></div>
 <div id="lateWarn" class="card" role="status" aria-live="polite" style="display:none; border-color:var(--accent); color:var(--accent); font-size:13px;"></div>
@@ -284,12 +347,16 @@ body.tab-today .chain .btn, body.tab-kronometre .chain .btn{display:none;}
 
 <!-- BUGÜN -->
 <section id="today" role="tabpanel" aria-labelledby="tab-today" tabindex="0" class="active">
+  <div class="today-grid">
+  <div class="tcol tcol-a">
   <div id="quickStart"></div>
   <div class="card" id="prioBox"></div>
   <div id="todayExam"></div>
   <div id="todaySuggest"></div>
   <div id="todayWindow"></div>
   <div id="todayPlans"></div>
+  </div>
+  <div class="tcol tcol-b">
   <h2>Bugünkü dersler</h2>
   <div id="todayClasses"></div>
   <h2>Yaklaşan 5 deadline</h2>
@@ -310,6 +377,8 @@ body.tab-today .chain .btn, body.tab-kronometre .chain .btn{display:none;}
     <div class="muted" style="margin-top:6px; font-size:12px;">Dün gece kaç saat uyudun? Saatleri girersen süreyi kendi hesaplar — tutarlılık ölçümü için kalkış saati en değerlisi.</div>
     <div id="sleepStats" style="margin-top:10px;"></div>
   </div>
+  </div><!-- /tcol-b -->
+  </div><!-- /today-grid -->
 </section>
 
 <!-- DEADLINELER -->
@@ -609,6 +678,7 @@ body.tab-today .chain .btn, body.tab-kronometre .chain .btn{display:none;}
   </div>
 </section>
 
+</div><!-- /mainCol -->
 </div>
 
 <dialog id="phoneDlg" aria-labelledby="phoneDlgT">
@@ -768,7 +838,8 @@ function activateTab(btn, moveFocus){
   }
   // Telefonda alt bardan sekme değişince yeni sekmenin başından başla; masaüstünde eski davranış
   const phone = window.matchMedia && matchMedia('(max-width:600px)').matches;
-  if(phone){ try{ window.scrollTo(0,0); }catch(e){} }
+  const wide = window.matchMedia && matchMedia('(min-width:1000px)').matches;   // kenar çubuğu sticky: yeni sekme baştan başlasın
+  if(phone || wide){ try{ window.scrollTo(0,0); }catch(e){} }
   else { try{ btn.scrollIntoView({block:'nearest', inline:'center', behavior:'smooth'}); }catch(e){} }
   if(moveFocus && btn.getClientRects().length) btn.focus();
 }
@@ -1308,22 +1379,23 @@ function chainStats(){
 }
 function renderChain(){
   const el = document.getElementById('chainCard'); if(!el) return;
-  const c = chainStats(), h = new Date().getHours(), running = ch && ch.phase === 'study';
+  const c = chainStats(), h = new Date().getHours(), running = ch && ch.phase === 'study', onBreak = ch && ch.phase === 'break';
   const pct = Math.min(100, Math.round(100*c.tMin/c.min));
-  const state = c.met ? 'ok' : running ? 'ok' : (h >= 18 || h < 3) ? 'late' : h >= 12 ? 'warn' : '';
+  const state = c.met ? 'ok' : (running || onBreak) ? 'ok' : (h >= 18 || h < 3) ? 'late' : h >= 12 ? 'warn' : '';
   el.className = 'chain ' + state;
   const dots = []; for(let i=13;i>=0;i--){ const d=new Date(); d.setDate(d.getDate()-i); const k=ymd(d);
     const on = (focusLog[k]||0) >= c.min, sk = c.skips.includes(k);
     dots.push(`<i class="${on?'on':sk?'sk':''} ${i===0?'td':''}" title="${k} · ${focusLog[k]||0} dk${sk?' (atlama hakkı)':''}"></i>`); }
   let msg;
   if(c.met) msg = `<b style="color:var(--teal)">✓ Bugünün minimumu tamam</b> <span class="muted">· ${c.tMin} dk</span>`;
+  else if(onBreak) msg = `<b>☕ Moladasın</b> <span class="muted">· dönünce bloklar bugüne işlenmeye devam eder (${c.tMin}/${c.min} dk)</span>`;
   else if(running) msg = `<b>⏱ Çalışıyorsun</b> <span class="muted">· blok bitince bugüne işlenir (${c.tMin}/${c.min} dk)</span>`;
   else if(state === 'late') msg = `<b style="color:var(--danger)">Bugün ${c.tMin} dk.</b> ` + (c.graceLeft
       ? `${c.streak ? c.streak+' günlük zinciri korumak' : 'Zinciri başlatmak'} için ${c.min - c.tMin} dk yeter.`
       : `<b>Atlama hakkın yok</b> — bugün kaçarsa ${c.streak ? c.streak+' günlük zincir' : 'zincir'} sıfırlanır. ${c.min - c.tMin} dk yeter.`);
   else if(state === 'warn') msg = `<b style="color:var(--accent)">Henüz ${c.tMin ? c.tMin+' dk' : 'başlamadın'}.</b> <span class="muted">Minimum ${c.min} dk — öğleden sonra ertelemek akşamı yakar.</span>`;
   else msg = `<b>Bugünün minimumu: ${c.min} dk</b> <span class="muted">· ilk blok ne kadar erken, o kadar kolay</span>`;
-  const btn = (!c.met && !running) ? `<button class="btn" style="flex:none;" onclick="quickStart()">▶ Başla</button>` : '';
+  const btn = (!c.met && !running && !onBreak) ? `<button class="btn" style="flex:none;" onclick="quickStart()">▶ Başla</button>` : '';
   el.innerHTML = `<div class="chain-n">🔗 ${c.streak}<small>GÜN ZİNCİR</small></div>
     <div class="chain-mid"><div style="font-size:13px;">${msg}</div>
       <div class="chain-bar" aria-hidden="true"><i style="width:${c.met?100:pct}%"></i></div>
@@ -1772,10 +1844,56 @@ function chRender(){
   document.getElementById('chHist').innerHTML = ch.log.length ? ch.log.slice(0,15).map(h=>
     `<div class="item"><span style="color:${map[h.t][0]};">${map[h.t][1]} #${h.n}</span>${h.md?'<span class="tag" style="color:'+(h.md==='aktif'?'var(--teal)':'var(--accent)')+';">'+(h.md==='aktif'?'✍':'📖')+'</span>':''}${h.g?'<span class="tag">'+esc(h.g)+'</span>':''}${h.ur>0?'<span class="muted" style="font-size:12px;">📱 '+h.ur+'</span>':''}<span class="spacer"></span><span class="countdown ok">${fmt(h.d)}</span></div>`).join('')
     : '<div class="card muted">Henüz oturum yok. Çalışma süresi bittiğinde Bugün istatistiğine otomatik işlenir.</div>';
+  try{ renderMini(); }catch(err){}
   document.title = ch.phase !== 'idle'
     ? fmt(e) + (ch.phase==='study'?' ▤':(over?' ⏰':' ☕')) + ' — Kontrol Paneli'
     : 'Kontrol Paneli — Umut';
 }
+
+// ---------- Masaüstü mini-sayaç (kenar çubuğu) ----------
+// Sayaç çalışırken hangi sekmede olursan ol görünür; dürtü butonu bir tık uzakta.
+// Saniyelik chRender her seferinde yeniden kurmasın diye yapı yalnızca durum değişince yenilenir.
+let miniKey = '';
+function renderMini(){
+  const el = document.getElementById('miniCh'); if(!el) return;
+  if(ch.phase === 'idle'){ if(miniKey !== 'idle'){ el.innerHTML = ''; el.className = 'mini'; miniKey = 'idle'; } return; }
+  const e = chElapsed(), isMeal = ch.phase === 'break' && ch.kind === 'yemek';
+  const over = ch.phase === 'break' && !isMeal && e > (ch.bl||10)*60;
+  const st = ch.phase === 'study' ? 'study' : over ? 'over' : 'break';
+  const uc = document.getElementById('chUrgeChips'), oc = document.getElementById('chOverChips');
+  const urgeOpen = !!uc && uc.style.display === 'block', overOpen = !!oc && oc.style.display === 'block';
+  const ack = Date.now() < urgeAckUntil;
+  const key = [st, isMeal, ch.tag, ch.su, ch.bl, urgeOpen, overOpen, ack].join('|');
+  if(key === miniKey){ const c = document.getElementById('miniClock'); if(c) c.textContent = fmt(e); return; }
+  miniKey = key;
+  const lbl = st === 'study' ? 'Çalışıyorum' + (ch.tag ? ' · ' + esc(ch.tag) : '')
+    : isMeal ? 'Yemekte' : over ? 'Mola aşıldı — limit ' + (ch.bl||10) + ' dk' : 'Mola · limit ' + (ch.bl||10) + ' dk';
+  const btns = st === 'study'
+    ? `<button class="btn" onclick="chMain()">❙❙ Mola <kbd>S</kbd></button><button class="btn ghost" onclick="chUrge()">${ack ? '✔ yakalandı' : '📱 Dürtü' + (ch.su ? ' (' + ch.su + ')' : '')} <kbd>D</kbd></button>`
+    : `<button class="btn" onclick="chMain()">▶ Devam <kbd>S</kbd></button>`;
+  const chipRow = (title, col, items, fn) => `<div class="mini-chips"><div style="font-size:12px; color:${col};">${title}</div><div class="row">` +
+    items.map(([k,t]) => `<button class="btn ghost" onclick="${fn}('${k}'); renderMini()">${t}</button>`).join('') + `</div></div>`;
+  const chips = urgeOpen ? chipRow('Neden?', 'var(--muted)', [['kacis','Kaçış'],['yorgun','Yorgunluk'],['anlamadim','Anlamıyorum']], 'chUrgeReason')
+    : overOpen ? chipRow('Mola neden uzadı?', 'var(--danger)', [['telefon','Telefon'],['ihtiyac','Yemek/ihtiyaç'],['farketmedim','Fark etmedim']], 'chOverReason') : '';
+  el.className = 'mini ' + st;
+  el.innerHTML = `<div class="mini-lbl">${lbl}</div><div class="mini-clock" id="miniClock" aria-hidden="true">${fmt(e)}</div>` +
+    `<div class="mini-row">${btns}</div>${chips}<button type="button" class="linkish mini-fin" onclick="chFinish()">■ Bitir</button>`;
+}
+
+// ---------- Klavye kısayolları ----------
+// 1–8 sekme · S başlat/mola/devam · D dürtü · N yeni hata kaydı. Yazı alanındayken ve dialog açıkken devre dışı.
+document.addEventListener('keydown', e => {
+  if(e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey || e.repeat) return;
+  const t = e.target;
+  if(t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
+  if(document.querySelector('dialog[open]')) return;
+  const k = e.key;
+  if(/^[1-8]$/.test(k)){ const b = tabButtons()[+k - 1]; if(b){ e.preventDefault(); activateTab(b); } return; }
+  const kl = k.toLowerCase();
+  if(kl === 's'){ e.preventDefault(); if(ch.phase === 'idle') quickStart(); else chMain(); }
+  else if(kl === 'd'){ if(ch.phase === 'study'){ e.preventDefault(); chUrge(); } }
+  else if(kl === 'n'){ e.preventDefault(); activateTab(document.getElementById('tab-hatadefteri')); const f = document.getElementById('mCourse'); if(f) f.focus(); }
+});
 
 // ---------- Weekly review ----------
 const REVIEW_ITEMS = [
