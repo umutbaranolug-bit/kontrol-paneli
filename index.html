@@ -1933,7 +1933,7 @@ const PLAN = [
   {id:'pzt', day:1, start:'15:45', end:'17:15', title:'CHEM 111 + PETE 220',
    pre:'10:40 CHEM öncesi 10 dk: Brown\'da bugünkü bölümün başlıklarına ve kalın terimlere göz gezdir',
    parts:[
-    {c:'CHEM 111', dk:40, t:T_CHEM, steps:['5 dk — bugünkü derste gösterilen soru tiplerini başlık olarak yaz','25 dk — bölüm sonundan 4 soru, kitap kapalı. Takılırsan sadece ilk adıma bak, kapat, baştan çöz','10 dk — yanlışları hata defterine yaz (ne yaptım / neden)']},
+    {c:'CHEM 111', dk:40, t:T_CHEM, steps:['5 dk — bugünkü derste gösterilen soru tiplerini başlık olarak yaz','15 dk — anlamadığın tipi Claude\'dan öğren: "Karar-Önce, CHEM 111, konu: X" → 1 etiketli örnek, sonra sohbeti kapat','15 dk — bölüm sonundan 3 soru, kitap kapalı. Takılırsan sadece ilk adıma bak, kapat, baştan çöz','5 dk — yanlışları hata defterine yaz (ne yaptım / neden)']},
     {c:'PETE 220', dk:45, t:T_PETE, steps:['35 dk — ODTÜClass\'taki bu haftanın materyalini oku, her alt başlığa 1 cümle özet','10 dk — tanım ve formülleri tek kağıda çıkar (Çarşamba bakacaksın)']}]},
   {id:'sal', day:2, start:'14:00', end:'15:45', title:'MATH 219 + GEOE 201',
    pre:'08:40 MATH öncesi 10 dk: Boyce\'ta bu haftanın bölümüne göz gezdir. Derse gitmediysen 08:40–10:30 MATH kısmını masada yap',
@@ -1948,11 +1948,11 @@ const PLAN = [
    pre:'10:40 MATH öncesi 10 dk: Salı konusundan 1 soruyu kapalı notla çöz. Derse gitmediysen 10:40–12:30 MATH masa bloğu, CHEM\'e (12:40) git',
    parts:[
     {c:'MATH 219', dk:80, t:T_MATH, steps:['15 dk — haftanın iki dersinin yöntem haritasını tek sayfaya çiz','50 dk — 5 soru, karışık sıra. Her soruda önce "tip ne, hangi yöntem" yaz, sonra çöz','15 dk — yanlışları hata defterine yaz; görüp çözdüğün her soruyu yarın sıfırdan tekrar çöz']},
-    {c:'CHEM 111', dk:30, t:T_CHEM, steps:['20 dk — öğlenki dersten 3 soru (bölüm sonu)','10 dk — Pazartesi yanlış yaptığın sorulardan 1\'ini sıfırdan çöz']}]},
+    {c:'CHEM 111', dk:30, t:T_CHEM, steps:['10 dk — öğlenki derste anlamadığın bir şey varsa Claude\'a "Karar-Önce, CHEM 111, konu: X"; yoksa geç','15 dk — öğlenki dersten 2–3 soru (bölüm sonu)','5 dk — Pazartesi yanlış yaptığın sorulardan 1\'ini sıfırdan çöz']}]},
   {id:'cum', day:5, start:'13:30', end:'15:45', title:'ES 221 + mini-sınav',
    pre:'09:40 öncesi 10 dk: bu haftanın konusunu Hibbeler/Beer\'den göz gezdir. ES\'de dönemde en fazla 4 devamsızlık',
    parts:[
-    {c:'ES 221', dk:60, t:T_ES, steps:['10 dk — sabah çözülen örneklerin sadece SORU kısmını yaz','40 dk — onları çözüme bakmadan çöz. İlk iş her zaman serbest cisim diyagramı (FBD)','10 dk — FBD\'de ne kaçırdığını hata defterine yaz']},
+    {c:'ES 221', dk:60, t:T_ES, steps:['5 dk — sabah çözülen örneklerin soru kısımlarını kopyala (çözüm görünmesin)','25 dk — anlamadığını Claude\'dan öğren: "Karar-Önce, ES 221, konu: X" → toolbox, yöntem haritası, 1 etiketli örnek. Bitince sohbeti kapat','25 dk — kopyaladığın soruları çözüme bakmadan çöz. İlk iş her zaman serbest cisim diyagramı (FBD)','5 dk — takıldığın yeri hata defterine yaz']},
     {c:'Mini-sınav', dk:45, steps:['Claude\'a "olcme: deneme sınavı, bu haftanın MATH + ES konuları" de — kaynaksız, süreli, 10–15 soru','Puanı ve yanlış tiplerini hata defterine işle. En düşük ders Cumartesi bloğuna gider']}]},
   {id:'cmt', day:6, start:'11:00', end:'13:00', title:'Geride kalan ders', kind:'catchup',
    parts:[
