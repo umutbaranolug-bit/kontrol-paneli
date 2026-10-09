@@ -188,6 +188,28 @@ dialog#phoneDlg::backdrop{background:oklch(0% 0 0 / .55); backdrop-filter:blur(2
 .analiz-link{display:flex; align-items:center; gap:10px; text-decoration:none; color:var(--text);}
 .analiz-link:hover{border-color:var(--teal);}
 .analiz-link b{color:var(--teal);}
+/* Bugünün bloğu */
+.pb{border-color:var(--teal);}
+.pb-done{border-color:var(--teal); background:linear-gradient(135deg, oklch(77% 0.11 195 / .10), var(--surface) 70%);}
+.pb-skip{opacity:.75;}
+.pb-h{display:flex; align-items:flex-start; gap:12px;}
+.pb-h>div:first-child{flex:1; min-width:0;}
+.pb-k{font-size:11px; letter-spacing:.08em;}
+.pb-t{font-size:16px;}
+.pb-pct{font-family:'JetBrains Mono',monospace; font-weight:700; color:var(--teal); font-size:18px; font-variant-numeric:tabular-nums;}
+.pb-bar{height:4px; background:var(--surface2); border-radius:3px; margin:10px 0 8px; overflow:hidden;}
+.pb-bar span{display:block; height:100%; background:var(--teal); transition:width .2s ease;}
+.pb-phone{font-size:12px; margin-bottom:6px;}
+.pb-part{margin-top:12px;}
+.pb-part-h{display:flex; align-items:center; gap:8px; margin-bottom:4px;}
+.pb-go{padding:4px 10px; font-size:12px;}
+.pb-topic{font-size:12px; margin:0 0 6px; padding:6px 9px; border-left:2px solid var(--accent); background:var(--surface2); border-radius:0 7px 7px 0;}
+.pb-step{display:flex; gap:9px; align-items:flex-start; padding:7px 4px; font-size:13.5px; line-height:1.4; cursor:pointer; border-radius:7px;}
+.pb-step:hover{background:var(--surface2);}
+.pb-step input{margin-top:2px; flex:none; width:17px; height:17px; padding:0; accent-color:var(--teal);}
+.pb-step.on span{color:var(--muted); text-decoration:line-through;}
+.pb-pick{font-size:13px; margin-top:10px; padding:9px 11px; background:var(--surface2); border-radius:9px; line-height:1.7;}
+.pb-foot{margin-top:10px;}
 @media (prefers-reduced-motion:reduce){ *{transition:none!important; animation:none!important;} }
 /* Sekme etiketleri: masaüstünde uzun ad, telefonda ikon + kısa ad */
 .ti, .ts{display:none;}
@@ -350,6 +372,7 @@ body.tab-today .chain .btn, body.tab-kronometre .chain .btn{display:none;}
   <div class="today-grid">
   <div class="tcol tcol-a">
   <div id="quickStart"></div>
+   <div id="todayBlock"></div>
   <div class="card" id="prioBox"></div>
   <div id="todayExam"></div>
   <div id="todaySuggest"></div>
@@ -1457,6 +1480,7 @@ function updateTabBadges(){
 }
 function renderToday(){
   try{ updateTabBadges(); }catch(e){}
+  try{ renderBlock(); }catch(e){}
   const now = new Date(); const day = now.getDay();
   const exams = deadlines.filter(d=>d.type==='exam'&&!d.done&&daysLeft(d.date)>=0&&daysLeft(d.date)<=14).sort((a,b)=>a.date.localeCompare(b.date));
   if(exams.length){
@@ -1895,6 +1919,169 @@ document.addEventListener('keydown', e => {
   else if(kl === 'n'){ e.preventDefault(); activateTab(document.getElementById('tab-hatadefteri')); const f = document.getElementById('mCourse'); if(f) f.focus(); }
 });
 
+// ---------- Haftalık plan: "Bugünün bloğu" ----------
+// Plan sabit ve kodda (Claude günceller). Sadece işaretler (planLog) saklanır ve eşitlenir.
+// Takvim yalnızca tetikleyici: saat gelince bildirim → panelde bu kart.
+// t: [[başlangıç tarihi, konu], …] — bugünün tarihine göre "bu hafta" ve "sıradaki" seçilir.
+const T_MATH = [['2026-10-05','Ch.1–2 · 1. mertebe denklemler'],['2026-10-12','§7.1–7.2 · matrisler, sistemlere giriş'],['2026-10-19','§7.3 · özdeğer / özvektör'],['2026-10-26','§7.4, 7.6 · kompleks özdeğer'],['2026-11-02','§7.7–7.9 · tekrarlı özdeğer, homojen olmayan'],['2026-11-09','§4.1–4.2 · MT1 14 Kas Cmt 13:30'],['2026-11-16','§4.3–4.4'],['2026-11-23','§3.7–3.8, 5.1–5.2'],['2026-11-30','§5.3, 5.5 · seriler'],['2026-12-07','§6.1–6.3 · Laplace'],['2026-12-14','§6.4–6.6 · MT2 19 Ara Cmt 13:30'],['2026-12-21','§10.1–10.2 · Fourier'],['2026-12-28','§10.3–10.5 · Final 7 Oca']];
+const T_ES   = [['2026-10-09','Genel prensipler, kuvvet vektörleri'],['2026-10-23','Parçacık dengesi'],['2026-10-30','Kuvvet sistemi bileşkeleri · moment = r×F'],['2026-11-06','Rijit cisim dengesi'],['2026-11-20','Yapı analizi · MT1 22 Kas 14:40'],['2026-11-27','Yapı analizi'],['2026-12-04','İç kuvvetler, centroid, atalet momenti · MT2 20 Ara 14:40']];
+const T_PETE = [['2026-10-12','Porozite-1 · Quiz-1 Çarşamba'],['2026-10-19','Porozite-2'],['2026-10-26','Permeabilite-1 · Quiz-2 Çarşamba'],['2026-11-02','Permeabilite-2'],['2026-11-09','Permeabilite-3 · Quiz-3 Çarşamba'],['2026-11-16','Saturasyon'],['2026-11-30','MIDTERM bu hafta'],['2026-12-07','Kaya mekaniği / elektriksel özellikler'],['2026-12-14','IFT & ıslanabilirlik · Quiz-4'],['2026-12-21','Kapiler basınç & rel. perm · Quiz-5']];
+const T_CHEM = [['2026-10-05','Ch1–2 · ölçüm, atom/iyon (sıra tahmini)'],['2026-10-12','Ch3 · stokiyometri'],['2026-10-19','Ch4 · sulu çözeltiler'],['2026-10-26','Ch5 · termokimya · MT1 7 Kas 09:30 (≈Ch1–5)'],['2026-11-09','Ch6–10 · MT2 12 Ara 09:30']];
+const T_GEOE = [['2026-10-05','Ü1–2 · giriş, Dünya\'nın içi, levha tektoniği (hafta tahmini)'],['2026-10-19','Ü3 · mineraller, kayaçlar, kaya döngüsü'],['2026-10-26','Ü4–5 · magmatik, sedimanter (PETE için en önemli)'],['2026-11-02','Ü6 · metamorfizma · MT1 11 Kas (%20)'],['2026-11-16','Ü7–8 · yüzey süreçleri, yeraltı suyu'],['2026-11-30','Ü9 · deformasyon · MT2 15 Ara (%30)'],['2026-12-14','Ü10–11 · depremler, stratigrafi']];
+
+const PLAN = [
+  {id:'pzt', day:1, start:'15:45', end:'17:15', title:'CHEM 111 + PETE 220',
+   pre:'10:40 CHEM öncesi 10 dk: Brown\'da bugünkü bölümün başlıklarına ve kalın terimlere göz gezdir',
+   parts:[
+    {c:'CHEM 111', dk:40, t:T_CHEM, steps:['5 dk — bugünkü derste gösterilen soru tiplerini başlık olarak yaz','25 dk — bölüm sonundan 4 soru, kitap kapalı. Takılırsan sadece ilk adıma bak, kapat, baştan çöz','10 dk — yanlışları hata defterine yaz (ne yaptım / neden)']},
+    {c:'PETE 220', dk:45, t:T_PETE, steps:['35 dk — ODTÜClass\'taki bu haftanın materyalini oku, her alt başlığa 1 cümle özet','10 dk — tanım ve formülleri tek kağıda çıkar (Çarşamba bakacaksın)']}]},
+  {id:'sal', day:2, start:'14:00', end:'15:45', title:'MATH 219 + GEOE 201',
+   pre:'08:40 MATH öncesi 10 dk: Boyce\'ta bu haftanın bölümüne göz gezdir. Derse gitmediysen 08:40–10:30 MATH kısmını masada yap',
+   parts:[
+    {c:'MATH 219', dk:60, t:T_MATH, steps:['10 dk — sabahki derste hangi denklem tipi / yöntem işlendi? Tahta fotoğrafından sadece başlıklar','20 dk — Claude\'a "Karar-Önce, bugünkü konu: X". Yöntem haritası: hangi engeli kaldırıyor, ne zaman seçilir','30 dk — suggested problems\'tan 3 soru. Önce SADECE sınıflandır, sonra çöz']},
+    {c:'GEOE 201', dk:45, t:T_GEOE, steps:['20 dk — sabahki notları temize çek, her süreci şema/döngü olarak çiz','25 dk — "bu neden böyle oluşur?" tipi 3 soru yaz, kitapsız cevapla']}]},
+  {id:'car', day:3, start:'11:00', end:'12:15', title:'GEOE 201 + PETE quiz hazırlık',
+   parts:[
+    {c:'GEOE 201', dk:30, t:T_GEOE, steps:['10 dk — Salı ve bu sabahın notlarını yan yana koy','20 dk — Salı yazdığın 3 soruyu notsuz tekrar cevapla, 2 yeni soru ekle (harita dersi varsa: o sabahki haritayı kendin tekrar çiz)']},
+    {c:'PETE 220', dk:30, t:T_PETE, steps:['15 dk — Pazartesi\'nin tanım/formül kağıdını kapalı yaz, sonra karşılaştır','15 dk — her formül için "hangi birimle, ne ölçülüyor?" — 13:40 recitation asla kaçmaz']}]},
+  {id:'prs', day:4, start:'14:00', end:'16:00', title:'MATH 219 ana seans + CHEM',
+   pre:'10:40 MATH öncesi 10 dk: Salı konusundan 1 soruyu kapalı notla çöz. Derse gitmediysen 10:40–12:30 MATH masa bloğu, CHEM\'e (12:40) git',
+   parts:[
+    {c:'MATH 219', dk:80, t:T_MATH, steps:['15 dk — haftanın iki dersinin yöntem haritasını tek sayfaya çiz','50 dk — 5 soru, karışık sıra. Her soruda önce "tip ne, hangi yöntem" yaz, sonra çöz','15 dk — yanlışları hata defterine yaz; görüp çözdüğün her soruyu yarın sıfırdan tekrar çöz']},
+    {c:'CHEM 111', dk:30, t:T_CHEM, steps:['20 dk — öğlenki dersten 3 soru (bölüm sonu)','10 dk — Pazartesi yanlış yaptığın sorulardan 1\'ini sıfırdan çöz']}]},
+  {id:'cum', day:5, start:'13:30', end:'15:45', title:'ES 221 + mini-sınav',
+   pre:'09:40 öncesi 10 dk: bu haftanın konusunu Hibbeler/Beer\'den göz gezdir. ES\'de dönemde en fazla 4 devamsızlık',
+   parts:[
+    {c:'ES 221', dk:60, t:T_ES, steps:['10 dk — sabah çözülen örneklerin sadece SORU kısmını yaz','40 dk — onları çözüme bakmadan çöz. İlk iş her zaman serbest cisim diyagramı (FBD)','10 dk — FBD\'de ne kaçırdığını hata defterine yaz']},
+    {c:'Mini-sınav', dk:45, steps:['Claude\'a "olcme: deneme sınavı, bu haftanın MATH + ES konuları" de — kaynaksız, süreli, 10–15 soru','Puanı ve yanlış tiplerini hata defterine işle. En düşük ders Cumartesi bloğuna gider']}]},
+  {id:'cmt', day:6, start:'11:00', end:'13:00', title:'Geride kalan ders', kind:'catchup',
+   parts:[
+    {c:'', dk:120, steps:['15 dk — seçtiğin dersin bu haftaki hata defteri kayıtlarını oku','75 dk — o hata tiplerinden 6 YENİ soru (aynı tip, farklı soru)','20 dk — görüp çözdüğün soruları sıfırdan tekrar çöz','10 dk — panele işle (hata defteri / tekrar)']}]},
+  {id:'paz', day:0, start:'20:00', end:'20:30', title:'Haftalık review', kind:'review',
+   parts:[
+    {c:'', dk:30, steps:['Yukarıdaki blok sayısına bak, Claude\'a "haftalık review" de','Gelecek hafta takvimde blokları bozan etkinlik var mı? Varsa o bloğu şimdi başka boşluğa taşı','Sınavına 14 gün kalan ders varsa: o dersin bloklarını D-14 triyajına göre doldur']}]}
+];
+const PLAN_START = '2026-10-09';   // sistem bu tarihte kuruldu — öncesi "kaçan blok" sayılmaz
+const DAY3 = ['Paz','Pzt','Sal','Çar','Prş','Cum','Cmt'];
+
+let planLog = sget('planLog', {});   // {yyyy-mm-dd: {blokId: {s:[adım anahtarları], skip:sebep}}}
+
+function planFor(d){ d = d || new Date(); return PLAN.find(b => b.day === d.getDay()) || null; }
+function blockKeys(b){
+  const ks = b.pre ? ['pre'] : [];
+  b.parts.forEach((p,pi) => p.steps.forEach((_,si) => ks.push(pi+'-'+si)));
+  return ks;
+}
+function blockEntry(date, b){ return ((planLog[date]||{})[b.id]) || {s:[], skip:''}; }
+// 'done' = tüm adımlar; 'part' = en az biri; 'skip' = bilerek atlandı; '' = hiç
+function blockState(date, b){
+  const e = blockEntry(date, b), all = blockKeys(b), n = all.filter(k => e.s.includes(k)).length;
+  if(n === all.length) return 'done';
+  if(e.skip) return 'skip';
+  return n ? 'part' : '';
+}
+function topicNow(list, date){
+  if(!list) return null;
+  let cur = null, nxt = null;
+  for(const [from, txt] of list){ if(from <= date) cur = txt; else { nxt = nxt || txt; } }
+  return {cur, nxt};
+}
+function planToggle(bid, key){
+  const date = ymd(); planLog[date] = planLog[date] || {};
+  const e = planLog[date][bid] = planLog[date][bid] || {s:[], skip:''};
+  const i = e.s.indexOf(key);
+  if(i >= 0) e.s.splice(i,1); else { e.s.push(key); e.skip = ''; }
+  planPrune(); sset('planLog', planLog); renderBlock();
+}
+function planSkip(bid){
+  const r = prompt('Bu blok neden yapılmadı? (telefon / etkinlik / yorgunluk / başka)');
+  if(r === null) return;
+  const date = ymd(); planLog[date] = planLog[date] || {};
+  const e = planLog[date][bid] = planLog[date][bid] || {s:[], skip:''};
+  e.skip = r.trim() || 'belirtilmedi';
+  planPrune(); sset('planLog', planLog); renderBlock();
+}
+function planUnskip(bid){
+  const e = (planLog[ymd()]||{})[bid]; if(!e) return;
+  e.skip = ''; sset('planLog', planLog); renderBlock();
+}
+function planPrune(){ Object.keys(planLog).forEach(k => { if(daysAgo(k) > 120) delete planLog[k]; }); }
+function planStart(tag){
+  if(ch.phase === 'idle' && tag){ ch.tag = tag; chSave(); }
+  quickStart();
+}
+// Bu haftanın (Pzt'den bugüne) bloklarının durumu
+function weekBlocks(){
+  const out = [], now = new Date(); now.setHours(0,0,0,0);
+  const back = (now.getDay() + 6) % 7;            // Pazartesi'den bu yana gün
+  for(let i = back; i >= 0; i--){
+    const d = new Date(now); d.setDate(d.getDate() - i);
+    const b = planFor(d); if(!b || b.kind === 'review') continue;
+    const k = ymd(d); if(k < PLAN_START) continue;
+    out.push({date:k, b, st:blockState(k, b), today:i===0, why:blockEntry(k,b).skip});
+  }
+  return out;
+}
+// Son 7 gün özeti — haftalık review verisi
+function planWeekStats(){
+  let n = 0, done = 0, part = 0; const skips = {};
+  for(let i = 1; i <= 7; i++){
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const b = planFor(d); if(!b || b.kind === 'review') continue;
+    const k = ymd(d); if(k < PLAN_START) continue;
+    const st = blockState(k, b); n++;
+    if(st === 'done') done++; else if(st === 'part') part++;
+    if(st === 'skip'){ const w = (blockEntry(k,b).skip||'').toLowerCase(); skips[w] = (skips[w]||0) + 1; }
+  }
+  return {n, done, part, skips};
+}
+const ST_LBL = {done:'✓ tamam', part:'◐ yarım', skip:'✕ atlandı', '':'○ yapılmadı'};
+function renderBlock(){
+  const el = document.getElementById('todayBlock'); if(!el) return;
+  const now = new Date(), date = ymd(now), b = planFor(now);
+  if(!b){ el.innerHTML = ''; return; }
+  const e = blockEntry(date, b), all = blockKeys(b), doneN = all.filter(k => e.s.includes(k)).length;
+  const st = blockState(date, b), pct = Math.round(100*doneN/all.length);
+  const hm = pad(now.getHours())+':'+pad(now.getMinutes());
+  const phase = hm < b.start ? 'saat '+b.start+'\'te başlıyor' : (hm <= b.end ? 'şu an blok saati' : 'blok saati geçti');
+  const chk = (key, txt) => {
+    const on = e.s.includes(key);
+    return `<label class="pb-step${on?' on':''}"><input type="checkbox" ${on?'checked':''} onchange="planToggle('${b.id}','${key}')"><span>${esc(txt)}</span></label>`;
+  };
+  let extra = '';
+  if(b.kind === 'catchup'){
+    const missed = weekBlocks().filter(x => !x.today && x.st !== 'done');
+    const ex = deadlines.filter(d=>d.type==='exam'&&!d.done&&daysLeft(d.date)>=0).sort((a,c)=>a.date.localeCompare(c.date))[0];
+    extra = `<div class="pb-pick"><b>Hangi ders?</b> ` + (missed.length
+      ? 'Bu hafta tamamlanmayan bloklar: ' + missed.map(x => `<span class="tag">${DAY3[new Date(x.date+'T00:00').getDay()]} · ${esc(x.b.title)} · ${ST_LBL[x.st]}</span>`).join(' ') + ' → en çok kaçan dersi seç.'
+      : 'Kaçan blok yok 👍 → Cuma mini-sınavında en düşük çıkan ders' + (ex ? `; o da yoksa en yakın sınav: <b>${esc(ex.title)}</b> (${daysLeft(ex.date)} gün)` : '') + '.')
+      + '</div>';
+  }
+  if(b.kind === 'review'){
+    const ws = planWeekStats();
+    const sk = Object.entries(ws.skips).map(([k,v]) => esc(k)+' ×'+v).join(', ');
+    extra = `<div class="pb-pick">Son 7 gün: <b>${ws.done}/${ws.n}</b> blok tamam${ws.part ? ', '+ws.part+' yarım' : ''}${sk ? ' · atlanma sebepleri: '+sk : ''}. <button class="linkish" onclick="activateTab(document.getElementById('tab-review'))">Review sekmesine git →</button></div>`;
+  }
+  const parts = b.parts.map((p,pi) => {
+    const tp = topicNow(p.t, date);
+    const head = p.c ? `<div class="pb-part-h"><b>${esc(p.c)}</b><span class="muted">${p.dk} dk</span><span class="spacer"></span>${
+      ch.phase==='idle' && p.c!=='Mini-sınav' ? `<button class="btn ghost pb-go" onclick="planStart('${esc(p.c)}')" aria-label="${esc(p.c)} için sayacı başlat">▶ başlat</button>` : ''}</div>` : '';
+    const topic = tp && tp.cur ? `<div class="pb-topic">Bu hafta: <b>${esc(tp.cur)}</b>${tp.nxt ? ' <span class="muted">· sonra: '+esc(tp.nxt)+'</span>' : ''}</div>` : '';
+    return `<div class="pb-part">${head}${topic}${p.steps.map((s,si) => chk(pi+'-'+si, s)).join('')}</div>`;
+  }).join('');
+  el.innerHTML = `<div class="card pb pb-${st||'none'}">
+    <div class="pb-h"><div><div class="muted pb-k">BUGÜNÜN BLOĞU · ${b.start}–${b.end} · ${phase}</div><b class="pb-t">${esc(b.title)}</b></div>
+      <div class="pb-pct" aria-label="${doneN} / ${all.length} adım">${pct}%</div></div>
+    <div class="pb-bar"><span style="width:${pct}%"></span></div>
+    <div class="muted pb-phone">📵 Telefon başka odada.</div>
+    ${b.pre ? `<div class="pb-part pb-pre"><div class="pb-part-h"><b>Derse girmeden</b></div>${chk('pre', b.pre)}</div>` : ''}
+    ${extra}${parts}
+    <div class="row pb-foot">${st==='done' ? '<b style="color:var(--teal)">Blok tamam ✓</b>'
+      : st==='skip' ? `<span class="muted">Atlandı: ${esc(e.skip)}</span><button class="linkish" onclick="planUnskip('${b.id}')">geri al</button>`
+      : (b.kind==='review' ? '' : `<button class="linkish" onclick="planSkip('${b.id}')">Bugün yapamadım — sebebini yaz</button>`)}</div>
+  </div>`;
+}
+
 // ---------- Weekly review ----------
 const REVIEW_ITEMS = [
   'Bu haftaki tüm ders notlarını gözden geçirdim (aktif hatırlama ile, okuyarak değil)',
@@ -1934,6 +2121,11 @@ function weekPatterns(){
     if(cs.bias > 8) bits.push('◎ tahminlerin gerçeğin <b style="color:var(--danger)">+'+cs.bias+' puan</b> üstünde — bildiğini sandığın konular aslında oturmamış' + (cs.worst && cs.worst.b>12 ? ' (en çok: <b>'+esc(cs.worst.c)+'</b>)' : ''));
     else if(cs.bias < -8) bits.push('◎ tahminlerin gerçeğin <b>'+cs.bias+' puan</b> altında — sandığından iyi biliyorsun, gereksiz tekrara zaman gitmiş olabilir');
     else bits.push('◎ kalibrasyonun iyi (sapma '+(cs.bias>0?'+':'')+cs.bias+' puan) — neye ne kadar çalışacağını doğru kestiriyorsun');
+  }
+  const pw = planWeekStats();
+  if(pw.n){
+    const sk = Object.entries(pw.skips).sort((a,b)=>b[1]-a[1])[0];
+    bits.push('📚 plan bloğu <b style="color:'+(pw.done>=pw.n*0.7?'var(--teal)':'var(--danger)')+'">'+pw.done+'/'+pw.n+'</b> tamam'+(pw.part?' · '+pw.part+' yarım':'')+(sk?' · en sık atlanma sebebi: <b>'+esc(sk[0])+'</b>':''));
   }
   const ms = modeSpan(7);
   if(ms.pct !== null){
@@ -2657,7 +2849,7 @@ function applyClaudeAction(){
 }
 
 function exportData(){
-  const keys=['deadlines','schedule','prio','focusLog','reviews','mistakes','triage','chrono','tagLog','urgeLog','breakLog','sleepLog','modeLog','calibLog','tierLog','settings','term','terms','courses','gpaBase','phoneLog'];
+  const keys=['deadlines','schedule','prio','focusLog','reviews','mistakes','triage','chrono','tagLog','urgeLog','breakLog','sleepLog','modeLog','calibLog','tierLog','settings','term','terms','courses','gpaBase','phoneLog','planLog'];
   const dump={};
   keys.forEach(k=>dump[k]=sget(k,null));
   try{ for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(k.startsWith('review-')) dump[k]=sget(k,null); } }catch(e){}
@@ -2672,7 +2864,7 @@ function importData(ev){
   r.onload=()=>{ try{
     const dump=JSON.parse(r.result);
     Object.entries(dump).forEach(([k,v])=>{ if(v!==null) sset(k,v); });
-    deadlines=sget('deadlines',[]); schedule=sget('schedule',[]); focusLog=sget('focusLog',{}); tagLog=sget('tagLog',{}); urgeLog=sget('urgeLog',{}); breakLog=sget('breakLog',{}); sleepLog=sget('sleepLog',{}); modeLog=sget('modeLog',{}); phoneLog=sget('phoneLog',{}); calibLog=sget('calibLog',[]); tierLog=sget('tierLog',{}); reviews=sget('reviews',[]); mistakes=sget('mistakes',[]); triage=sget('triage',{}); courses=sget('courses',[]); gpaBase=Object.assign(GB0(),sget('gpaBase',{})||{}); settings=Object.assign({},SET0,sget('settings',{})||{}); renderSettings(); renderCourses();
+    deadlines=sget('deadlines',[]); schedule=sget('schedule',[]); focusLog=sget('focusLog',{}); tagLog=sget('tagLog',{}); urgeLog=sget('urgeLog',{}); breakLog=sget('breakLog',{}); sleepLog=sget('sleepLog',{}); modeLog=sget('modeLog',{}); phoneLog=sget('phoneLog',{}); calibLog=sget('calibLog',[]); tierLog=sget('tierLog',{}); reviews=sget('reviews',[]); mistakes=sget('mistakes',[]); triage=sget('triage',{}); planLog=sget('planLog',{}); courses=sget('courses',[]); gpaBase=Object.assign(GB0(),sget('gpaBase',{})||{}); settings=Object.assign({},SET0,sget('settings',{})||{}); renderSettings(); renderCourses();
     prio=sget('prio',null)||PRIO0(); if(!Array.isArray(prio.items)||prio.items.length!==3) prio=PRIO0(); prio.items.forEach(x=>{if(typeof x.w!=='string')x.w='';}); prioRoll();
     ch=sget('chrono',null)||CH0(); if(ch.day!==ymd()) ch=CH0(); chLoop(); chRender();
     normalizePlans();
@@ -2689,7 +2881,7 @@ function importData(ev){
 // birbirinin üstüne hangi sürümden geldiğini taşıyor, gerçek bir çatal
 // (fork) varsa otomatik seçmek yerine soruyor ve kaybeden tarafı önce
 // dosyaya yedekliyor.
-const SYNC_KEYS = ['deadlines','schedule','prio','focusLog','reviews','mistakes','triage','chrono','tagLog','urgeLog','breakLog','sleepLog','modeLog','calibLog','tierLog','settings','lastExport','term','terms','courses','gpaBase','phoneLog'];
+const SYNC_KEYS = ['deadlines','schedule','prio','focusLog','reviews','mistakes','triage','chrono','tagLog','urgeLog','breakLog','sleepLog','modeLog','calibLog','tierLog','settings','lastExport','term','terms','courses','gpaBase','phoneLog','planLog'];
 let syncPushTimer = null, syncDirty = false;
 
 function syncUrl(){ try{ return localStorage.getItem('syncUrl')||''; }catch(e){ return ''; } }
@@ -2739,7 +2931,7 @@ function collectData(){
 function applyRemote(d){
   Object.entries(d).forEach(([k,v]) => { if(v!==null && v!==undefined) ssetRaw(k, v); });
   deadlines=sget('deadlines',[]); schedule=sget('schedule',[]);
-  focusLog=sget('focusLog',{}); tagLog=sget('tagLog',{}); urgeLog=sget('urgeLog',{}); breakLog=sget('breakLog',{}); sleepLog=sget('sleepLog',{}); modeLog=sget('modeLog',{}); phoneLog=sget('phoneLog',{}); calibLog=sget('calibLog',[]); tierLog=sget('tierLog',{}); reviews=sget('reviews',[]); mistakes=sget('mistakes',[]); triage=sget('triage',{}); courses=sget('courses',[]); gpaBase=Object.assign(GB0(),sget('gpaBase',{})||{}); settings=Object.assign({},SET0,sget('settings',{})||{}); renderSettings(); renderCourses();
+  focusLog=sget('focusLog',{}); tagLog=sget('tagLog',{}); urgeLog=sget('urgeLog',{}); breakLog=sget('breakLog',{}); sleepLog=sget('sleepLog',{}); modeLog=sget('modeLog',{}); phoneLog=sget('phoneLog',{}); calibLog=sget('calibLog',[]); tierLog=sget('tierLog',{}); reviews=sget('reviews',[]); mistakes=sget('mistakes',[]); triage=sget('triage',{}); planLog=sget('planLog',{}); courses=sget('courses',[]); gpaBase=Object.assign(GB0(),sget('gpaBase',{})||{}); settings=Object.assign({},SET0,sget('settings',{})||{}); renderSettings(); renderCourses();
   prio=sget('prio',null)||PRIO0(); if(!Array.isArray(prio.items)||prio.items.length!==3) prio=PRIO0(); prio.items.forEach(x=>{if(typeof x.w!=='string')x.w='';}); prioRoll();
   ch=sget('chrono',null)||CH0(); if(ch.day!==ymd()) ch=CH0(); ch.u=ch.u||0; ch.su=ch.su||0; ch.bl=ch.bl||10; if(typeof ch.lam!=='number') ch.lam=-1; if(typeof ch.tag!=='string') ch.tag=''; if(typeof ch.auto!=='boolean') ch.auto=true; ch.ls=ch.ls||0; if(ch.mode!=='aktif'&&ch.mode!=='pasif') ch.mode='aktif';
   normalizePlans();
