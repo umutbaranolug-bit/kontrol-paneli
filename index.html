@@ -2042,6 +2042,7 @@ function renderBlock(){
   if(!b){ el.innerHTML = ''; return; }
   const e = blockEntry(date, b), all = blockKeys(b), doneN = all.filter(k => e.s.includes(k)).length;
   const st = blockState(date, b), pct = Math.round(100*doneN/all.length);
+  const dueN = (reviews||[]).filter(r=>r.due<=date).length;
   const hm = pad(now.getHours())+':'+pad(now.getMinutes());
   const phase = hm < b.start ? 'saat '+b.start+'\'te başlıyor' : (hm <= b.end ? 'şu an blok saati' : 'blok saati geçti');
   const chk = (key, txt) => {
@@ -2074,6 +2075,7 @@ function renderBlock(){
       <div class="pb-pct" aria-label="${doneN} / ${all.length} adım">${pct}%</div></div>
     <div class="pb-bar"><span style="width:${pct}%"></span></div>
     <div class="muted pb-phone">📵 Telefon başka odada.</div>
+    ${dueN && b.kind!=='review' ? `<div class="pb-pick">🔁 <b>Önce tekrar:</b> ${dueN} konu bekliyor (≈${Math.min(15, dueN*(settings.dkTekrar||6))} dk, en fazla 15 dk — kalanı yarına). <button class="linkish" onclick="activateTab(document.getElementById('tab-tekrar'))">Tekrar sekmesine git →</button></div>` : ''}
     ${b.pre ? `<div class="pb-part pb-pre"><div class="pb-part-h"><b>Derse girmeden</b></div>${chk('pre', b.pre)}</div>` : ''}
     ${extra}${parts}
     <div class="row pb-foot">${st==='done' ? '<b style="color:var(--teal)">Blok tamam ✓</b>'
