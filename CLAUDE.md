@@ -23,8 +23,9 @@ Umut'un kişisel çalışma paneli: günlük öncelikler, deadline geri sayımı
 | `sw.js` | Service worker (aşağıda). |
 | `manifest.json` | PWA manifesti: `standalone`, `portrait`, `start_url`/`scope` `./`, tema `#0F141B`. |
 | `icon-192.png`, `icon-512.png` | PWA ikonları. |
+| `apps-script/Code.gs` | Sync backend'inin (Google Apps Script) **referans kopyası**. Push ile deploy olmaz; çalışan sürüm Google'daki Apps Script projesidir (bkz. [Sync](#sync-google-apps-script--sheets)). Uygulamanın parçası değil, `SHELL`'e eklenmez. |
 
-Repo'da **olmayanlar:** Apps Script (`Code.gs`) kaynağı ve arayüzde atıf yapılan `KURULUM.md`. Sunucu tarafı yalnızca Google'da yaşıyor.
+Repo'da **olmayan:** arayüzde atıf yapılan `KURULUM.md`.
 
 `index.html` içindeki kod `// ---------- Başlık ----------` yorumlarıyla bölümlenmiş; bir şeyi bulmak için fonksiyon adını grep'le. Yorumlar Türkçe ve çoğu "neden böyle" açıklıyor — aynı üslubu koru.
 
@@ -58,11 +59,24 @@ Kullanıcı metni `innerHTML`'e girmeden önce mutlaka `esc()`'ten geçer.
 
 ## Sync: Google Apps Script + Sheets
 
-Kurulum sekmesine girilen Web App URL'si (`syncUrl`) tek uç nokta. Sunucu kaynağı repo'da olmadığı için aşağıdaki, istemcinin beklediği sözleşmedir:
+Kurulum sekmesine girilen Web App URL'si (`syncUrl`) tek uç nokta. İstemci ile sunucu arasındaki sözleşme:
 
 - **Push:** `POST`, `Content-Type: text/plain`, gövde `{updatedAt, rev, baseRev, deviceId, deviceName, data}`. `data` = `collectData()` (tüm `SYNC_KEYS` + `review-*`).
 - **Pull:** `GET` → aynı zarfı JSON olarak döner; `data` yoksa "bulut boş" sayılıp ilk push yapılır.
 - Apps Script hata verince çoğu zaman 200 + HTML döndüğü için `pushSync` gövdeye de bakar; `<` ile başlıyorsa hata sayar. Doğrulanmamış cevapta "eşitlendi" denmez.
+
+**Sunucu tarafı (`apps-script/Code.gs`)**
+
+Bilerek aptal bir depo: gelen gövdeyi saklar, aynen geri verir. Zarfın içine bakmaz; `rev`/`baseRev`/`deviceId` sunucuda hiç okunmaz.
+
+- **Depolama:** script'in bağlı olduğu Spreadsheet'te `sync` sayfası, `A1` hücresi — tüm zarf tek bir JSON string. Sayfa yoksa ilk istekte oluşturulur. Script container-bound (`getActiveSpreadsheet()`), yani kodda Sheet ID yok; Web App URL'si de kodda değil, yalnızca cihazlardaki `syncUrl`'de durur. İkisi de repo'ya girmez.
+- **`doGet`:** `A1`'i JSON MIME tipiyle aynen döner; hücre boşsa `{}` (istemci bunu "bulut boş" sayar).
+- **`doPost`:** gövdeyi `JSON.parse` ile dener. Geçersizse hücreye dokunmaz, `{"error":"invalid json"}` döner; geçerliyse `A1`'in üzerine yazar ve `{"ok":true}` döner. İkisi de HTTP 200.
+- **Son yazan kazanır.** Sunucuda sürüm kontrolü, kilit (`LockService`) veya geçmiş yok; her POST öncekini ezer. "Hiçbir şey sessizce ezilmez" garantisi tamamen istemcideki pull-önce-push akışına ve çakışma kartına dayanır — iki cihaz pull yapmadan art arda push ederse sunucu bunu durdurmaz.
+- **Bilinen sınırlar:**
+  - Sheets'te bir hücre en fazla 50.000 karakter alır. Zarf bunu aşarsa `setValue` hata fırlatır, Apps Script 200 + HTML döner ve istemci bunu "EŞİTLENMEDİ" olarak gösterir (sessiz kayıp yok, ama sync o noktada durur). Loglar büyüdükçe gerçek bir risk; çözüm sunucuda parçalama ya da Drive dosyası olur.
+  - İstemci cevapta `error` alanına bakmıyor; `{"error":"invalid json"}` de "eşitlendi" sayılır. `pushSync` her zaman `JSON.stringify` çıktısı gönderdiği için pratikte tetiklenmez.
+- **Dağıtım:** Apps Script editöründe Web App olarak yayınlanır; istemci kimlik bilgisi göndermediği için erişim "Anyone" olmalı — URL'yi bilen herkes veriyi okuyup yazabilir, URL'yi gizli tut. `Code.gs`'i değiştirmek için repo'daki kopyayı düzenlemek yetmez: kodu editöre yapıştırıp **yeni sürüm olarak yeniden dağıtmak** gerekir (mevcut dağıtımı güncelle ki URL değişmesin). Repo kopyası ile canlı script'i elle eş tut.
 
 Tetikleyiciler: her `sset` → 8 sn debounce ile push; sekme gizlenince bekleyen değişiklik hemen push; sekme görünür olunca ve açılışta otomatik pull.
 
