@@ -3002,6 +3002,9 @@ async function pushSync(force){
     if(!res.ok) throw new Error('HTTP '+res.status);
     const body = (await res.text()).trim();
     if(body.startsWith('<')) throw new Error('sunucu HTML döndü — Web App dağıtımı/erişim ayarını kontrol et');
+    // Sunucu yazamadığında da HTTP 200 döner, hata gövdede: {"error":"..."}
+    let ans = null; try{ ans = JSON.parse(body); }catch(e){}
+    if(ans && ans.error) throw new Error('sunucu: '+ans.error);
     syncDirty = false;
     ssetRaw('lastSeenRemoteRev', rev);
     ssetRaw('lastSync', todayKey()); checkBackup();
@@ -3018,6 +3021,9 @@ async function pullSync(auto){
     setSyncStatus('bulut kontrol ediliyor…');
     const res = await fetch(url);
     const j = await res.json();
+    // Hata cevabında da data yok; bunu "bulut boş" sayarsak yerel veri çakışma
+    // kontrolü olmadan bulutun üstüne yazılır. Boş bulut ile bozuk bulut ayrı şeyler.
+    if(j && j.error){ setSyncStatus('eşitleme hatası — sunucu: '+j.error, false); return; }
     if(!j || !j.data){ setSyncStatus('bulut boş — ilk gönderim yapılıyor'); pushSync(); return; }
     const sameDevice = j.deviceId === deviceId();
     const localT = sget('dataUpdatedAt', 0);

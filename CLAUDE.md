@@ -23,7 +23,7 @@ Umut'un kişisel çalışma paneli: günlük öncelikler, deadline geri sayımı
 | `sw.js` | Service worker (aşağıda). |
 | `manifest.json` | PWA manifesti: `standalone`, `portrait`, `start_url`/`scope` `./`, tema `#0F141B`. |
 | `icon-192.png`, `icon-512.png` | PWA ikonları. |
-| `apps-script/Code.gs` | Sync backend'inin (Google Apps Script) **referans kopyası**. Push ile deploy olmaz; çalışan sürüm Google'daki Apps Script projesidir (bkz. [Sync](#sync-google-apps-script--sheets)). Uygulamanın parçası değil, `SHELL`'e eklenmez. |
+| `apps-script/Code.gs` | Sync backend'inin (Google Apps Script) **referans kopyası**. Push ile deploy olmaz; çalışan sürüm Google'daki Apps Script projesidir (bkz. [Sync](#sync-google-apps-script--drive)). Uygulamanın parçası değil, `SHELL`'e eklenmez. |
 
 Repo'da **olmayan:** arayüzde atıf yapılan `KURULUM.md`.
 
@@ -57,25 +57,29 @@ Kullanıcı metni `innerHTML`'e girmeden önce mutlaka `esc()`'ten geçer.
 - Farklı origin'e giden istekler (Apps Script sync) ve GET olmayanlar SW'den geçmez.
 - SW'nin ikinci işi bildirim: Android Chrome'da `new Notification()` yasak, mola bildirimi `registration.showNotification()` ile çıkıyor. `notificationclick` açık paneli öne getirir, yoksa açar.
 
-## Sync: Google Apps Script + Sheets
+## Sync: Google Apps Script + Drive
 
 Kurulum sekmesine girilen Web App URL'si (`syncUrl`) tek uç nokta. İstemci ile sunucu arasındaki sözleşme:
 
 - **Push:** `POST`, `Content-Type: text/plain`, gövde `{updatedAt, rev, baseRev, deviceId, deviceName, data}`. `data` = `collectData()` (tüm `SYNC_KEYS` + `review-*`).
 - **Pull:** `GET` → aynı zarfı JSON olarak döner; `data` yoksa "bulut boş" sayılıp ilk push yapılır.
 - Apps Script hata verince çoğu zaman 200 + HTML döndüğü için `pushSync` gövdeye de bakar; `<` ile başlıyorsa hata sayar. Doğrulanmamış cevapta "eşitlendi" denmez.
+- Cevapta `error` alanı varsa (`{"error":"..."}`, HTTP 200) hem `pushSync` hem `pullSync` bunu hata sayar. Pull tarafı özellikle önemli: hata cevabında da `data` yok, "bulut boş" sayılsaydı yerel veri çakışma kontrolü olmadan buluta yazılırdı.
 
 **Sunucu tarafı (`apps-script/Code.gs`)**
 
 Bilerek aptal bir depo: gelen gövdeyi saklar, aynen geri verir. Zarfın içine bakmaz; `rev`/`baseRev`/`deviceId` sunucuda hiç okunmaz.
 
-- **Depolama:** script'in bağlı olduğu Spreadsheet'te `sync` sayfası, `A1` hücresi — tüm zarf tek bir JSON string. Sayfa yoksa ilk istekte oluşturulur. Script container-bound (`getActiveSpreadsheet()`), yani kodda Sheet ID yok; Web App URL'si de kodda değil, yalnızca cihazlardaki `syncUrl`'de durur. İkisi de repo'ya girmez.
-- **`doGet`:** `A1`'i JSON MIME tipiyle aynen döner; hücre boşsa `{}` (istemci bunu "bulut boş" sayar).
-- **`doPost`:** gövdeyi `JSON.parse` ile dener. Geçersizse hücreye dokunmaz, `{"error":"invalid json"}` döner; geçerliyse `A1`'in üzerine yazar ve `{"ok":true}` döner. İkisi de HTTP 200.
-- **Son yazan kazanır.** Sunucuda sürüm kontrolü, kilit (`LockService`) veya geçmiş yok; her POST öncekini ezer. "Hiçbir şey sessizce ezilmez" garantisi tamamen istemcideki pull-önce-push akışına ve çakışma kartına dayanır — iki cihaz pull yapmadan art arda push ederse sunucu bunu durdurmaz.
+- **Depolama:** script sahibinin Drive'ında `kontrol-paneli-sync.json` dosyası (`DriveApp`) — tüm zarf tek bir JSON string. Dosya ID'si Script Properties'te (`SYNC_FILE_ID`) durur, kodda değil; dosya adla aranmaz. Web App URL'si de kodda değil, yalnızca cihazlardaki `syncUrl`'de. İkisi de repo'ya girmez.
+- **Taşıma (`migrate_`):** `SYNC_FILE_ID` yoksa ilk GET/POST isteğinde çalışır: eski deponun (bağlı Spreadsheet, `sync!A1`) içeriğini Drive dosyasına kopyalar, geri okuyup doğrular, sonra ID'yi kaydeder. `A1` silinmez — taşıma anındaki hali yedek olarak kalır, hücreye yalnızca bir not düşülür. Script hâlâ container-bound, ama Spreadsheet taşımadan sonra okunmaz.
+- **`doGet`:** dosyayı JSON MIME tipiyle aynen döner; boşsa `{}` (istemci bunu "bulut boş" sayar). Hata **yakalanmaz**: Apps Script HTML hata sayfası döner, istemcinin her sürümü bunu hata sayar.
+- **`doPost`:** gövdeyi `JSON.parse` ile dener. Geçersizse dosyaya dokunmaz, `{"error":"invalid json"}` döner; geçerliyse dosyanın üzerine yazar ve `{"ok":true}` döner. Yazma hatası (Drive, kilit zaman aşımı) `{"error":"<mesaj>"}` olarak döner. Hepsi HTTP 200.
+- **Dosya kaybolursa yenisi oluşturulmaz**, hata verilir (çöp kutusundaysa da). Bilerek: boş dosya "bulut boş" demek, o da ilk bağlanan cihazın verisini kontrolsüz buluta yazması demek. Dosya gerçekten gittiyse `SYNC_FILE_ID` özelliği elle silinir, sonraki istek yeniden kurar.
+- **Son yazan kazanır.** Sunucuda sürüm kontrolü veya geçmiş yok; her POST öncekini ezer. `LockService` yalnızca taşıma ile okuma/yazmanın iç içe girmesini engeller, çakışma çözmez. "Hiçbir şey sessizce ezilmez" garantisi tamamen istemcideki pull-önce-push akışına ve çakışma kartına dayanır — iki cihaz pull yapmadan art arda push ederse sunucu bunu durdurmaz.
 - **Bilinen sınırlar:**
-  - Sheets'te bir hücre en fazla 50.000 karakter alır. Zarf bunu aşarsa `setValue` hata fırlatır, Apps Script 200 + HTML döner ve istemci bunu "EŞİTLENMEDİ" olarak gösterir (sessiz kayıp yok, ama sync o noktada durur). Loglar büyüdükçe gerçek bir risk; çözüm sunucuda parçalama ya da Drive dosyası olur.
-  - İstemci cevapta `error` alanına bakmıyor; `{"error":"invalid json"}` de "eşitlendi" sayılır. `pushSync` her zaman `JSON.stringify` çıktısı gönderdiği için pratikte tetiklenmez.
+  - `File.setContent` en fazla 10 MB alır (eski hücre limiti 50.000 karakterdi). Aşılırsa `doPost` `{"error":...}` döner, istemci "EŞİTLENMEDİ" gösterir.
+  - `DriveApp` tam Drive kapsamı (`auth/drive`) ister; script sahibinin tüm Drive'ına erişim yetkisi vardır, kod yalnızca kendi dosyasına dokunur.
+- **Editörden elle çalışan yardımcılar:** `yetkiVer()` (yalnızca izin ister, taşıma yapmaz) ve `durum()` (dosya URL'si + boyutları loglar).
 - **Dağıtım:** Apps Script editöründe Web App olarak yayınlanır; istemci kimlik bilgisi göndermediği için erişim "Anyone" olmalı — URL'yi bilen herkes veriyi okuyup yazabilir, URL'yi gizli tut. `Code.gs`'i değiştirmek için repo'daki kopyayı düzenlemek yetmez: kodu editöre yapıştırıp **yeni sürüm olarak yeniden dağıtmak** gerekir (mevcut dağıtımı güncelle ki URL değişmesin). Repo kopyası ile canlı script'i elle eş tut.
 
 Tetikleyiciler: her `sset` → 8 sn debounce ile push; sekme gizlenince bekleyen değişiklik hemen push; sekme görünür olunca ve açılışta otomatik pull.
