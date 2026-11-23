@@ -21,7 +21,7 @@ Umut'un kişisel çalışma paneli: günlük öncelikler, deadline geri sayımı
 | `index.html` | Uygulamanın tamamı (~3075 satır): CSS (1–~330), sekme çubuğu + 8 `<section>` (335–702), tek `<script>` bloğu (716–3075). Framework, bundler, modül yok. |
 | `analiz.html` | Salt okunur analiz paneli (ısı haritası, haftalık trend, ders↔kredi, dürtü/uyku/telefon/kalibrasyon grafikleri). localStorage'dan okur, hiçbir anahtara yazmaz, sync'e karışmaz. Kendi `get()` ve `esc()` kopyası var. |
 | `sw.js` | Service worker (aşağıda). |
-| `manifest.json` | PWA manifesti: `standalone`, `portrait`, `start_url`/`scope` `./`, tema `#0F141B`. |
+| `manifest.json` | PWA manifesti: `standalone`, `portrait`, `start_url`/`scope` `./`, tema `#F3F1EC` (v2 açık tema). |
 | `icon-192.png`, `icon-512.png` | PWA ikonları. |
 | `apps-script/Code.gs` | Sync backend'inin (Google Apps Script) **referans kopyası**. Push ile deploy olmaz; çalışan sürüm Google'daki Apps Script projesidir (bkz. [Sync](#sync-google-apps-script--drive)). Uygulamanın parçası değil, `SHELL`'e eklenmez. |
 
@@ -99,6 +99,19 @@ Bu akışa dokunan her değişiklikte "hiçbir şey sessizce ezilmez" garantisin
 
 ## Sekmeler
 
+**v2 (Kasım 2026):** arayüz 4 sekmeye indi, açık temaya geçti. 8 `<section>` DOM'da duruyor ama `dersler`, `tekrar`, `review` sekmelerinin butonları `hidden`; `TAB_ALIAS` eski bağlantıları yeni yere yönlendirir (`tekrar` → Notlar, `dersler` → Ayarlar, `review` → Bugün). Kronometre butonu da gizli; Bugün'deki "Başlat" ve `S` tuşu açar. Klavye `1`–`4`.
+
+| Buton | `section` id | İçerik |
+|---|---|---|
+| Bugün | `today` | Gün + Dönem akış şeritleri, sıradaki sınav kartı (plan şeridi, bugünün bloğu, Başlat), zincir + son 7 gün, tekrar (en fazla `RV_CAP` = 5), yaklaşan deadlineler. Eski kartlar (`quickStart`, `prioBox`, `todayWindow`, uyku…) `.v2-legacy` içinde gizli; render fonksiyonları çalışmaya devam eder. |
+| Sınavlar | `deadlines` | `#examView`: yaklaşan sınav listesi + seçili sınavın triyajı (tek buton Yok/Yarım/Hazır = `cycleTri`) + o dersin son 3 hatası. Altında tüm deadline'lar; tamamlananlar kapalı `<details>` içinde. |
+| Notlar | `hatadefteri` | Hata defteri (ilk 30, "Tümünü göster") + tekrar (Aktif / Uyuyor / Arşiv). |
+| Ayarlar | `kurulum` | Ders programı ızgarası, dersler + GPA, çalışma, senkron, Claude, veri; yoğun dönem ve akşam penceresi "Diğer" altında. |
+
+**Tekrar kapısı (`rvState`):** kart dersinin sıradaki sınavına `RV_WAKE` (14) günden fazla varsa "uyur", kalınca açılır; sınavı bilinmeyen ders her zaman aktif. Durum her seferinde `deadlines`'tan hesaplanır, saklanmaz. Kartta yalnızca kullanıcı arşivlerse `archived:true` olur (mistakes için de aynı alan).
+
+Aşağıdaki tablo v2 öncesi sekme düzenidir; veri şekilleri hâlâ geçerli.
+
 Klavye: `1`–`8` sekme, `S` başlat/mola/devam, `D` dürtü kaydı (çalışırken), `N` yeni hata kaydı. `index.html#review` gibi hash ile doğrudan sekme açılır.
 
 | # | Sekme (`section` id) | Ne yapar |
@@ -131,6 +144,10 @@ Klavye: `1`–`8` sekme, `S` başlat/mola/devam, `D` dürtü kaydı (çalışır
 | `add_course` | `code`*, `name`, `credit`, `retake`, `target`, `expect`, `note`, `comps: [{n, w, date}]` | `upsertCourse`: kod eşleşirse günceller, yoksa ekler. Tarihli her bileşen için `"KOD BİLEŞEN"` başlıklı deadline da açar (adında "lab" geçiyorsa `lab`, değilse `exam`; aynı başlık zaten varsa atlar). |
 | `set_grade` | `course`*, `comp`*, `score`* (0–100'e kırpılır) | Var olan dersin var olan bileşenine not yazar. |
 | `set_expect` | `course`*, `letter`* (`AA`…`FF`) | Beklenen harfi ayarlar. |
+| `archive_review` | `ids`* | Tekrar kartlarına `archived:true` koyar (Notlar → Arşiv'den geri alınır). |
+| `archive_mistakes` | `course`* | O dersin hata kayıtlarına `archived:true` koyar. |
+| `rename_course` | `from`*, `to`* | Tekrar ve hata kayıtlarında ders adını birleştirir. |
+| `remove_triage` | `deadline_title`*, `ids`* | Yalnızca verilen id'li triyaj konularını siler (çift içe aktarma temizliği). |
 
 \* zorunlu. Bilinmeyen `action` hata verir.
 
@@ -143,11 +160,10 @@ Klavye: `1`–`8` sekme, `S` başlat/mola/devam, `D` dürtü kaydı (çalışır
 ```
 
 Şemanın değişmezleri — yeni action eklerken koru:
-- **Hiçbir action veri silmez.** `add_*` yalnızca ekler; `add_course`/`set_grade`/`set_expect` yalnızca ders alanlarını günceller.
+- **Action'lar veri silmez; tek istisna `remove_triage`** — o da yalnızca açıkça verilen id'leri. `add_*` yalnızca ekler; `add_course`/`set_grade`/`set_expect` yalnızca ders alanlarını günceller; `archive_*` bayrak koyar, `rename_course` ders adını değiştirir.
 - Alanlar doğrulanır, serbest metin `esc()` üzerinden render edilir.
 - Bu şema `ders-sistemi:panel-json-komut` skill'inde de sabit; burada bir action eklenir/değişirse skill de güncellenmeli.
 
-Not: fonksiyonun üstündeki yorum hâlâ "dört eylem tipi" ve "hiçbir eylem var olan veriyi değiştirmez" diyor; ders action'ları eklendikten sonra güncellenmemiş.
 
 ## Testler
 

@@ -5,61 +5,63 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Kontrol Paneli — Umut</title>
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0F141B">
+<meta name="theme-color" content="#F3F1EC">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg: oklch(21.5% 0.017 264);
-  --surface: oklch(26% 0.018 264);
-  --surface2: oklch(30% 0.019 264);
-  --border: oklch(37% 0.02 264);
-  /* Form kontrolleri ve ikon butonları için: kart zeminine karşı 3.48:1 (WCAG 1.4.11).
-     Dekoratif kart kenarlıkları --border'da kalıyor; onlar bu eşiğe tabi değil. */
-  --border-input: oklch(57% 0.02 264);
-  --border-soft: oklch(32.5% 0.018 264);
-  --text: oklch(93% 0.008 264);
-  --muted: oklch(69% 0.02 264);
-  --accent: oklch(80% 0.16 78);
-  --accent-ink: oklch(22% 0.035 78);
-  --teal: oklch(77% 0.11 195);
-  --teal-ink: oklch(20% 0.035 195);
-  --danger: oklch(68% 0.16 25);
-  color-scheme: dark;
-  --radius:16px;
-  --shadow-sm: 0 1px 2px oklch(0% 0 0 / 0.22), 0 1px 0 oklch(100% 0 0 / 0.03) inset;
-  --shadow-md: 0 10px 28px oklch(0% 0 0 / 0.24);
+  /* v2 (Kasım 2026): açık tema. Değişken adları ve anlamları aynı kaldı —
+     --teal "birincil eylem / iyi", --accent "uyarı / şimdi", --danger "kritik".
+     Renkler beyaz kart zeminine karşı metin olarak ≥4.5:1 verecek şekilde seçildi. */
+  --bg: #F3F1EC;
+  --surface: #FFFFFF;
+  --surface2: #F3F1EC;
+  --border: #E3E0D8;
+  /* Form kontrolleri ve ikon butonları: beyaz zemine karşı ≥3:1 (WCAG 1.4.11). */
+  --border-input: #8F8B82;
+  --border-soft: #EEEBE4;
+  --text: #15161A;
+  --muted: #5F5E5A;
+  --accent: #A8520A;
+  --accent-ink: #FFFFFF;
+  --teal: #2340F0;
+  --teal-ink: #FFFFFF;
+  --danger: #C0352B;
+  --soft: #E6EAFE;
+  --soft-ink: #1A30B8;
+  --ink: #15161A;
+  color-scheme: light;
+  --radius:14px;
+  --shadow-sm: none;
+  --shadow-md: 0 12px 32px rgba(21,22,26,.14);
 }
 *{box-sizing:border-box; margin:0; padding:0;}
-body{background:
-    radial-gradient(1100px 700px at 12% -8%, oklch(80% 0.16 78 / .09), transparent 60%),
-    radial-gradient(900px 650px at 100% 4%, oklch(77% 0.11 195 / .08), transparent 58%),
-    var(--bg);
-  background-attachment:fixed; overscroll-behavior-y:contain; color:var(--text); font-family:'Inter',system-ui,sans-serif; font-size:15px; line-height:1.5; min-height:100vh; -webkit-font-smoothing:antialiased;}
+body{background:var(--bg);
+  background-attachment:fixed; overscroll-behavior-y:contain; color:var(--text); font-family:'Geist',system-ui,sans-serif; font-size:15px; line-height:1.5; min-height:100vh; font-variant-numeric:tabular-nums; -webkit-font-smoothing:antialiased;}
 .wrap{max-width:980px; margin:0 auto; padding:28px 20px 90px;}
 
 /* Header */
 header{display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-bottom:6px;}
-h1{font-family:'Space Grotesk',sans-serif; font-size:21px; font-weight:700; letter-spacing:-0.02em;}
+h1{font-family:'Geist',system-ui,sans-serif; font-size:21px; font-weight:700; letter-spacing:-0.02em;}
 /* Amber yalnızca "uyarı / şimdi" anlamına ayrıldı — isim ve saat nötr */
 h1 span{color:var(--muted); font-weight:500;}
-#clock{font-family:'JetBrains Mono',monospace; font-size:22px; font-weight:700; color:var(--text); font-variant-numeric:tabular-nums;}
+#clock{font-family:'Geist Mono',ui-monospace,monospace; font-size:22px; font-weight:700; color:var(--text); font-variant-numeric:tabular-nums;}
 #dateline{color:var(--muted); font-size:13px; margin-bottom:22px; text-transform:capitalize;}
 
 /* Day gauge (signature) */
 .gauge{background:linear-gradient(180deg, var(--surface), var(--surface) 60%, var(--surface2)); border:1px solid var(--border); border-radius:16px; padding:18px 20px 20px; margin-bottom:24px; box-shadow:var(--shadow-md); position:relative;}
 .gauge::before{content:''; position:absolute; top:0; left:16px; right:16px; height:2px; background:linear-gradient(90deg, var(--accent), var(--teal)); border-radius:0 0 3px 3px; opacity:.6;}
-.gauge-label{display:flex; justify-content:space-between; font-size:10.5px; color:var(--muted); font-family:'JetBrains Mono',monospace; letter-spacing:.08em; margin-bottom:8px;}
+.gauge-label{display:flex; justify-content:space-between; font-size:10.5px; color:var(--muted); font-family:'Geist Mono',ui-monospace,monospace; letter-spacing:.08em; margin-bottom:8px;}
 .gauge-label span{white-space:nowrap; flex:none;}
 .gauge-track{position:relative; height:30px; background:var(--surface2); border-radius:8px; overflow:hidden; box-shadow:inset 0 1px 3px oklch(0% 0 0 / 0.3);}
 .gauge-fill{position:absolute; top:0; left:0; bottom:0; background:linear-gradient(90deg, oklch(80% 0.16 78 / .14), oklch(80% 0.16 78 / .34)); border-right:2px solid var(--accent);}
 .gauge-block{position:absolute; top:4px; bottom:4px; background:var(--teal); opacity:.85; border-radius:5px; min-width:3px;}
 .gauge-block[data-past="1"]{opacity:.3;}
 .gauge-ticks{position:relative; height:14px; margin-top:5px;}
-.gauge-ticks span{position:absolute; transform:translateX(-50%); font-size:10px; color:var(--muted); font-family:'JetBrains Mono',monospace;}
+.gauge-ticks span{position:absolute; transform:translateX(-50%); font-size:10px; color:var(--muted); font-family:'Geist Mono',ui-monospace,monospace;}
 .gauge-now{position:absolute; top:0; bottom:0; width:2px; background:var(--accent); box-shadow:0 0 6px var(--accent); z-index:2;}
 .gauge-hint{font-size:12px; color:var(--muted); margin-top:10px;}
 
@@ -71,14 +73,14 @@ h1 span{color:var(--muted); font-weight:500;}
 
 /* Tabs */
 nav{display:flex; gap:3px; margin-bottom:22px; flex-wrap:wrap; background:var(--surface); border:1px solid var(--border); padding:4px; border-radius:12px;}
-nav button{background:transparent; border:none; color:var(--muted); padding:9px 15px; border-radius:9px; cursor:pointer; font-family:'Space Grotesk',sans-serif; font-weight:500; font-size:13.5px; white-space:nowrap; transition:background .15s ease, color .15s ease;}
+nav button{background:transparent; border:none; color:var(--muted); padding:9px 15px; border-radius:9px; cursor:pointer; font-family:'Geist',system-ui,sans-serif; font-weight:500; font-size:13.5px; white-space:nowrap; transition:background .15s ease, color .15s ease;}
 nav button:hover:not(.active){background:var(--surface2); color:var(--text);}
 nav button.active{background:var(--surface2); color:var(--text); font-weight:700; box-shadow:var(--shadow-sm), inset 0 0 0 1px var(--border-input);}
 nav button:focus-visible{outline:2px solid var(--teal); outline-offset:2px;}
 section{display:none;}
 section.active{display:block;}
 
-h2{font-family:'Space Grotesk',sans-serif; font-size:16.5px; font-weight:700; letter-spacing:-0.01em; margin:22px 0 12px;}
+h2{font-family:'Geist',system-ui,sans-serif; font-size:16.5px; font-weight:700; letter-spacing:-0.01em; margin:22px 0 12px;}
 .card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px 18px; margin-bottom:12px; box-shadow:var(--shadow-sm);}
 .muted{color:var(--muted); font-size:13px;}
 .row{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
@@ -96,12 +98,12 @@ button.btn:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
 
 /* Lists */
 .item{display:flex; align-items:center; gap:10px; padding:11px 14px; background:var(--surface2); border:1px solid var(--border); border-radius:11px; margin-bottom:8px;}
-.tag{font-family:'JetBrains Mono',monospace; font-size:11px; padding:2px 8px; border-radius:20px; background:var(--surface); border:1px solid var(--border); color:var(--muted); white-space:nowrap;}
+.tag{font-family:'Geist Mono',ui-monospace,monospace; font-size:11px; padding:2px 8px; border-radius:20px; background:var(--surface); border:1px solid var(--border); color:var(--muted); white-space:nowrap;}
 .tag.exam{color:var(--danger); border-color:var(--danger);}
 .tag.hw{color:var(--accent); border-color:var(--accent);}
 .tag.lab{color:var(--teal); border-color:var(--teal);}
 .tag.other{color:var(--muted); border-color:var(--border-input);}
-.countdown{font-family:'JetBrains Mono',monospace; font-weight:700; font-size:15px; min-width:64px; text-align:right; font-variant-numeric:tabular-nums;}
+.countdown{font-family:'Geist Mono',ui-monospace,monospace; font-weight:700; font-size:15px; min-width:64px; text-align:right; font-variant-numeric:tabular-nums;}
 .countdown.urgent{color:var(--danger);}
 .countdown.soon{color:var(--accent);}
 .countdown.ok{color:var(--teal);}
@@ -125,9 +127,9 @@ button.btn:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
 
 /* Schedule table */
 .sched-day{margin-bottom:14px;}
-.sched-day h3{font-family:'Space Grotesk',sans-serif; font-size:14px; color:var(--accent); margin-bottom:6px;}
+.sched-day h3{font-family:'Geist',system-ui,sans-serif; font-size:14px; color:var(--accent); margin-bottom:6px;}
 .sched-entry{display:flex; gap:10px; align-items:center; padding:9px 14px; background:var(--surface2); border:1px solid var(--border); border-radius:9px; margin-bottom:7px; font-size:14px;}
-.sched-entry .time{font-family:'JetBrains Mono',monospace; color:var(--teal); font-weight:700; white-space:nowrap; font-variant-numeric:tabular-nums;}
+.sched-entry .time{font-family:'Geist Mono',ui-monospace,monospace; color:var(--teal); font-weight:700; white-space:nowrap; font-variant-numeric:tabular-nums;}
 
 /* Bugünün 3 önceliği */
 .prio-row{display:flex; align-items:center; gap:10px; padding:7px 0 2px;}
@@ -135,12 +137,12 @@ button.btn:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
 .prio-row input[type=text]{flex:1; background:transparent; border:none; padding:4px 0; font-size:15px;}
 .prio-row input[type=text]:focus{outline:none; border-bottom:2px solid var(--teal); box-shadow:0 2px 0 0 oklch(77% 0.11 195 / .3);}
 .prio-row.on input[type=text]{opacity:.4; text-decoration:line-through;}
-.prio-num{font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--muted); width:12px; flex:none;}
+.prio-num{font-family:'Geist Mono',ui-monospace,monospace; font-size:12px; color:var(--muted); width:12px; flex:none;}
 /* [ÖZELLİK 6] if-then tetikleyici satırı */
 .prio-when{display:flex; align-items:center; gap:8px; padding:0 0 7px 28px; border-bottom:1px solid var(--border-soft);}
 .prio-when:last-child{border-bottom:none;}
 .prio-when.on{opacity:.35;}
-.prio-if{font-size:11px; color:var(--teal); font-family:'JetBrains Mono',monospace; flex:none;}
+.prio-if{font-size:11px; color:var(--teal); font-family:'Geist Mono',ui-monospace,monospace; flex:none;}
 .prio-when input[type=text]{flex:1; background:transparent; border:none; padding:2px 0; font-size:12.5px; color:var(--muted);}
 .prio-when input[type=text]:focus{outline:none; border-bottom:1px solid var(--teal); color:var(--text); box-shadow:none;}
 
@@ -152,15 +154,15 @@ textarea{width:100%; min-height:90px; resize:vertical;}
 
 footer{margin-top:34px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
 /* Sekme rozetleri: bekleyen tekrar / 3 gün içindeki deadline sayısı — sekmeyi açmadan görünür */
-.tab-badge{display:inline-block; min-width:17px; height:17px; line-height:17px; padding:0 5px; margin-left:6px; border-radius:9px; background:var(--danger); color:oklch(97% 0.01 25); font-family:'JetBrains Mono',monospace; font-size:10.5px; font-weight:700; text-align:center; vertical-align:1px;}
+.tab-badge{display:inline-block; min-width:17px; height:17px; line-height:17px; padding:0 5px; margin-left:6px; border-radius:9px; background:var(--danger); color:oklch(97% 0.01 25); font-family:'Geist Mono',ui-monospace,monospace; font-size:10.5px; font-weight:700; text-align:center; vertical-align:1px;}
 .tab-badge:empty{display:none;}
 /* Zincir kartı: günlük minimum + ardışık gün sayacı. Saat ilerledikçe tonu sertleşir. */
 .chain{display:flex; align-items:center; gap:12px; flex-wrap:wrap; background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:10px 14px; margin-bottom:14px; box-shadow:var(--shadow-sm);}
 .chain.ok{border-color:var(--teal);}
 .chain.warn{border-color:var(--accent);}
 .chain.late{border-color:var(--danger); background:linear-gradient(135deg, oklch(68% 0.16 25 / .10), var(--surface) 70%);}
-.chain-n{font-family:'JetBrains Mono',monospace; font-size:22px; font-weight:700; line-height:1; font-variant-numeric:tabular-nums;}
-.chain-n small{font-family:'Inter',sans-serif; font-size:11px; font-weight:500; color:var(--muted); display:block; margin-top:3px; letter-spacing:.04em;}
+.chain-n{font-family:'Geist Mono',ui-monospace,monospace; font-size:22px; font-weight:700; line-height:1; font-variant-numeric:tabular-nums;}
+.chain-n small{font-family:'Geist',system-ui,sans-serif; font-size:11px; font-weight:500; color:var(--muted); display:block; margin-top:3px; letter-spacing:.04em;}
 .chain-mid{flex:1; min-width:170px;}
 .chain-bar{height:6px; background:var(--surface2); border-radius:3px; overflow:hidden; margin:5px 0 4px;}
 .chain-bar i{display:block; height:100%; background:var(--teal); border-radius:3px;}
@@ -196,7 +198,7 @@ dialog#phoneDlg::backdrop{background:oklch(0% 0 0 / .55); backdrop-filter:blur(2
 .pb-h>div:first-child{flex:1; min-width:0;}
 .pb-k{font-size:11px; letter-spacing:.08em;}
 .pb-t{font-size:16px;}
-.pb-pct{font-family:'JetBrains Mono',monospace; font-weight:700; color:var(--teal); font-size:18px; font-variant-numeric:tabular-nums;}
+.pb-pct{font-family:'Geist Mono',ui-monospace,monospace; font-weight:700; color:var(--teal); font-size:18px; font-variant-numeric:tabular-nums;}
 .pb-bar{height:4px; background:var(--surface2); border-radius:3px; margin:10px 0 8px; overflow:hidden;}
 .pb-bar span{display:block; height:100%; background:var(--teal); transition:width .2s ease;}
 .pb-phone{font-size:12px; margin-bottom:6px;}
@@ -228,7 +230,7 @@ body.tab-today .chain .btn, body.tab-kronometre .chain .btn{display:none;}
   nav button.ovf{display:none;}
   nav button, #moreBtn{flex:1 1 0; min-width:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
     padding:6px 2px 5px; min-height:52px; font-size:11.5px; font-weight:500; border-radius:10px; position:relative; background:none; box-shadow:none;}
-  #moreBtn{display:flex; border:none; color:var(--muted); cursor:pointer; font-family:'Space Grotesk',sans-serif;}
+  #moreBtn{display:flex; border:none; color:var(--muted); cursor:pointer; font-family:'Geist',system-ui,sans-serif;}
   nav button.active, #moreBtn.active{background:none; box-shadow:none; color:var(--text); font-weight:700;}
   nav button.active::before, #moreBtn.active::before{content:''; position:absolute; top:-4px; left:28%; right:28%; height:3px; border-radius:0 0 3px 3px; background:var(--text);}
   #moreBtn:focus-visible{outline:2px solid var(--teal); outline-offset:-2px;}
@@ -285,9 +287,9 @@ body.tab-today .chain .btn, body.tab-kronometre .chain .btn{display:none;}
   nav button.active .ti{opacity:1;}
   nav button .tl{flex:1; min-width:0;}
   nav button .tab-badge{margin-left:0;}
-  nav button[data-k]::after{content:attr(data-k) / ""; flex:none; font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--muted); border:1px solid var(--border-soft); border-radius:5px; padding:0 5px; line-height:17px; opacity:.75;}
+  nav button[data-k]::after{content:attr(data-k) / ""; flex:none; font-family:'Geist Mono',ui-monospace,monospace; font-size:11px; color:var(--muted); border:1px solid var(--border-soft); border-radius:5px; padding:0 5px; line-height:17px; opacity:.75;}
   .kbd-hint{display:block; font-size:12px; color:var(--muted); line-height:1.8; padding:0 6px;}
-  .kbd-hint kbd, .mini kbd{font-family:'JetBrains Mono',monospace; font-size:10.5px; border:1px solid currentColor; border-radius:4px; padding:0 4px; line-height:15px; opacity:.65;}
+  .kbd-hint kbd, .mini kbd{font-family:'Geist Mono',ui-monospace,monospace; font-size:10.5px; border:1px solid currentColor; border-radius:4px; padding:0 4px; line-height:15px; opacity:.65;}
   /* Günün Akışı yalnızca Bugün'de, ince şerit */
   body:not(.tab-today) .gauge{display:none;}
   .gauge{padding:12px 18px 8px; margin-bottom:16px;}
@@ -300,7 +302,7 @@ body.tab-today .chain .btn, body.tab-kronometre .chain .btn{display:none;}
   .mini.break{border-color:var(--accent); background:linear-gradient(135deg, oklch(80% 0.16 78 / .10), var(--surface) 70%);}
   .mini.over{border-color:var(--danger); background:linear-gradient(135deg, oklch(68% 0.16 25 / .14), var(--surface) 70%);}
   .mini-lbl{font-size:12.5px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-  .mini-clock{font-family:'JetBrains Mono',monospace; font-size:36px; font-weight:700; letter-spacing:-.02em; line-height:1.15; font-variant-numeric:tabular-nums; color:var(--teal);}
+  .mini-clock{font-family:'Geist Mono',ui-monospace,monospace; font-size:36px; font-weight:700; letter-spacing:-.02em; line-height:1.15; font-variant-numeric:tabular-nums; color:var(--teal);}
   .mini.break .mini-clock{color:var(--accent);} .mini.over .mini-clock{color:var(--danger);}
   .mini-row{display:flex; gap:6px; margin-top:8px;}
   .mini-row .btn{flex:1; min-width:0; padding:8px 6px; font-size:13px; display:inline-flex; align-items:center; justify-content:center; gap:6px; white-space:nowrap;}
@@ -312,6 +314,259 @@ body.tab-today .chain .btn, body.tab-kronometre .chain .btn{display:none;}
 @media (min-width:1200px){
   .today-grid{display:grid; grid-template-columns:minmax(0,1.05fr) minmax(0,1fr); gap:0 22px; align-items:start;}
   .today-grid .tcol-b > h2:first-child{margin-top:0;}
+}
+
+/* ================= v2 (Kasım 2026): açık tema, 4 sekme, sınav odaklı Bugün =================
+   Eski kurallar yerinde; bu blok sonda olduğu için üstüne yazar. */
+body{font-family:'Geist',system-ui,sans-serif;}
+h2{font-size:17px; font-weight:600; letter-spacing:-0.01em;}
+.card{border-radius:14px;}
+.item{background:var(--surface); border-color:var(--border-soft); border-radius:10px;}
+.card .item{border-left:0; border-right:0; border-top:0; border-radius:0; padding-left:0; padding-right:0; margin:0;}
+input,select,textarea{background:#FFFFFF; min-height:40px;}
+input:focus,select:focus,textarea:focus{border-color:var(--teal); box-shadow:0 0 0 3px rgba(35,64,240,.18);}
+button.btn{min-height:40px; border-radius:8px; background:var(--ink); color:#FFFFFF;}
+button.btn:hover{filter:none; background:#2B2C33;}
+button.btn.ghost{background:#FFFFFF; color:var(--text); border-color:#D6D3CB;}
+button.btn.ghost:hover{border-color:var(--text); color:var(--text);}
+button.btn.warn{color:#FFFFFF;}
+.tag{font-family:'Geist',system-ui,sans-serif; font-weight:600; font-size:11.5px; background:var(--surface2); border-color:transparent; color:var(--text);}
+.tag.exam{background:#FBE9E7; border-color:transparent;}
+.tag.hw{background:#FBEFE0; border-color:transparent;}
+.tag.lab{background:var(--soft); color:var(--soft-ink); border-color:transparent;}
+.countdown{font-family:'Geist',system-ui,sans-serif; font-weight:600;}
+.morning, #morningCard{display:none !important;}
+.del{min-width:32px; min-height:32px; border-radius:6px;}
+.del:hover{background:var(--surface2);}
+.chip-mark{font-size:10px;}
+
+/* Üst çubuk */
+#tabs button[hidden]{display:none !important;}
+nav{background:transparent; border:0; padding:0; gap:2px;}
+nav button{font-family:'Geist',system-ui,sans-serif; color:var(--text); font-size:14px; padding:10px 14px; border-radius:8px;}
+nav button:hover:not(.active){background:rgba(21,22,26,.06);}
+nav button.active{background:var(--ink); color:#FFFFFF; box-shadow:none; font-weight:600;}
+nav button:focus-visible{outline:2px solid var(--teal);}
+#moreBtn, #moreSheet{display:none !important;}
+.tab-badge{background:var(--teal); color:#FFFFFF; font-family:'Geist',system-ui,sans-serif;}
+
+/* ---------- Bugün ---------- */
+.v2-today{display:grid; grid-template-columns:minmax(0,1fr); gap:16px; align-items:start;}
+.v2-today > .card{margin:0;}
+.v2-eb{font-size:11.5px; font-weight:600; text-transform:uppercase; letter-spacing:.08em; color:var(--muted);}
+.v2-flow{padding:18px 22px 10px;}
+.v2-flow-h{display:flex; justify-content:space-between; align-items:baseline; gap:12px; flex-wrap:wrap; margin-bottom:10px;}
+.v2-flow-h b{font-size:15px; font-weight:600; text-transform:capitalize;}
+.v2-flow-row{display:grid; grid-template-columns:62px minmax(0,1fr); gap:14px; align-items:start;}
+.v2-flow-row[hidden]{display:none;}
+.v2-flow-row > .v2-eb{line-height:28px;}
+.gauge-track{position:relative; height:28px; background:#EEEBE4; border-radius:8px; overflow:hidden; box-shadow:none;}
+.gauge-fill{position:absolute; top:0; left:0; bottom:0; background:var(--soft); border-right:0;}
+.gauge-block{position:absolute; top:5px; bottom:5px; background:var(--ink); opacity:.85; border-radius:5px; min-width:3px;}
+.gauge-block[data-past="1"]{opacity:.25;}
+.gauge-now{position:absolute; top:0; bottom:0; width:2px; background:var(--teal); box-shadow:none; z-index:2;}
+.gauge-ticks{position:relative; height:16px; margin-top:4px;}
+.gauge-ticks span{position:absolute; transform:translateX(-50%); font-size:11px; color:var(--muted); font-family:'Geist',system-ui,sans-serif; white-space:nowrap;}
+.v2-term{overflow:visible;}
+.v2-tfill{position:absolute; top:0; bottom:0; left:0; background:var(--soft); border-radius:8px 0 0 8px;}
+.v2-tline{position:absolute; left:2%; right:2%; top:50%; height:2px; margin-top:-1px; background:#D6D3CB;}
+.v2-mk{position:absolute; top:50%; width:10px; height:10px; margin:-5px 0 0 -5px; border-radius:50%; box-sizing:border-box; background:#FFFFFF; border:2px solid var(--ink); z-index:3;}
+.v2-mk.past{background:var(--ink);}
+.v2-mk.next{width:14px; height:14px; margin:-7px 0 0 -7px; background:var(--teal); border-color:var(--teal);}
+.gauge-ticks .v2-mo{transform:translateX(4px);}
+.gauge-ticks .v2-nx{transform:translateX(calc(-100% - 6px)); color:var(--soft-ink); font-weight:600;}
+
+.v2-hero{background:var(--ink); color:#FFFFFF; border-radius:14px; padding:26px 28px; display:flex; flex-direction:column; gap:20px;}
+.v2-hero .v2-eb{color:#B9B8B3;}
+.v2-hh{display:flex; justify-content:space-between; align-items:flex-start; gap:16px;}
+.v2-ht{margin:4px 0 4px; font-size:30px; font-weight:600; letter-spacing:-0.02em; line-height:1.12; color:#FFFFFF;}
+.v2-hm{font-size:14.5px; color:#B9B8B3;}
+.v2-cd{text-align:right; flex:none;}
+.v2-cd b{display:block; font-size:68px; font-weight:600; line-height:.85; letter-spacing:-0.05em;}
+.v2-cd span{display:block; font-size:13px; color:#B9B8B3; margin-top:8px;}
+.v2-hmeta{display:flex; justify-content:space-between; gap:12px; font-size:13px; color:#B9B8B3; margin-bottom:8px; flex-wrap:wrap;}
+.v2-days{display:grid; grid-template-columns:repeat(7, minmax(0,1fr)); gap:4px;}
+.v2-day{background:#23242B; border-radius:8px; padding:9px 4px; text-align:center; min-width:0;}
+.v2-day b{display:block; font-size:12px; font-weight:600;}
+.v2-day span{display:block; font-size:11px; color:#C9C8C3; margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.v2-day.on{background:var(--teal);} .v2-day.on span{color:#FFFFFF;}
+.v2-ready{display:flex; gap:3px; height:6px;}
+.v2-ready i{display:block; border-radius:3px; min-width:0;}
+.v2-ready i[style="flex:0"]{display:none;}
+.v2-ready .g{background:var(--teal);} .v2-ready .y{background:#6E7BFF; opacity:.6;} .v2-ready .r{background:#3A3B42;}
+.v2-block{background:#23242B; border-radius:12px; padding:18px 20px; display:flex; flex-wrap:wrap; align-items:center; gap:14px 22px;}
+.v2-bl{font-size:13px; font-weight:500; color:#A9B6FF;}
+.v2-bt{font-size:20px; font-weight:600; letter-spacing:-0.01em; margin-top:4px;}
+.v2-bs{font-size:13.5px; color:#B9B8B3; margin-top:4px;}
+button.btn.v2-cta{flex:none; min-height:52px; padding:0 28px; border-radius:10px; background:var(--teal); color:#FFFFFF; font-size:16px; font-weight:600;}
+button.btn.v2-cta:hover{background:#1A30D8;}
+button.btn.v2-cta:focus-visible{outline:2px solid #FFFFFF; outline-offset:2px;}
+
+.v2-stat{display:flex; flex-direction:column; gap:14px;}
+.v2-stat .chain{background:transparent; border:0; box-shadow:none; padding:0; margin:0; border-radius:0;}
+.v2-stat .chain.late{background:transparent;}
+.v2-stat #todayStats{font-size:13.5px; color:var(--muted); line-height:1.55;}
+.v2-stat #todayStats b{color:var(--text);}
+.v2-stat #weekChart{border-top:1px solid var(--border-soft); padding-top:12px;}
+.chain-n{font-family:'Geist',system-ui,sans-serif; font-size:28px; font-weight:600;}
+.chain-dots i.on{background:var(--teal); border-color:var(--teal);}
+.chain-dots i.td{outline-color:var(--teal);}
+.chain-bar i{background:var(--teal);}
+
+.v2-rv h2, .v2-next h2{margin:0 0 6px;}
+.v2-rvrow{display:flex; align-items:center; gap:12px; padding:10px 0; border-top:1px solid var(--border-soft); flex-wrap:wrap;}
+.v2-rvt{flex:1 1 240px; min-width:0; font-size:14.5px;}
+.v2-rvb{display:flex; gap:4px;}
+.v2-rvb .btn{min-height:40px; padding:0 12px; font-size:13px;}
+.v2-foot{padding-top:10px; border-top:1px solid var(--border-soft); font-size:13px;}
+.v2-next .item{padding:10px 0;}
+
+/* ---------- Sınavlar ---------- */
+.v2-exams{display:flex; flex-wrap:wrap; gap:20px; align-items:flex-start; margin-bottom:8px;}
+.v2-exlist{flex:1 1 210px; display:flex; flex-direction:column; gap:2px; background:transparent; border:0; padding:0; margin:0;}
+.v2-exi{display:flex; justify-content:space-between; align-items:center; gap:12px; width:100%; text-align:left; padding:11px 14px; border-radius:10px; border:1px solid transparent; background:transparent; color:var(--text); font:inherit; cursor:pointer;}
+.v2-exi span:first-child{display:flex; flex-direction:column; min-width:0;}
+.v2-exi b{font-size:14px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.v2-exi small{font-size:12px; color:var(--muted);}
+.v2-exi .v2-exn{font-size:13px; color:var(--muted); flex:none;}
+.v2-exi:hover{background:rgba(21,22,26,.05);}
+.v2-exi.on{background:var(--surface); border-color:var(--border);}
+.v2-exi.on b, .v2-exi.on .v2-exn{font-weight:600; color:var(--text);}
+.v2-exmain{flex:999 1 620px; min-width:0; display:flex; flex-direction:column; gap:16px;}
+.v2-excols{display:flex; flex-wrap:wrap; gap:16px; align-items:flex-start;}
+.v2-excols > .card{margin:0;}
+.v2-topics{flex:999 1 440px; min-width:0;}
+.v2-mist{flex:1 1 260px;}
+.v2-h3{font-size:16px; font-weight:600; margin:0 0 6px;}
+.v2-trow{display:flex; align-items:center; gap:10px; padding:11px 0; border-top:1px solid var(--border-soft);}
+.v2-tt{flex:1; min-width:0; display:flex; flex-direction:column; gap:2px;}
+.v2-tt b{font-size:14.5px; font-weight:600;}
+.v2-tt span{font-size:13px; color:var(--muted);}
+.v2-pill{flex:none; min-height:38px; width:80px; border-radius:999px; border:1px solid transparent; background:transparent; color:var(--muted); font:inherit; font-size:13px; font-weight:600; cursor:pointer;}
+.v2-pill.r:hover{border-color:#D6D3CB;}
+.v2-pill.y{background:var(--soft); color:var(--soft-ink);}
+.v2-pill.g{background:var(--teal); color:#FFFFFF;}
+.v2-pill:focus-visible{outline:2px solid var(--teal); outline-offset:2px;}
+.v2-mi{padding:12px 0; border-top:1px solid var(--border-soft); font-size:14px;}
+.v2-mi span{display:block; font-size:13px; color:var(--muted); margin-top:3px;}
+.v2-more{margin-top:10px; color:var(--teal); border-bottom-color:var(--teal); font-size:14px; font-weight:500;}
+
+/* ---------- Notlar ---------- */
+.v2-notes{display:flex; flex-wrap:wrap; gap:20px; align-items:flex-start;}
+.v2-notes-a{flex:999 1 520px; min-width:0; background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:22px 24px;}
+.v2-notes-b{flex:1 1 340px; min-width:0; background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:22px 24px;}
+.v2-notes .card{background:var(--surface2); border:0; box-shadow:none;}
+.v2-h{margin:0 0 14px; font-size:21px;}
+.v2-seg{display:flex; gap:2px; background:var(--surface2); border-radius:8px; padding:3px; margin:12px 0 6px;}
+.v2-seg button{flex:1; min-height:40px; border:0; border-radius:6px; background:transparent; color:var(--muted); font:inherit; font-size:13px; font-weight:500; cursor:pointer;}
+.v2-seg button.on{background:#FFFFFF; color:var(--text); font-weight:600; box-shadow:0 1px 2px rgba(0,0,0,.08);}
+.v2-seg button:focus-visible{outline:2px solid var(--teal);}
+.v2-wk{border-top:1px solid var(--border-soft);}
+.v2-wk summary{display:flex; align-items:center; gap:14px; padding:12px 0; cursor:pointer; list-style:none;}
+.v2-wk summary::-webkit-details-marker{display:none;}
+.v2-wkd{width:52px; flex:none; font-size:13px; font-weight:600;}
+.v2-wkc{flex:1; min-width:0; font-size:14.5px;}
+.v2-wkc small{display:block; font-size:12.5px; color:var(--muted);}
+.v2-wki{display:flex; align-items:center; gap:8px; padding:6px 0 6px 66px; font-size:13.5px; color:var(--muted);}
+.v2-wki span{flex:1;}
+.v2-note{margin-top:12px; font-size:13px; line-height:1.5;}
+.v2-rvi{flex-wrap:wrap;}
+.v2-rvbtns{display:flex; flex-wrap:wrap; gap:4px; align-items:center;}
+
+/* ---------- Ayarlar ---------- */
+#kurulum{max-width:860px;}
+
+/* ---------- Masaüstü (≥1000px): üst çubuk ---------- */
+@media (min-width:1000px){
+  .wrap{display:block; max-width:1240px; padding:0 28px 60px;}
+  #side{position:sticky; top:0; z-index:20; display:flex; flex-direction:row; align-items:center; gap:28px; max-height:none; overflow:visible;
+    background:var(--bg); border-bottom:1px solid var(--border); margin:0 -28px 24px; padding:10px 28px;}
+  #side header{flex-direction:row; align-items:baseline; gap:12px;}
+  #side h1{font-size:17px;}
+  #side h1 > span{display:none;}
+  #side #clock{order:2; font-size:15px; margin:0; font-family:'Geist',system-ui,sans-serif; font-weight:500; color:var(--muted);}
+  #side #dateline{display:none;}
+  #tabbar{order:1;}
+  nav{flex-direction:row; padding:0;}
+  nav button{width:auto; padding:10px 14px;}
+  nav button .ti{display:none;}
+  nav button[data-k]::after{display:none;}
+  .kbd-hint{display:none;}
+  /* Mini-sayaç: sayaç çalışırken sağ altta yüzer */
+  #miniCh:not(:empty){position:fixed; right:24px; bottom:24px; width:300px; z-index:25; box-shadow:var(--shadow-md);}
+  .mini{background:var(--surface); border-color:var(--teal);}
+  .mini-clock{font-family:'Geist Mono',ui-monospace,monospace; color:var(--teal);}
+  .v2-today{grid-template-columns:minmax(0,2fr) minmax(0,1fr);}
+  .v2-flow{grid-column:1 / -1;}
+  .v2-hero-wrap{grid-row:span 1;}
+  .v2-stat{align-self:stretch;}
+}
+@media (min-width:1200px){ .today-grid{display:block;} }
+
+/* ---------- Telefon ---------- */
+@media (max-width:600px){
+  #tabbar{background:rgba(243,241,236,.96);}
+  nav button{color:var(--muted);}
+  nav button.active{background:none; color:var(--text);}
+  nav button.active::before{background:var(--teal);}
+  nav{flex:1 1 0;}
+  .v2-hero{padding:22px 20px;}
+  .v2-ht{font-size:26px;}
+  .v2-cd b{font-size:56px;}
+  .v2-days{display:flex; overflow-x:auto; scroll-snap-type:x mandatory;}
+  .v2-day{flex:0 0 84px; scroll-snap-align:start;}
+  button.btn.v2-cta{width:100%;}
+  .v2-flow-row{grid-template-columns:52px minmax(0,1fr); gap:10px;}
+  .v2-exlist{flex-direction:row; overflow-x:auto; flex-basis:100%;}
+  .v2-exi{flex:0 0 auto; width:auto;}
+  .v2-notes-a, .v2-notes-b{padding:18px 16px;}
+}
+/* ikinci tur */
+.v2-stat .chain{flex-direction:column; align-items:stretch; gap:8px;}
+.v2-stat .chain-n{display:flex; align-items:baseline; gap:8px;}
+.v2-stat .chain-n small{display:inline; margin:0;}
+.v2-stat .chain-mid{min-width:0;}
+.v2-stat .chain-mid > div:last-child{flex-wrap:wrap; row-gap:4px;}
+.v2-notes #mList .item, .v2-notes #rvDue .item, .v2-notes #rvUpcoming .item{background:transparent; border:0; border-top:1px solid var(--border-soft); border-radius:0; padding:12px 0; margin:0;}
+.v2-moreall{margin-top:12px; width:100%;}
+.v2-done{margin-top:12px;}
+.v2-done summary{cursor:pointer; padding:10px 0; color:var(--muted); font-size:14px;}
+#dlList .item{border-radius:10px;}
+#dateline{display:none !important;}
+.v2-exi{white-space:nowrap;}
+/* ---------- Ayarlar (v2) ---------- */
+#kurulum{max-width:none;}
+.v2-set{display:flex; flex-wrap:wrap; gap:24px; align-items:flex-start;}
+.v2-setnav{flex:1 1 180px; max-width:220px; display:flex; flex-direction:column; gap:2px; position:sticky; top:84px; background:none; border:0; padding:0; margin:0;}
+.v2-setnav a{display:block; padding:10px 14px; border-radius:8px; color:var(--text); text-decoration:none; font-size:14px; font-weight:500;}
+.v2-setnav a:hover{background:rgba(21,22,26,.06);}
+.v2-setnav a:focus-visible{outline:2px solid var(--teal);}
+.v2-setmain{flex:999 1 640px; min-width:0; display:flex; flex-direction:column; gap:20px;}
+.v2-setmain .card{margin:0;}
+.v2-sc{padding:22px 26px; scroll-margin-top:84px;}
+.v2-sc > h2{margin:0 0 12px;}
+.v2-sc h2:focus{outline:none;}
+.v2-sch{display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:12px;}
+.v2-sch h2{margin:0;}
+#scForm{background:var(--surface2); border-radius:10px; padding:12px; margin-bottom:12px;}
+.v2-setcols{display:flex; flex-wrap:wrap; gap:20px; align-items:flex-start;}
+.v2-setcol{flex:1 1 360px; min-width:0; display:flex; flex-direction:column; gap:20px;}
+.v2-setcol .card .card, .v2-sc .card{background:var(--surface2); border:0; box-shadow:none;}
+.v2-setcol #crsList .card{background:var(--surface2);}
+.v2-grid-wrap{overflow-x:auto;}
+.v2-grid{display:grid; gap:6px; min-width:480px;}
+.v2-gd{font-size:12px; font-weight:600; color:var(--muted); text-align:center; padding-bottom:6px;}
+.v2-gt{position:relative; background:var(--surface2); border-radius:8px;}
+.v2-gb{position:absolute; left:4px; right:4px; box-sizing:border-box; padding:5px 8px; border-radius:6px; background:var(--soft); color:var(--soft-ink); font-size:12px; line-height:1.3; overflow:hidden;}
+.v2-gb b{display:block; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.v2-gb span{display:block;}
+.v2-sub{margin-top:12px;}
+.v2-sub summary, .v2-other summary{cursor:pointer; font-size:14px; padding:4px 0;}
+.v2-other{padding:16px 26px;}
+@media (max-width:600px){
+  .v2-setnav{position:static; flex-direction:row; overflow-x:auto; max-width:none; flex-basis:100%;}
+  .v2-setnav a{white-space:nowrap;}
+  .v2-sc{padding:18px 16px;}
 }
 </style>
 </head>
@@ -325,21 +580,19 @@ body.tab-today .chain .btn, body.tab-kronometre .chain .btn{display:none;}
 </header>
 <div id="dateline"></div>
 
-<div class="chain" id="chainCard" role="status" aria-live="polite"></div>
-
 <!-- Masaüstü mini-sayaç: sayaç çalışırken her sekmede görünür -->
 <div id="miniCh" class="mini" role="region" aria-label="Çalışma sayacı"></div>
 
 <div id="tabbar">
 <nav id="tabs" role="tablist" aria-label="Panel bölümleri">
   <button data-tab="today" id="tab-today" data-k="1" aria-keyshortcuts="1" role="tab" aria-controls="today" aria-selected="true" tabindex="0" class="active"><svg class="ti" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg><span class="tl">Bugün</span></button>
-  <button data-tab="deadlines" id="tab-deadlines" data-k="2" aria-keyshortcuts="2" role="tab" aria-controls="deadlines" aria-selected="false" tabindex="-1"><svg class="ti" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span class="tl has-s">Deadlineler</span><span class="ts" aria-hidden="true">Deadline</span><span class="tab-badge" id="bdgDl"></span></button>
-  <button data-tab="dersler" id="tab-dersler" data-k="3" aria-keyshortcuts="3" role="tab" aria-controls="dersler" aria-selected="false" tabindex="-1" class="ovf"><svg class="ti" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/></svg><span class="tl">Dersler</span></button>
-  <button data-tab="tekrar" id="tab-tekrar" data-k="4" aria-keyshortcuts="4" role="tab" aria-controls="tekrar" aria-selected="false" tabindex="-1"><svg class="ti" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg><span class="tl">Tekrar</span><span class="tab-badge" id="bdgRv"></span></button>
-  <button data-tab="hatadefteri" id="tab-hatadefteri" data-k="5" aria-keyshortcuts="5" role="tab" aria-controls="hatadefteri" aria-selected="false" tabindex="-1"><svg class="ti" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h11a2 2 0 0 1 2 2v16H8a2 2 0 0 1-2-2z"/><path d="M10.5 9.5l4 4M14.5 9.5l-4 4"/></svg><span class="tl has-s">Hata Defteri</span><span class="ts" aria-hidden="true">Hata</span></button>
-  <button data-tab="kronometre" id="tab-kronometre" data-k="6" aria-keyshortcuts="6" role="tab" aria-controls="kronometre" aria-selected="false" tabindex="-1" class="ovf"><svg class="ti" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9.5 2h5M12 2v3"/></svg><span class="tl">Kronometre</span></button>
-  <button data-tab="review" id="tab-review" data-k="7" aria-keyshortcuts="7" role="tab" aria-controls="review" aria-selected="false" tabindex="-1" class="ovf"><svg class="ti" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span class="tl">Review</span></button>
-  <button data-tab="kurulum" id="tab-kurulum" data-k="8" aria-keyshortcuts="8" role="tab" aria-controls="kurulum" aria-selected="false" tabindex="-1" class="ovf"><svg class="ti" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span class="tl">Kurulum</span></button>
+  <button data-tab="deadlines" id="tab-deadlines" data-k="2" aria-keyshortcuts="2" role="tab" aria-controls="deadlines" aria-selected="false" tabindex="-1"><svg class="ti" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span class="tl">Sınavlar</span><span class="tab-badge" id="bdgDl"></span></button>
+  <button hidden data-tab="dersler" id="tab-dersler" role="tab" aria-controls="dersler" aria-selected="false" tabindex="-1" class="ovf"><svg class="ti" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/></svg><span class="tl">Dersler</span></button>
+  <button hidden data-tab="tekrar" id="tab-tekrar" role="tab" aria-controls="tekrar" aria-selected="false" tabindex="-1"><svg class="ti" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg><span class="tl">Tekrar</span><span class="tab-badge" id="bdgRv"></span></button>
+  <button data-tab="hatadefteri" id="tab-hatadefteri" data-k="3" aria-keyshortcuts="3" role="tab" aria-controls="hatadefteri" aria-selected="false" tabindex="-1"><svg class="ti" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h11a2 2 0 0 1 2 2v16H8a2 2 0 0 1-2-2z"/><path d="M10.5 9.5l4 4M14.5 9.5l-4 4"/></svg><span class="tl">Notlar</span><span class="tab-badge" id="bdgNt"></span></button>
+  <button hidden data-tab="kronometre" id="tab-kronometre" role="tab" aria-controls="kronometre" aria-selected="false" tabindex="-1" class="ovf"><svg class="ti" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9.5 2h5M12 2v3"/></svg><span class="tl">Kronometre</span></button>
+  <button hidden data-tab="review" id="tab-review" role="tab" aria-controls="review" aria-selected="false" tabindex="-1" class="ovf"><svg class="ti" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span class="tl">Review</span></button>
+  <button data-tab="kurulum" id="tab-kurulum" data-k="4" aria-keyshortcuts="4" role="tab" aria-controls="kurulum" aria-selected="false" tabindex="-1"><svg class="ti" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span class="tl">Ayarlar</span></button>
 </nav>
 <button type="button" id="moreBtn" aria-haspopup="true" aria-expanded="false" aria-controls="moreSheet"><svg class="ti" aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg><span id="moreLbl">Daha</span></button>
 </div>
@@ -349,19 +602,11 @@ body.tab-today .chain .btn, body.tab-kronometre .chain .btn{display:none;}
   <button type="button" role="menuitem" data-goto="review">🗓 Haftalık Review</button>
   <button type="button" role="menuitem" data-goto="kurulum">⚙ Kurulum</button>
 </div>
-<div class="kbd-hint" aria-hidden="true"><kbd>1</kbd>–<kbd>8</kbd> sekme · <kbd>S</kbd> başlat / mola<br><kbd>D</kbd> dürtü · <kbd>N</kbd> yeni hata kaydı</div>
+<div class="kbd-hint" aria-hidden="true"><kbd>1</kbd>–<kbd>4</kbd> sekme · <kbd>S</kbd> başlat / mola<br><kbd>D</kbd> dürtü · <kbd>N</kbd> yeni hata kaydı</div>
 </aside>
 
 <div id="mainCol">
 <div class="morning" id="morningCard"></div>
-
-<div class="gauge">
-  <div class="gauge-label"><span>07:00</span><span>GÜNÜN AKIŞI</span><span>02:00</span></div>
-  <div class="gauge-track" id="gaugeTrack"><div class="gauge-fill" id="gaugeFill"></div></div>
-  <div class="gauge-ticks" id="gaugeTicks"></div>
-  <div class="gauge-hint" id="gaugeHint">Turkuaz bloklar bugünkü derslerin. Amber çizgi şu anki saatin.</div>
-</div>
-
 
 <div id="sleepWarn" class="card" role="status" aria-live="polite" style="display:none; border-color:var(--danger); color:var(--danger); font-size:13px;"></div>
 <div id="lateWarn" class="card" role="status" aria-live="polite" style="display:none; border-color:var(--accent); color:var(--accent); font-size:13px;"></div>
@@ -369,25 +614,37 @@ body.tab-today .chain .btn, body.tab-kronometre .chain .btn{display:none;}
 
 <!-- BUGÜN -->
 <section id="today" role="tabpanel" aria-labelledby="tab-today" tabindex="0" class="active">
-  <div class="today-grid">
-  <div class="tcol tcol-a">
+  <div class="v2-today">
+  <!-- Günün + dönemin akışı: aynı dilde iki şerit -->
+  <div class="card v2-flow" role="group" aria-label="Günün ve dönemin akışı">
+    <div class="v2-flow-h"><b id="flowDate"></b><span class="muted" id="flowSum"></span></div>
+    <div class="v2-flow-row"><span class="v2-eb">Gün</span>
+      <div><div class="gauge-track" id="gaugeTrack" role="img" aria-label="Günün akışı 07:00–02:00"><div class="gauge-fill" id="gaugeFill"></div></div>
+      <div class="gauge-ticks" id="gaugeTicks" aria-hidden="true"></div>
+      <div class="gauge-hint" id="gaugeHint" hidden></div></div></div>
+    <div class="v2-flow-row" id="termRow"><span class="v2-eb">Dönem</span>
+      <div><div class="gauge-track v2-term" id="termTrack" role="img"></div>
+      <div class="gauge-ticks" id="termTicks" aria-hidden="true"></div></div></div>
+  </div>
+  <div id="examHero" class="v2-hero-wrap"></div>
+  <div class="card v2-stat">
+    <div class="chain" id="chainCard" role="status" aria-live="polite"></div>
+    <div id="todayStats"></div>
+    <div id="weekChart"></div>
+  </div>
+  <div class="card v2-rv" id="todayReviews"></div>
+  <div class="card v2-next"><h2>Sonra</h2><div id="todayDeadlines"></div></div>
+  </div>
+  <!-- v2'de Bugün'den kalkan kartlar: render fonksiyonları çalışmaya devam etsin diye DOM'da gizli duruyor -->
+  <div class="v2-legacy" hidden>
   <div id="quickStart"></div>
-   <div id="todayBlock"></div>
+  <div id="todayBlock"></div>
   <div class="card" id="prioBox"></div>
   <div id="todayExam"></div>
   <div id="todaySuggest"></div>
   <div id="todayWindow"></div>
   <div id="todayPlans"></div>
-  </div>
-  <div class="tcol tcol-b">
-  <h2>Bugünkü dersler</h2>
   <div id="todayClasses"></div>
-  <h2>Yaklaşan 5 deadline</h2>
-  <div id="todayDeadlines"></div>
-  <h2>Bugünkü odak istatistiği</h2>
-  <div class="card" id="todayStats"></div>
-  <div class="card" id="weekChart"></div>
-
   <!-- [ÖZELLİK 4] Uyku takibi -->
   <h2>Uyku</h2>
   <div class="card">
@@ -400,12 +657,13 @@ body.tab-today .chain .btn, body.tab-kronometre .chain .btn{display:none;}
     <div class="muted" style="margin-top:6px; font-size:12px;">Dün gece kaç saat uyudun? Saatleri girersen süreyi kendi hesaplar — tutarlılık ölçümü için kalkış saati en değerlisi.</div>
     <div id="sleepStats" style="margin-top:10px;"></div>
   </div>
-  </div><!-- /tcol-b -->
-  </div><!-- /today-grid -->
+  </div>
 </section>
 
 <!-- DEADLINELER -->
 <section id="deadlines" role="tabpanel" aria-labelledby="tab-deadlines" tabindex="0">
+  <div id="examView" class="v2-exams"></div>
+  <h2>Tüm deadline'lar</h2>
   <div class="card">
     <div class="row">
       <input type="text" id="dlTitle" placeholder="Başlık (örn. MATH 219 MT1)" style="flex:2; min-width:160px;" aria-label="Başlık (örn. MATH 219 MT1)">
@@ -428,51 +686,16 @@ body.tab-today .chain .btn, body.tab-kronometre .chain .btn{display:none;}
   </div>
   <div id="dlList"></div>
 </section>
-<!-- DERSLER (ders kaydı + GPA simülatörü) -->
-<section id="dersler" role="tabpanel" aria-labelledby="tab-dersler" tabindex="0">
-  <div class="card" id="gpaCard"></div>
-  <div id="crsList"></div>
-  <details class="card" style="display:block;">
-    <summary style="cursor:pointer;"><b>Ders ekle / GPA tabanı</b></summary>
-    <div class="row" style="margin-top:10px;">
-      <input type="text" id="crsCode" placeholder="Kod (örn. MATH 219)" style="width:130px;" aria-label="Ders kodu">
-      <input type="text" id="crsName" placeholder="Ad" style="flex:1; min-width:140px;" aria-label="Ders adı">
-      <input type="number" id="crsCredit" placeholder="Kredi" min="0" max="10" style="width:72px;" aria-label="Kredi">
-      <select id="crsRetake" aria-label="Tekrar alınıyorsa eski not">
-        <option value="">Yeni ders</option><option>AA</option><option>BA</option><option>BB</option><option>CB</option><option>CC</option><option>DC</option><option>DD</option><option>FD</option><option>FF</option>
-      </select>
-      <button class="btn" onclick="addCourseUI()">Ekle</button>
-    </div>
-    <div class="muted" style="margin-top:6px; font-size:12px;">Tekrar alınan derste eski notu seç. Yeni not eskisinin yerine geçer, toplam kredi değişmez.</div>
-    <div class="row" style="margin-top:12px;">
-      <span class="muted" style="font-size:12px;">Dönem öncesi kredi</span><input type="number" id="gbCredits" step="1" style="width:72px;" onchange="saveGpaBase()" aria-label="Dönem öncesi toplam kredi">
-      <span class="muted" style="font-size:12px;">puan</span><input type="number" id="gbPoints" step="0.5" style="width:84px;" onchange="saveGpaBase()" aria-label="Dönem öncesi toplam puan">
-      <span class="muted" style="font-size:12px;">hedef</span><input type="number" id="gbTarget" step="0.01" style="width:70px;" onchange="saveGpaBase()" aria-label="Hedef GPA">
-      <span class="muted" style="font-size:12px;">sonraki dönem(ler) kredisi</span><input type="number" id="gbFuture" step="1" style="width:64px;" onchange="saveGpaBase()" aria-label="Hedef tarihine kadar kalan diğer dönemlerin kredisi">
-    </div>
-  </details>
-</section>
+<!-- DERSLER: v2'de içerik Ayarlar sekmesinde -->
+<section id="dersler" role="tabpanel" aria-labelledby="tab-dersler" tabindex="0"></section>
+<!-- TEKRAR: v2'de içerik Notlar sekmesinde; sekme yalnızca eski bağlantılar için -->
+<section id="tekrar" role="tabpanel" aria-labelledby="tab-tekrar" tabindex="0"></section>
 
-<!-- TEKRAR (aralıklı tekrar) -->
-<section id="tekrar" role="tabpanel" aria-labelledby="tab-tekrar" tabindex="0">
-  <div class="card">
-    <div class="row">
-      <input type="text" id="rvTopic" placeholder="Konu (örn. seri yakınsaklık testleri)" style="flex:2; min-width:160px;" aria-label="Konu (örn. seri yakınsaklık testleri)">
-      <input type="text" id="rvCourse" placeholder="Ders" style="width:100px;" aria-label="Ders">
-      <button class="btn" onclick="addReview()">Ekle</button>
-    </div>
-    <div class="muted" style="margin-top:8px;">Konu eklenince ilk tekrar yarın düşer. Her tekrarda önce <b>tahmin</b> ver (deftere bakmadan: ne kadarını hatırlıyorum?), sonra boş kağıda dök ve gerçeği işaretle. Aralık ona göre uzar veya kısalır (1 → 3 → 7 → 14 → 30 → 60 gün). Zor = merdivende geri, Kolay = ileri (ilk iki tekrarda tek basamak, sonra iki).</div>
-  </div>
-  <h2>Kalibrasyon</h2>
-  <div id="calibBox"></div>
-  <h2>Bugün tekrar edilecekler</h2>
-  <div id="rvDue"></div>
-  <h2>Sırada</h2>
-  <div id="rvUpcoming"></div>
-</section>
-
-<!-- HATA DEFTERİ -->
+<!-- NOTLAR: hata defteri + tekrar -->
 <section id="hatadefteri" role="tabpanel" aria-labelledby="tab-hatadefteri" tabindex="0">
+  <div class="v2-notes">
+  <div class="v2-notes-a">
+  <h2 class="v2-h">Hata defteri <span class="muted" id="mCountH"></span></h2>
   <div class="card">
     <div class="row">
       <input id="mCourse" placeholder="Ders" style="width:90px;" aria-label="Ders">
@@ -485,10 +708,9 @@ body.tab-today .chain .btn, body.tab-kronometre .chain .btn{display:none;}
     </div>
     <div class="muted" style="margin-top:8px;">Skill'lerin ürettiği 📓 satırlarını buraya gir. "Neden" alanını doldurmak en çok işe yarayan kısım — hatayı not etmek değil, doğrusunun <b>nedenini kendi cümlenle</b> yazmak kalıcılığı artırıyor. Sınavdan önce dersin filtresini aç ve baştan sona oku. Kronikleşen hatayı ↻ ile Tekrar merdivenine at.</div>
   </div>
-  <div class="row" style="margin-bottom:8px;"><span class="muted">Filtre:</span><select id="mFilter" onchange="renderMistakes()" aria-label="Hata defteri ders filtresi"><option value="">Tümü</option></select><span class="muted spacer" style="text-align:right;" id="mCount"></span></div>
+  <div class="row" style="margin-bottom:8px;"><span class="muted">Filtre:</span><select id="mFilter" onchange="mShowAll=false; renderMistakes()" aria-label="Hata defteri ders filtresi"><option value="">Tümü</option></select><span class="muted spacer" style="text-align:right;" id="mCount"></span></div>
   <div id="mList"></div>
-
-  <!-- [ÖZELLİK 9] Problem çözüm kalibrasyonu — problem-cozum-rehberi skill'inin Step 0/Step 7 çıktısı -->
+  <div hidden><!-- [ÖZELLİK 9] Problem çözüm kalibrasyonu — problem-cozum-rehberi skill'inin Step 0/Step 7 çıktısı -->
   <h2>Problem Kalibrasyonu</h2>
   <div class="card">
     <div class="row">
@@ -510,14 +732,33 @@ body.tab-today .chain .btn, body.tab-kronometre .chain .btn{display:none;}
     </div>
     <div class="muted" style="margin-top:8px; font-size:12px;">Skill oturumu bitince buraya gir: ders+tip yaz, tahmini işaretle, sonucu gir. Kademe otomatik güncellenir (5 art arda doğru → bir kademe yukarı, 2 art arda yanlış → bir kademe aşağı — ceza değil, kalibrasyon).</div>
   </div>
-  <div id="tierBox"></div>
+  <div id="tierBox"></div></div>
+  </div>
+  <div class="v2-notes-b">
+  <h2 class="v2-h">Tekrar <span class="muted" id="rvCountH"></span></h2>
+  <div class="card">
+    <div class="row">
+      <input type="text" id="rvTopic" placeholder="Konu (örn. seri yakınsaklık testleri)" style="flex:2; min-width:160px;" aria-label="Konu (örn. seri yakınsaklık testleri)">
+      <input type="text" id="rvCourse" placeholder="Ders" style="width:100px;" aria-label="Ders">
+      <button class="btn" onclick="addReview()">Ekle</button>
+    </div>
+    <div class="muted" style="margin-top:8px;">Konu eklenince ilk tekrar yarın düşer. Her tekrarda önce <b>tahmin</b> ver (deftere bakmadan: ne kadarını hatırlıyorum?), sonra boş kağıda dök ve gerçeği işaretle. Aralık ona göre uzar veya kısalır (1 → 3 → 7 → 14 → 30 → 60 gün). Zor = merdivende geri, Kolay = ileri (ilk iki tekrarda tek basamak, sonra iki).</div>
+  </div>
+  <div hidden><h2>Kalibrasyon</h2>
+  <div id="calibBox"></div></div>
+  <div class="v2-seg" role="tablist" aria-label="Tekrar durumu" id="rvTabs"></div>
+  <div id="rvDue"></div>
+  
+  <div id="rvUpcoming"></div>
+  </div>
+  </div>
 </section>
 
 <!-- KRONOMETRE (serbest sayaç) -->
 <section id="kronometre" role="tabpanel" aria-labelledby="tab-kronometre" tabindex="0">
   <div class="card timer-box" style="padding:22px 16px;">
     <div id="chBadge" class="tag" style="font-size:12px; margin-bottom:10px; display:inline-block;">Hazır</div>
-    <div id="chClock" style="font-family:'JetBrains Mono',monospace; font-size:56px; font-weight:700; letter-spacing:-0.03em;">00:00</div>
+    <div id="chClock" style="font-family:'Geist Mono',ui-monospace,monospace; font-size:56px; font-weight:700; letter-spacing:-0.03em;">00:00</div>
     <div id="chLabel" class="muted" style="margin-top:4px; min-height:20px;">Başlamak için düğmeye bas</div>
     <div class="timer-controls">
       <button class="btn" id="chMainBtn" onclick="chMain()">▶ Çalışmaya Başla</button>
@@ -559,9 +800,9 @@ body.tab-today .chain .btn, body.tab-kronometre .chain .btn{display:none;}
     </div>
   </div>
   <div class="row" style="gap:10px; align-items:stretch;">
-    <div class="card" style="flex:1;"><div class="muted" style="font-size:12px;">Çalışma</div><div id="chS" style="font-family:'JetBrains Mono',monospace; font-size:20px; font-weight:700; color:var(--teal);">00:00</div></div>
-    <div class="card" style="flex:1;"><div class="muted" style="font-size:12px;">Mola</div><div id="chB" style="font-family:'JetBrains Mono',monospace; font-size:20px; font-weight:700; color:var(--accent);">00:00</div></div>
-    <div class="card" style="flex:1;"><div class="muted" style="font-size:12px;">Yemek</div><div id="chM" style="font-family:'JetBrains Mono',monospace; font-size:20px; font-weight:700; color:var(--muted);">00:00</div></div>
+    <div class="card" style="flex:1;"><div class="muted" style="font-size:12px;">Çalışma</div><div id="chS" style="font-family:'Geist Mono',ui-monospace,monospace; font-size:20px; font-weight:700; color:var(--teal);">00:00</div></div>
+    <div class="card" style="flex:1;"><div class="muted" style="font-size:12px;">Mola</div><div id="chB" style="font-family:'Geist Mono',ui-monospace,monospace; font-size:20px; font-weight:700; color:var(--accent);">00:00</div></div>
+    <div class="card" style="flex:1;"><div class="muted" style="font-size:12px;">Yemek</div><div id="chM" style="font-family:'Geist Mono',ui-monospace,monospace; font-size:20px; font-weight:700; color:var(--muted);">00:00</div></div>
   </div>
   <div class="card muted" id="chRatio" style="display:none;"></div>
   <div class="card muted" id="chUrgeSum" style="display:none;"></div>
@@ -589,9 +830,13 @@ body.tab-today .chain .btn, body.tab-kronometre .chain .btn{display:none;}
 
 <!-- KURULUM -->
 <section id="kurulum" role="tabpanel" aria-labelledby="tab-kurulum" tabindex="0">
-  <h2 style="margin-top:0;">Ders programı</h2>
-  <div class="card">
-    <div class="row">
+  <!-- v2: Ayarlar — bölümler gruplandı; tüm id'ler ve fonksiyonlar aynı -->
+  <div class="v2-set">
+  <nav class="v2-setnav" aria-label="Ayar bölümleri"><a href="#set-program" onclick="setNav(event,'set-program')">Ders programı</a><a href="#set-dersler" onclick="setNav(event,'set-dersler')">Dersler</a><a href="#set-calisma" onclick="setNav(event,'set-calisma')">Çalışma</a><a href="#set-senkron" onclick="setNav(event,'set-senkron')">Senkron</a><a href="#set-claude" onclick="setNav(event,'set-claude')">Claude</a><a href="#set-veri" onclick="setNav(event,'set-veri')">Veri</a></nav>
+  <div class="v2-setmain">
+  <div role="region" class="card v2-sc" id="set-program" aria-labelledby="h-program">
+    <div class="v2-sch"><h2 id="h-program">Ders programı</h2><button type="button" class="btn ghost" onclick="toggleScForm()" id="scFormBtn" aria-expanded="false" aria-controls="scForm">Ders ekle</button></div>
+    <div id="scForm" hidden><div class="row">
       <select id="scDay" aria-label="Ders günü">
         <option value="1">Pazartesi</option><option value="2">Salı</option><option value="3">Çarşamba</option>
         <option value="4">Perşembe</option><option value="5">Cuma</option><option value="6">Cumartesi</option><option value="0">Pazar</option>
@@ -601,81 +846,37 @@ body.tab-today .chain .btn, body.tab-kronometre .chain .btn{display:none;}
       <input type="text" id="scTitle" placeholder="Ders / etkinlik" style="flex:2; min-width:140px;" aria-label="Ders / etkinlik">
       <input type="text" id="scLoc" placeholder="Yer" style="width:90px;" aria-label="Yer">
       <button class="btn" onclick="addClass()">Ekle</button>
-    </div>
+    </div></div>
+    <div id="schedGrid"></div>
+    <details class="v2-sub"><summary>Liste ve silme</summary><div id="schedList"></div></details>
   </div>
-  <div id="schedList"></div>
-
-  <h2>Yoğun dönem — staj, sınav haftası, iş</h2>
-  <div class="card">
-    <div class="row">
-      <input type="text" id="stjTitle" value="" placeholder="örn. TP-OTC Stajı, Final Haftası" style="flex:1; min-width:160px;" aria-label="örn. TP-OTC Stajı, Final Haftası">
-      <span class="muted" style="font-size:12px;">tarih</span>
-      <input type="date" id="stjFrom" aria-label="Yoğun dönem başlangıç tarihi"><input type="date" id="stjTo" aria-label="Yoğun dönem bitiş tarihi">
+  <div class="v2-setcols">
+  <div class="v2-setcol">
+    <div role="region" class="card v2-sc" id="set-dersler" aria-labelledby="h-dersler"><h2 id="h-dersler">Dersler ve ortalama</h2>
+      <div class="card" id="gpaCard"></div>
+  <div id="crsList"></div>
+  <details class="card" style="display:block;">
+    <summary style="cursor:pointer;"><b>Ders ekle / GPA tabanı</b></summary>
+    <div class="row" style="margin-top:10px;">
+      <input type="text" id="crsCode" placeholder="Kod (örn. MATH 219)" style="width:130px;" aria-label="Ders kodu">
+      <input type="text" id="crsName" placeholder="Ad" style="flex:1; min-width:140px;" aria-label="Ders adı">
+      <input type="number" id="crsCredit" placeholder="Kredi" min="0" max="10" style="width:72px;" aria-label="Kredi">
+      <select id="crsRetake" aria-label="Tekrar alınıyorsa eski not">
+        <option value="">Yeni ders</option><option>AA</option><option>BA</option><option>BB</option><option>CB</option><option>CC</option><option>DC</option><option>DD</option><option>FD</option><option>FF</option>
+      </select>
+      <button class="btn" onclick="addCourseUI()">Ekle</button>
     </div>
-    <div class="row" style="margin-top:8px;">
-      <span class="muted" style="font-size:12px;">saat</span>
-      <input type="time" id="stjStart" value="08:00" aria-label="Yoğun dönem günlük başlangıç saati"><input type="time" id="stjEnd" value="17:00" aria-label="Yoğun dönem günlük bitiş saati">
-      <button class="btn" onclick="seedStaj()">Pzt–Cum bloğu ekle</button>
+    <div class="muted" style="margin-top:6px; font-size:12px;">Tekrar alınan derste eski notu seç. Yeni not eskisinin yerine geçer, toplam kredi değişmez.</div>
+    <div class="row" style="margin-top:12px;">
+      <span class="muted" style="font-size:12px;">Dönem öncesi kredi</span><input type="number" id="gbCredits" step="1" style="width:72px;" onchange="saveGpaBase()" aria-label="Dönem öncesi toplam kredi">
+      <span class="muted" style="font-size:12px;">puan</span><input type="number" id="gbPoints" step="0.5" style="width:84px;" onchange="saveGpaBase()" aria-label="Dönem öncesi toplam puan">
+      <span class="muted" style="font-size:12px;">hedef</span><input type="number" id="gbTarget" step="0.01" style="width:70px;" onchange="saveGpaBase()" aria-label="Hedef GPA">
+      <span class="muted" style="font-size:12px;">sonraki dönem(ler) kredisi</span><input type="number" id="gbFuture" step="1" style="width:64px;" onchange="saveGpaBase()" aria-label="Hedef tarihine kadar kalan diğer dönemlerin kredisi">
     </div>
-    <div class="muted" style="margin-top:6px;">Aynı mekanizma her yoğun dönem için geçerli — staj, sınav haftası, tam günlük iş. Bloklar yalnızca bu tarih aralığında sayılır; gün çubuğunu ve akşam penceresi hesabını doldurur. Bitiş tarihi geçince kendiliğinden düşer, silmeyi hatırlaman gerekmez.</div>
-  </div>
-
-  <h2>Günlük minimum (zincir)</h2>
-  <div class="card">
-    <div class="row">
-      <span class="muted" style="font-size:12px;">Her gün en az</span><input type="number" id="stMin" min="5" max="240" step="5" onchange="saveSettings()" style="width:70px;" aria-label="Günlük minimum çalışma (dakika)"><span class="muted" style="font-size:12px;">dk odak</span>
+  </details>
     </div>
-    <div class="muted" style="margin-top:6px; font-size:12px;">Zincir bu eşiğe bakar. Bilerek küçük tutuldu: amaç her gün masaya oturmak — 25 dk'yı geçen gün zaten çoğunlukla uzar. Haftada 1 kaçırma zinciri kırmaz (atlama hakkı); arka arkaya ikinci kaçırma kırar.</div>
-  </div>
-
-  <h2>Akşam penceresi</h2>
-  <div class="card">
-    <div class="row">
-      <span class="muted" style="font-size:12px;">Hedef yatış</span><input type="time" id="stBed" onchange="saveSettings()" style="width:104px;" aria-label="Hedef yatış saati">
-      <span class="muted" style="font-size:12px;">Yol + yemek + toparlanma</span><input type="number" id="stPay" min="0" max="360" step="15" onchange="saveSettings()" style="width:70px;" aria-label="Yol, yemek ve toparlanma payı (dakika)"><span class="muted" style="font-size:12px;">dk</span>
-    </div>
-    <div class="row" style="margin-top:8px;">
-      <span class="muted" style="font-size:12px;">Soru başına</span><input type="number" id="stSoru" min="1" max="120" onchange="saveSettings()" style="width:64px;" aria-label="Soru başına süre (dakika)"><span class="muted" style="font-size:12px;">dk</span>
-      <span class="muted" style="font-size:12px;">Tekrar başına</span><input type="number" id="stTekrar" min="1" max="60" onchange="saveSettings()" style="width:64px;" aria-label="Tekrar başına süre (dakika)"><span class="muted" style="font-size:12px;">dk</span>
-    </div>
-    <div class="muted" style="margin-top:6px;">Bugün sekmesindeki pencere kartı bu değerlerle hesaplanır: kalan saatten bloklar ve pay düşülür, iş yükü soru/tekrar sayısından çıkar. Süreler kabaca doğru olsun yeter — kartın işi kesin dakika vermek değil, işin akşama sığıp sığmadığını söylemek.</div>
-  </div>
-
-  <h2>Yeni dönem</h2>
-  <div class="card">
-    <div class="muted" style="font-size:12px; margin-bottom:8px;" id="termNow"></div>
-    <div class="row">
-      <input type="text" id="termLabel" placeholder="örn. Güz 2026" style="flex:1; min-width:140px;" aria-label="Yeni dönemin adı">
-      <button class="btn" onclick="newTerm()">Yeni dönemi başlat</button>
-    </div>
-    <div class="muted" style="margin-top:6px; font-size:12px;">Önce tam yedek indirir, sonra biten dönemi arşivler: ders programı, geçmiş/tamamlanmış deadlineler ve triyajları temizlenir. <b>Kalır:</b> hata defteri, tekrar kartları, kalibrasyon, odak/uyku geçmişi, henüz gelmemiş deadlineler ve süren yoğun dönem blokları — eski dönemin hataları yeni derslerin temeli.</div>
-    <div id="termList" style="margin-top:8px;"></div>
-  </div>
-
-  <h2>Analiz</h2>
-  <a class="card analiz-link" href="analiz.html"><span style="font-size:20px;">📊</span><span style="flex:1;"><b>Analiz panelini aç</b><div class="muted" style="font-size:12px;">Salt okunur — bu cihazdaki veriyi okur, hiçbir şeyi değiştirmez.</div></span><span class="muted">→</span></a>
-
-  <h2>Claude özeti</h2>
-  <div class="card">
-    <div class="muted" style="font-size:12px; margin-bottom:8px;">Güncel durumu (bugünkü öncelikler, yaklaşan deadlinelar, D-14 triage, kalibrasyon) tek metin olarak kopyalar — Claude'a yapıştır.</div>
-    <button class="btn" onclick="copyClaudeSummary()">📋 Özeti kopyala</button>
-    <div class="muted" id="claudeSummaryStatus" role="status" aria-live="polite" style="margin-top:6px; font-size:12px;"></div>
-  </div>
-
-  <h2>Claude'dan yapıştır</h2>
-  <div class="card">
-    <div class="muted" style="font-size:12px; margin-bottom:8px;">Claude'un verdiği JSON komut bloğunu buraya yapıştır — deadline, D-14 konusu, hata defteri veya tekrar ekler. Hiçbir şey silmez, sadece ekler.</div>
-    <textarea id="claudeApplyInp" placeholder='{"action":"add_deadline","title":"...","date":"YYYY-MM-DD","type":"exam"}' style="min-height:80px; font-family:'JetBrains Mono',monospace; font-size:12px;" aria-label="Claude JSON komut bloğu"></textarea>
-    <div class="row" style="margin-top:8px;">
-      <button class="btn" onclick="applyClaudeAction()">Uygula</button>
-    </div>
-    <div class="muted" id="claudeApplyStatus" role="status" aria-live="polite" style="margin-top:6px; font-size:12px;"></div>
-  </div>
-
-  <h2>Bilgisayar ↔ telefon senkronu</h2>
-  <div class="card">
-
-    <div class="row">
+    <div role="region" class="card v2-sc" id="set-senkron" aria-labelledby="h-senkron"><h2 id="h-senkron">Senkron</h2>
+      <div class="row">
       <input id="syncUrlInp" placeholder="Apps Script Web App URL (bkz. KURULUM.md)" style="flex:1; min-width:200px;" aria-label="Apps Script Web App URL (bkz. KURULUM.md)">
       <button class="btn ghost" onclick="saveSyncUrl()">Kaydet</button>
       <button class="btn" onclick="pullSync()">Şimdi eşitle</button>
@@ -688,16 +889,76 @@ body.tab-today .chain .btn, body.tab-kronometre .chain .btn{display:none;}
     <div class="muted" id="syncStatus" role="status" aria-live="polite" style="margin-top:6px;">senkronizasyon kapalı — URL girilmemiş</div>
     <div class="muted" style="margin-top:6px; font-size:12px;">İki cihaz da aynı anda düzenlerse aynı satırı sessizce ezmez — hangi cihazın hangi değişikliği yaptığını gösterip seçim ister; kaybeden taraf otomatik yedeklenir.</div>
   </div>
-  <div id="syncConflict"></div>
-
-  <h2>Yedek</h2>
-  <div class="card">
-    <div class="row">
+  <div id="syncConflict">
+    </div>
+  </div>
+  <div class="v2-setcol">
+    <div role="region" class="card v2-sc" id="set-calisma" aria-labelledby="h-calisma"><h2 id="h-calisma">Çalışma</h2>
+      <h3 class="v2-h3">Günlük minimum (zincir)</h3>
+      <div class="row">
+      <span class="muted" style="font-size:12px;">Her gün en az</span><input type="number" id="stMin" min="5" max="240" step="5" onchange="saveSettings()" style="width:70px;" aria-label="Günlük minimum çalışma (dakika)"><span class="muted" style="font-size:12px;">dk odak</span>
+    </div>
+    <div class="muted" style="margin-top:6px; font-size:12px;">Zincir bu eşiğe bakar. Bilerek küçük tutuldu: amaç her gün masaya oturmak — 25 dk'yı geçen gün zaten çoğunlukla uzar. Haftada 1 kaçırma zinciri kırmaz (atlama hakkı); arka arkaya ikinci kaçırma kırar.</div>
+    </div>
+    <div role="region" class="card v2-sc" id="set-claude" aria-labelledby="h-claude"><h2 id="h-claude">Claude</h2>
+      <h3 class="v2-h3">Claude'dan yapıştır</h3>
+      <div class="muted" style="font-size:12px; margin-bottom:8px;">Claude'un verdiği JSON komut bloğunu buraya yapıştır — deadline, sınav konusu, hata veya tekrar ekler; temizlik komutları arşivler. Yalnızca remove_triage, id'si verilen konuyu siler.</div>
+    <textarea id="claudeApplyInp" placeholder='{"action":"add_deadline","title":"...","date":"YYYY-MM-DD","type":"exam"}' style="min-height:80px; font-family:'Geist Mono',ui-monospace,monospace; font-size:12px;" aria-label="Claude JSON komut bloğu"></textarea>
+    <div class="row" style="margin-top:8px;">
+      <button class="btn" onclick="applyClaudeAction()">Uygula</button>
+    </div>
+    <div class="muted" id="claudeApplyStatus" role="status" aria-live="polite" style="margin-top:6px; font-size:12px;"></div>
+      <h3 class="v2-h3" style="margin-top:18px;">Panel özeti</h3>
+      <div class="muted" style="font-size:12px; margin-bottom:8px;">Güncel durumu (bugünkü öncelikler, yaklaşan deadlinelar, D-14 triage, kalibrasyon) tek metin olarak kopyalar — Claude'a yapıştır.</div>
+    <button class="btn" onclick="copyClaudeSummary()">📋 Özeti kopyala</button>
+    <div class="muted" id="claudeSummaryStatus" role="status" aria-live="polite" style="margin-top:6px; font-size:12px;"></div>
+    </div>
+    <div role="region" class="card v2-sc" id="set-veri" aria-labelledby="h-veri"><h2 id="h-veri">Veri</h2>
+      <h3 class="v2-h3">Yedek</h3>
+      <div class="row">
       <button class="btn ghost" onclick="exportData()">Verileri dışa aktar</button>
       <button class="btn ghost" onclick="document.getElementById('importFile').click()">Yedekten geri yükle</button>
       <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)" aria-label="Yedek dosyası seç">
     </div>
     <div class="muted" style="margin-top:6px;">Veriler bu tarayıcıda saklanır. Sync kuruluysa bulut da yedek sayılır — uyarı kartı ikisinden yenisine bakar.</div>
+      <h3 class="v2-h3" style="margin-top:18px;">Yeni dönem</h3>
+      <div class="muted" style="font-size:12px; margin-bottom:8px;" id="termNow"></div>
+    <div class="row">
+      <input type="text" id="termLabel" placeholder="örn. Güz 2026" style="flex:1; min-width:140px;" aria-label="Yeni dönemin adı">
+      <button class="btn" onclick="newTerm()">Yeni dönemi başlat</button>
+    </div>
+    <div class="muted" style="margin-top:6px; font-size:12px;">Önce tam yedek indirir, sonra biten dönemi arşivler: ders programı, geçmiş/tamamlanmış deadlineler ve triyajları temizlenir. <b>Kalır:</b> hata defteri, tekrar kartları, kalibrasyon, odak/uyku geçmişi, henüz gelmemiş deadlineler ve süren yoğun dönem blokları — eski dönemin hataları yeni derslerin temeli.</div>
+    <div id="termList" style="margin-top:8px;"></div>
+      <h3 class="v2-h3" style="margin-top:18px;">Analiz</h3>
+      <a class="card analiz-link" href="analiz.html"><span style="font-size:20px;">📊</span><span style="flex:1;"><b>Analiz panelini aç</b><div class="muted" style="font-size:12px;">Salt okunur — bu cihazdaki veriyi okur, hiçbir şeyi değiştirmez.</div></span><span class="muted">→</span></a>
+    </div>
+  </div>
+  </div>
+  <details class="card v2-sc v2-other"><summary><b>Diğer</b> <span class="muted">· yoğun dönem, akşam penceresi</span></summary>
+    <h3 class="v2-h3" style="margin-top:14px;">Yoğun dönem — staj, sınav haftası, iş</h3>
+    <div class="row">
+      <input type="text" id="stjTitle" value="" placeholder="örn. TP-OTC Stajı, Final Haftası" style="flex:1; min-width:160px;" aria-label="örn. TP-OTC Stajı, Final Haftası">
+      <span class="muted" style="font-size:12px;">tarih</span>
+      <input type="date" id="stjFrom" aria-label="Yoğun dönem başlangıç tarihi"><input type="date" id="stjTo" aria-label="Yoğun dönem bitiş tarihi">
+    </div>
+    <div class="row" style="margin-top:8px;">
+      <span class="muted" style="font-size:12px;">saat</span>
+      <input type="time" id="stjStart" value="08:00" aria-label="Yoğun dönem günlük başlangıç saati"><input type="time" id="stjEnd" value="17:00" aria-label="Yoğun dönem günlük bitiş saati">
+      <button class="btn" onclick="seedStaj()">Pzt–Cum bloğu ekle</button>
+    </div>
+    <div class="muted" style="margin-top:6px;">Aynı mekanizma her yoğun dönem için geçerli — staj, sınav haftası, tam günlük iş. Bloklar yalnızca bu tarih aralığında sayılır; gün çubuğunu ve akşam penceresi hesabını doldurur. Bitiş tarihi geçince kendiliğinden düşer, silmeyi hatırlaman gerekmez.</div>
+    <h3 class="v2-h3" style="margin-top:18px;">Akşam penceresi</h3>
+    <div class="row">
+      <span class="muted" style="font-size:12px;">Hedef yatış</span><input type="time" id="stBed" onchange="saveSettings()" style="width:104px;" aria-label="Hedef yatış saati">
+      <span class="muted" style="font-size:12px;">Yol + yemek + toparlanma</span><input type="number" id="stPay" min="0" max="360" step="15" onchange="saveSettings()" style="width:70px;" aria-label="Yol, yemek ve toparlanma payı (dakika)"><span class="muted" style="font-size:12px;">dk</span>
+    </div>
+    <div class="row" style="margin-top:8px;">
+      <span class="muted" style="font-size:12px;">Soru başına</span><input type="number" id="stSoru" min="1" max="120" onchange="saveSettings()" style="width:64px;" aria-label="Soru başına süre (dakika)"><span class="muted" style="font-size:12px;">dk</span>
+      <span class="muted" style="font-size:12px;">Tekrar başına</span><input type="number" id="stTekrar" min="1" max="60" onchange="saveSettings()" style="width:64px;" aria-label="Tekrar başına süre (dakika)"><span class="muted" style="font-size:12px;">dk</span>
+    </div>
+    <div class="muted" style="margin-top:6px;">Bugün sekmesindeki pencere kartı bu değerlerle hesaplanır: kalan saatten bloklar ve pay düşülür, iş yükü soru/tekrar sayısından çıkar. Süreler kabaca doğru olsun yeter — kartın işi kesin dakika vermek değil, işin akşama sığıp sığmadığını söylemek.</div>
+  </details>
+  </div>
   </div>
 </section>
 
@@ -705,7 +966,7 @@ body.tab-today .chain .btn, body.tab-kronometre .chain .btn{display:none;}
 </div>
 
 <dialog id="phoneDlg" aria-labelledby="phoneDlgT">
-  <div id="phoneDlgT" style="font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:17px;">📱 Telefon nerede?</div>
+  <div id="phoneDlgT" style="font-family:'Geist',system-ui,sans-serif; font-weight:700; font-size:17px;">📱 Telefon nerede?</div>
   <div class="muted" style="font-size:12.5px; margin-top:4px;">Bloğa başlamadan önce tek dokunuş. Cevapların kaydediliyor — Analiz paneli hangisinde gerçekten daha çok çalıştığını gösterecek.</div>
   <button class="ph-opt best" onclick="phonePick('uzak')"><span style="font-size:20px;">🚪</span><span><b>Başka odada</b><span class="muted">en güçlü seçenek — dürtü gelince ulaşamazsın</span></span></button>
   <button class="ph-opt" onclick="phonePick('sessiz')"><span style="font-size:20px;">🔕</span><span><b>Yanımda, sessiz / ters</b><span class="muted">görüş alanında kalan telefon dikkati yine çeker</span></span></button>
@@ -784,6 +1045,8 @@ function tickClock(){
   document.getElementById('clock').textContent = pad(now.getHours())+':'+pad(now.getMinutes());
   document.getElementById('dateline').textContent = now.toLocaleDateString('tr-TR',{weekday:'long', day:'numeric', month:'long', year:'numeric'});
   renderGauge(now);
+  const fd = document.getElementById('flowDate');
+  if(fd) fd.innerHTML = esc(now.toLocaleDateString('tr-TR',{weekday:'long', day:'numeric', month:'long'})) + ' <span class="muted">· ' + pad(now.getHours())+':'+pad(now.getMinutes()) + '</span>';
   const lw = document.getElementById('lateWarn');
   if(lw){
     const h = now.getHours();
@@ -825,7 +1088,7 @@ function renderGauge(now){
   }
   const gHint = document.getElementById('gaugeHint');
   if(gHint) gHint.textContent = inWindow
-    ? 'Turkuaz bloklar bugünkü derslerin. Amber çizgi şu anki saatin.'
+    ? 'Koyu bloklar bugünkü derslerin. Mavi çizgi şu anki saatin.'
     : 'Pencere 07:00–02:00 arası; şu an dışındasın. Çubuk bugünün bloklarını gösteriyor.';
   const ticks = document.getElementById('gaugeTicks');
   if(ticks && !ticks.dataset.done){
@@ -837,10 +1100,13 @@ function renderGauge(now){
 setInterval(tickClock, 10000); tickClock();
 
 // ---------- Tabs ----------
-const tabButtons = () => [...document.querySelectorAll('#tabs button')];
+const tabButtons = () => [...document.querySelectorAll('#tabs button')].filter(b => !b.hidden);
+// v2: 8 sekme 4'e indi. Eski sekmelere giden bağlantılar (Tekrar sekmesine git, #review vb.) yeni yerine düşer.
+const TAB_ALIAS = {tekrar:'hatadefteri', dersler:'kurulum', review:'today'};
 function activateTab(btn, moveFocus){
   if(!btn || !btn.dataset.tab) return;
-  tabButtons().forEach(b=>{
+  if(TAB_ALIAS[btn.dataset.tab]) btn = document.getElementById('tab-' + TAB_ALIAS[btn.dataset.tab]);
+  [...document.querySelectorAll('#tabs button')].forEach(b=>{
     const on = b === btn;
     b.classList.toggle('active', on);
     b.setAttribute('aria-selected', on ? 'true' : 'false');
@@ -987,8 +1253,12 @@ function dlRow(d, showDel){
   </div>`;
 }
 function renderDeadlines(){
+  try{ renderExamView(); }catch(e){ console.error(e); }
+  // v2: tamamlananlar listenin başını işgal etmesin — en alta, kapalı bir bölüme
   const sorted = [...deadlines].sort((a,b)=>a.date.localeCompare(b.date));
-  document.getElementById('dlList').innerHTML = sorted.length? sorted.map(d=>dlRow(d,true)+((d.type==='exam'&&!d.done&&daysLeft(d.date)>=0)?triPanel(d):'')+planPanel(d)).join('') : '<div class="card muted">Henüz deadline yok. Sınav ve ödev tarihlerini buraya ekle — Bugün sekmesinde geri sayımlarını görürsün. Sınav eklersen altında D-14 triyaj panosu açılır.</div>';
+  const openDl = sorted.filter(d=>!d.done), doneDl = sorted.filter(d=>d.done);
+  document.getElementById('dlList').innerHTML = sorted.length? openDl.map(d=>dlRow(d,true)+planPanel(d)).join('')
+    + (doneDl.length ? `<details class="v2-done"><summary>Tamamlananlar (${doneDl.length})</summary>${doneDl.map(d=>dlRow(d,true)).join('')}</details>` : '') : '<div class="card muted">Henüz deadline yok. Sınav ve ödev tarihlerini buraya ekle — Bugün sekmesinde geri sayımlarını görürsün. Sınav eklersen altında D-14 triyaj panosu açılır.</div>';
 }
 function toggleDl(id){ const d=deadlines.find(x=>x.id===id); if(d){d.done=!d.done; sset('deadlines',deadlines); renderDeadlines(); renderToday();} }
 function delDl(id){ deadlines=deadlines.filter(x=>x.id!==id); sset('deadlines',deadlines); renderDeadlines(); renderToday(); }
@@ -1026,7 +1296,35 @@ function seedStaj(){
   sset('schedule',schedule); renderSchedule(); renderToday(); tickClock();
 }
 function delClass(id){ schedule=schedule.filter(x=>x.id!==id); sset('schedule',schedule); renderSchedule(); renderToday(); tickClock(); }
+// v2: Ayarlar'da haftalık ızgara. Liste görünümü (silme) "Liste ve silme" altında duruyor.
+function toggleScForm(){
+  const f = document.getElementById('scForm'), b = document.getElementById('scFormBtn'); if(!f) return;
+  f.hidden = !f.hidden; b.setAttribute('aria-expanded', String(!f.hidden)); b.textContent = f.hidden ? 'Ders ekle' : 'Kapat';
+  if(!f.hidden){ const t = document.getElementById('scTitle'); if(t) t.focus(); }
+}
+function setNav(ev, id){
+  const el = document.getElementById(id); if(!el) return;
+  ev.preventDefault(); el.scrollIntoView({behavior:'smooth', block:'start'});
+  const h = el.querySelector('h2'); if(h){ h.tabIndex = -1; h.focus({preventScroll:true}); }
+}
+function renderSchedGrid(){
+  const el = document.getElementById('schedGrid'); if(!el) return;
+  const t = ymd(), live = schedule.filter(s=>!(s.to && t > s.to));
+  if(!live.length){ el.innerHTML = '<div class="muted">Program boş. "Ders ekle" ile bu dönemin derslerini gir; Bugün\'deki gün çubuğu kendiliğinden dolar.</div>'; return; }
+  const days = [1,2,3,4,5].concat([6,0].filter(d=>live.some(s=>s.day==d)));
+  const m = x => { const [h,mm] = x.split(':').map(Number); return h*60 + mm; };
+  const lo = Math.floor(Math.min(...live.map(s=>m(s.start)))/60)*60, hi = Math.ceil(Math.max(...live.map(s=>m(s.end)))/60)*60;
+  const span = Math.max(60, hi - lo), H = Math.max(240, span/60*44);
+  const cols = days.map(d=>{
+    const bl = live.filter(s=>s.day==d).map(s=>{
+      const top = (m(s.start)-lo)/span*100, h = (m(s.end)-m(s.start))/span*100, short = m(s.end)-m(s.start) < 60;
+      return `<div class="v2-gb" style="top:${top.toFixed(2)}%; height:${h.toFixed(2)}%;" title="${esc(s.title)} · ${s.start}–${s.end}${s.loc?' · '+esc(s.loc):''}"><b>${esc(s.title)}${short?' · '+s.start:''}</b>${short?'':`<span>${s.start} · ${esc(s.loc||'')}</span>`}</div>`; }).join('');
+    return `<div class="v2-gc"><div class="v2-gd">${DSHORT[d]}</div><div class="v2-gt" style="height:${H}px">${bl}</div></div>`; }).join('');
+  el.innerHTML = `<div class="v2-grid-wrap"><div class="v2-grid" style="grid-template-columns:repeat(${days.length}, minmax(92px,1fr))">${cols}</div></div>
+    <div class="muted" style="font-size:12.5px; margin-top:8px;">${pad(lo/60)}:00–${pad(hi/60)}:00</div>`;
+}
 function renderSchedule(){
+  try{ renderSchedGrid(); }catch(e){ console.error(e); }
   const order=[1,2,3,4,5,6,0];
   let html='';
   order.forEach(day=>{
@@ -1093,35 +1391,67 @@ function calibStats(n){
   return {n:rows.length, bias:Math.round(bias), brier:brier.toFixed(3), worst};
 }
 function delReview(id){ reviews = reviews.filter(x=>x.id!==id); sset('reviews', reviews); renderReviews(); renderToday(); }
+// v2: tekrar kalemi dersinin sıradaki sınavına RV_WAKE gün kalana kadar "uyur".
+// 75 kalemin hepsi aynı anda gecikmiş görününce liste hiç açılmıyordu. Veri değişmez:
+// durum her seferinde deadlines'tan hesaplanır, kalemde yalnızca kullanıcı arşivlerse archived:true olur.
+let rvView = 'aktif';
+function setRvView(v){ rvView = v; renderReviews(); }
+function archiveReview(id){ const r = reviews.find(x=>x.id===id); if(!r) return; r.archived = true; sset('reviews', reviews); renderReviews(); renderToday(); }
+function restoreReview(id){ const r = reviews.find(x=>x.id===id); if(!r) return; delete r.archived; sset('reviews', reviews); renderReviews(); renderToday(); }
 function renderReviews(){
   const t = isoToday();
-  const due = reviews.filter(r=>r.due<=t).sort((a,b)=>a.due.localeCompare(b.due));
-  const up = reviews.filter(r=>r.due>t).sort((a,b)=>a.due.localeCompare(b.due));
-  document.getElementById('rvDue').innerHTML = due.length ? due.map(r=>{
-    const j = jolPend[r.id];
-    // [ÖZELLİK 8] Önce tahmin (cevaba/deftere bakmadan), sonra gerçek performans → kalibrasyon
-    const step = (typeof j === 'number')
-      ? `<span class="tag" style="color:var(--teal);">tahmin %${j}</span>
-         <button class="btn warn" style="padding:5px 9px;font-size:12px;" onclick="rateReview(${r.id},-1)">Zor</button>
-         <button class="btn ghost" style="padding:5px 9px;font-size:12px;" onclick="rateReview(${r.id},0)">Orta</button>
-         <button class="btn" style="padding:5px 9px;font-size:12px;" onclick="rateReview(${r.id},1)">Kolay</button>
-         <button class="del" onclick="clearJOL(${r.id})" title="Tahmini geri al">↺</button>`
-      : `<button class="btn ghost" style="padding:5px 8px;font-size:11px;" onclick="setJOL(${r.id},0)" aria-label="Tahmin: yüzde 0 hatırlıyorum">%0</button>
-         <button class="btn ghost" style="padding:5px 8px;font-size:11px;" onclick="setJOL(${r.id},35)" aria-label="Tahmin: yüzde 35 hatırlıyorum">%35</button>
-         <button class="btn ghost" style="padding:5px 8px;font-size:11px;" onclick="setJOL(${r.id},70)" aria-label="Tahmin: yüzde 70 hatırlıyorum">%70</button>
-         <button class="btn ghost" style="padding:5px 8px;font-size:11px;" onclick="setJOL(${r.id},100)" aria-label="Tahmin: yüzde 100 hatırlıyorum">%100</button>`;
-    const hint = (typeof j === 'number') ? 'şimdi boş kağıda dök, sonra gerçeği işaretle' : 'önce tahmin et: ne kadarını hatırlıyorsun?';
-    return `<div class="item"><span class="tag">${esc(r.course||'—')}</span>
-    <span style="flex:1;">${esc(r.topic)}<div class="muted">${r.count+1}. tekrar · ${hint}</div></span>
-    ${step}
-    <button class="del" onclick="delReview(${r.id})" title="Sil" aria-label="${esc(r.topic)} konusunu tekrar listesinden sil">✕</button></div>`; }).join('')
-    : '<div class="card muted">Bugün tekrar yok. Yeni öğrendiğin her önemli konuyu yukarıdan ekle.</div>';
+  const st = new Map(reviews.map(r=>[r.id, rvState(r)]));
+  const of = s => reviews.filter(r=>st.get(r.id).s===s);
+  const act = of('aktif'), slp = of('uyku'), arc = of('arsiv');
+  const due = dueReviews(t);
+  const up = act.filter(r=>r.due>t).sort((a,b)=>a.due.localeCompare(b.due));
+  const hc = document.getElementById('rvCountH'); if(hc) hc.textContent = '· ' + reviews.length;
+  const tabs = document.getElementById('rvTabs');
+  if(tabs) tabs.innerHTML = [['aktif','Aktif',act.length],['uyku','Uyuyor',slp.length],['arsiv','Arşiv',arc.length]].map(([k,l,n]) =>
+    `<button type="button" role="tab" aria-selected="${rvView===k}" class="${rvView===k?'on':''}" onclick="setRvView('${k}')">${l} ${n}</button>`).join('');
+  const dueEl = document.getElementById('rvDue'), upEl = document.getElementById('rvUpcoming');
+  if(rvView === 'uyku'){
+    const g = {};
+    slp.forEach(r=>{ const s0 = st.get(r.id), k = (r.course||'—') + '|' + s0.wake;
+      (g[k] = g[k] || {course:r.course||'—', wake:s0.wake, exam:s0.exam, items:[]}).items.push(r); });
+    const rows = Object.values(g).sort((a,b)=>a.wake.localeCompare(b.wake));
+    dueEl.innerHTML = rows.length ? rows.map(x=>`<details class="v2-wk"><summary><span class="v2-wkd">${fmtShort(x.wake)}</span>
+      <span class="v2-wkc"><b>${esc(x.course)}</b> · ${x.items.length} kalem<small>${esc(x.exam.title)} · ${fmtShort(x.exam.date)}</small></span></summary>
+      ${x.items.map(r=>`<div class="v2-wki"><span>${esc(r.topic)}</span><button class="del" onclick="archiveReview(${r.id})" title="Arşivle" aria-label="${esc(r.topic)} — arşivle">⤓</button></div>`).join('')}</details>`).join('')
+      : '<div class="muted">Uyuyan kalem yok.</div>';
+    upEl.innerHTML = `<div class="muted v2-note">Bir kalem, dersinin sıradaki sınavına ${RV_WAKE} gün kalınca açılır. Bugün ekranında günde en fazla ${RV_CAP} tekrar görünür.</div>`;
+  } else if(rvView === 'arsiv'){
+    dueEl.innerHTML = arc.length ? arc.map(r=>`<div class="item"><span class="tag">${esc(r.course||'—')}</span><span style="flex:1;">${esc(r.topic)}</span>
+      <button class="btn ghost" style="padding:5px 10px;font-size:12px;" onclick="restoreReview(${r.id})">Geri al</button>
+      <button class="del" onclick="delReview(${r.id})" title="Sil" aria-label="${esc(r.topic)} konusunu kalıcı sil">✕</button></div>`).join('')
+      : '<div class="muted">Arşiv boş.</div>';
+    upEl.innerHTML = '';
+  } else {
+    dueEl.innerHTML = due.length ? due.map(r=>{
+      const j = jolPend[r.id];
+      // [ÖZELLİK 8] Önce tahmin (cevaba/deftere bakmadan), sonra gerçek performans → kalibrasyon
+      const step = (typeof j === 'number')
+        ? `<span class="tag" style="color:var(--teal);">tahmin %${j}</span>
+           <button class="btn warn" style="padding:5px 9px;font-size:12px;" onclick="rateReview(${r.id},-1)">Zor</button>
+           <button class="btn ghost" style="padding:5px 9px;font-size:12px;" onclick="rateReview(${r.id},0)">Orta</button>
+           <button class="btn" style="padding:5px 9px;font-size:12px;" onclick="rateReview(${r.id},1)">Kolay</button>
+           <button class="del" onclick="clearJOL(${r.id})" title="Tahmini geri al">↺</button>`
+        : `<button class="btn ghost" style="padding:5px 8px;font-size:11px;" onclick="setJOL(${r.id},0)" aria-label="Tahmin: yüzde 0 hatırlıyorum">%0</button>
+           <button class="btn ghost" style="padding:5px 8px;font-size:11px;" onclick="setJOL(${r.id},35)" aria-label="Tahmin: yüzde 35 hatırlıyorum">%35</button>
+           <button class="btn ghost" style="padding:5px 8px;font-size:11px;" onclick="setJOL(${r.id},70)" aria-label="Tahmin: yüzde 70 hatırlıyorum">%70</button>
+           <button class="btn ghost" style="padding:5px 8px;font-size:11px;" onclick="setJOL(${r.id},100)" aria-label="Tahmin: yüzde 100 hatırlıyorum">%100</button>`;
+      const hint = (typeof j === 'number') ? 'şimdi boş kağıda dök, sonra gerçeği işaretle' : 'önce tahmin et: ne kadarını hatırlıyorsun?';
+      return `<div class="item v2-rvi"><span class="tag">${esc(r.course||'—')}</span>
+      <span style="flex:1; min-width:180px;">${esc(r.topic)}<div class="muted">${r.count+1}. tekrar · ${hint}</div></span>
+      <span class="v2-rvbtns">${step}
+      <button class="del" onclick="archiveReview(${r.id})" title="Arşivle" aria-label="${esc(r.topic)} — arşivle">⤓</button></span></div>`; }).join('')
+      : '<div class="muted">Bugün tekrar yok. Yeni öğrendiğin önemli konuyu yukarıdan ekle.</div>';
+    upEl.innerHTML = up.length ? '<h3 class="v2-h3" style="margin-top:16px;">Sırada</h3>' + up.map(r=>`
+      <div class="item"><span class="tag">${esc(r.course||'—')}</span><span style="flex:1;">${esc(r.topic)}</span>
+      <span class="countdown ok">${fmtShort(r.due)}</span>
+      <button class="del" onclick="archiveReview(${r.id})" title="Arşivle" aria-label="${esc(r.topic)} — arşivle">⤓</button></div>`).join('') : '';
+  }
   renderCalib();
-  document.getElementById('rvUpcoming').innerHTML = up.length ? up.map(r=>`
-    <div class="item"><span class="tag">${esc(r.course||'—')}</span><span style="flex:1;">${esc(r.topic)}</span>
-    <span class="countdown ok">${new Date(r.due+'T00:00').toLocaleDateString('tr-TR',{day:'numeric',month:'short'})}</span>
-    <button class="del" onclick="delReview(${r.id})" title="Sil" aria-label="${esc(r.topic)} konusunu tekrar listesinden sil">✕</button></div>`).join('')
-    : '<div class="card muted">Sırada konu yok.</div>';
 }
 // [ÖZELLİK 8] Kalibrasyon kartı — nerede kendine fazla/az güveniyorsun
 function renderCalib(){
@@ -1169,19 +1499,24 @@ function mistakeToReview(id){
   reviews.push({id:Date.now(), topic:mText(m), course:m.course, level:0, due, count:0});
   sset('reviews', reviews); renderReviews(); renderToday();
 }
+let mShowAll = false;
 function renderMistakes(){
   const sel = document.getElementById('mFilter');
-  const courses = [...new Set(mistakes.map(m=>m.course).filter(Boolean))];
+  const courses = [...new Set(mistakes.filter(m=>!m.archived).map(m=>m.course).filter(Boolean))];
   const cur = sel.value;
   sel.innerHTML = '<option value="">Tümü</option>' + courses.map(c=>`<option value="${esc(c)}" ${c===cur?'selected':''}>${esc(c)}</option>`).join('');
-  const list = mistakes.filter(m=>!sel.value || m.course===sel.value);
-  document.getElementById('mCount').textContent = list.length + ' kayıt';
+  const listAll = mistakes.filter(m=>!m.archived && (!sel.value || m.course===sel.value));
+  // v2: 190+ kayıt tek seferde basılınca sayfa 20 bin piksel oluyordu; ilk 30, gerisi isteğe bağlı
+  const list = mShowAll ? listAll : listAll.slice(0, 30);
+  const hh = document.getElementById('mCountH'); if(hh) hh.textContent = '· ' + mistakes.filter(m=>!m.archived).length;
+  document.getElementById('mCount').textContent = listAll.length + ' kayıt';
   document.getElementById('mList').innerHTML = list.length ? list.map(m=>`
     <div class="item"><span class="tag">${esc(m.course||'—')}</span>
     <span style="flex:1;">${esc(mText(m))}${m.se?`<div class="muted" style="font-size:12px; color:var(--teal); margin-top:2px;">↳ ${esc(m.se)}</div>`:''}<div class="muted" style="font-size:11px;">${esc(m.date||'')}</div></span>
     <button class="btn ghost" style="padding:4px 8px; font-size:11px; white-space:nowrap;" onclick="mistakeToReview(${m.id})" title="Tekrar listesine ekle" aria-label="${esc(mText(m))} — tekrar listesine ekle">↻ Tekrara</button>
     <button class="del" onclick="delMistake(${m.id})" title="Sil" aria-label="${esc(mText(m))} kaydını sil">✕</button></div>`).join('')
     : '<div class="card muted">Kayıt yok. Tek cümle yeterli: hata neydi, doğrusu ne — ve mümkünse neden.</div>';
+  if(listAll.length > list.length) document.getElementById('mList').insertAdjacentHTML('beforeend', `<button type="button" class="btn ghost v2-moreall" onclick="mShowAll=true; renderMistakes();">Tümünü göster (${listAll.length})</button>`);
 }
 
 // ---------- [ÖZELLİK 9] Problem çözüm kalibrasyonu + destek kademesi ----------
@@ -1350,7 +1685,7 @@ function renderMorning(){
   }
 
   // Bugün tekrar
-  const dueCount = reviews.filter(r=>r.due<=isoToday()).length;
+  const dueCount = dueReviews().length;
   if(dueCount>0) parts.push(`<b style="color:var(--danger)">${dueCount} tekrar</b> bekliyor`);
 
   // Kalibrasyon uyarısı — en çok şişirdiğin ders (yeterli veri varsa)
@@ -1475,7 +1810,8 @@ function syncStartUi(force){
 function updateTabBadges(){
   const set = (id, n, lbl) => { const el = document.getElementById(id); if(!el) return;
     el.textContent = n > 0 ? String(n) : ''; if(n > 0) el.setAttribute('aria-label', n+' '+lbl); else el.removeAttribute('aria-label'); };
-  set('bdgRv', (reviews||[]).filter(r=>r.due<=isoToday()).length, 'tekrar bekliyor');
+  const dueN = dueReviews().length;
+  set('bdgRv', dueN, 'tekrar bekliyor'); set('bdgNt', dueN, 'tekrar bekliyor');
   set('bdgDl', (deadlines||[]).filter(d=>!d.done && daysLeft(d.date)>=0 && daysLeft(d.date)<=3).length, 'deadline 3 gün içinde');
 }
 function renderToday(){
@@ -1497,8 +1833,8 @@ function renderToday(){
   const key = ymd(now);   // yerel gün — toISOString() UTC verdiği için 00:00-03:00 arası dünü gösteriyordu
   const mins = focusLog[key]||0;
   const week = Object.entries(focusLog).filter(([k])=>daysAgo(k)<7).reduce((a,[,v])=>a+v,0);
-  const dueCount = reviews.filter(r=>r.due<=isoToday()).length;
-  const rvLine = dueCount>0 ? ` · <b style="color:var(--danger)">${dueCount} tekrar bekliyor</b> (Tekrar sekmesi)` : ' · Tekrar listesi temiz';
+  const dueCount = dueReviews().length;
+  const rvLine = dueCount>0 ? ` · <b style="color:var(--danger)">${dueCount} tekrar bekliyor</b> (Notlar)` : ' · Tekrar listesi temiz';
   renderSuggest(); syncStartUi(true); renderWindow(); renderPlans(); renderWeekChart(); renderSleep(); renderMorning();
   const md = modeSpan(1), mdw = modeSpan(7);
   let mdLine = '';
@@ -1509,6 +1845,9 @@ function renderToday(){
       (md.pct < 50 ? ' — <span style="color:var(--danger)">okuma çözmenin yerini tutmuyor</span>' : '') + `</div>`;
   }
   document.getElementById('todayStats').innerHTML = `Bugün <b>${mins} dk</b> odaklanılmış çalışma · Son 7 gün toplam <b style="color:var(--teal)">${(week/60).toFixed(1)} saat</b>${rvLine}${mdLine}`;
+  try{ renderExamHero(); }catch(e){ console.error(e); }
+  try{ renderTodayReviews(); }catch(e){ console.error(e); }
+  try{ renderTermGauge(); }catch(e){ console.error(e); }
 }
 function daysAgo(dateStr){ return Math.round((new Date().setHours(0,0,0,0) - new Date(dateStr+'T00:00'))/86400000); }
 
@@ -1905,14 +2244,14 @@ function renderMini(){
 }
 
 // ---------- Klavye kısayolları ----------
-// 1–8 sekme · S başlat/mola/devam · D dürtü · N yeni hata kaydı. Yazı alanındayken ve dialog açıkken devre dışı.
+// 1–4 sekme · S başlat/mola/devam · D dürtü · N yeni hata kaydı. Yazı alanındayken ve dialog açıkken devre dışı.
 document.addEventListener('keydown', e => {
   if(e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey || e.repeat) return;
   const t = e.target;
   if(t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
   if(document.querySelector('dialog[open]')) return;
   const k = e.key;
-  if(/^[1-8]$/.test(k)){ const b = tabButtons()[+k - 1]; if(b){ e.preventDefault(); activateTab(b); } return; }
+  if(/^[1-4]$/.test(k)){ const b = tabButtons()[+k - 1]; if(b){ e.preventDefault(); activateTab(b); } return; }
   const kl = k.toLowerCase();
   if(kl === 's'){ e.preventDefault(); if(ch.phase === 'idle') quickStart(); else chMain(); }
   else if(kl === 'd'){ if(ch.phase === 'study'){ e.preventDefault(); chUrge(); } }
@@ -2042,7 +2381,7 @@ function renderBlock(){
   if(!b){ el.innerHTML = ''; return; }
   const e = blockEntry(date, b), all = blockKeys(b), doneN = all.filter(k => e.s.includes(k)).length;
   const st = blockState(date, b), pct = Math.round(100*doneN/all.length);
-  const dueN = (reviews||[]).filter(r=>r.due<=date).length;
+  const dueN = dueReviews(date).length;
   const hm = pad(now.getHours())+':'+pad(now.getMinutes());
   const phase = hm < b.start ? 'saat '+b.start+'\'te başlıyor' : (hm <= b.end ? 'şu an blok saati' : 'blok saati geçti');
   const chk = (key, txt) => {
@@ -2171,8 +2510,8 @@ function renderSuggest(){
     const ex = exams[0], reds = (triage[ex.id]||[]).filter(t=>t.color==='r');
     if(reds.length){ txt = '🔴 ' + esc(reds[0].topic); sub = esc(ex.title) + ' · kırmızı konu — günün en verimli saatinde bunu çalış'; stag = codeOf(ex.title); }
   }
-  const dueRv = reviews.filter(r=>r.due<=isoToday()).length;
-  if(!txt && dueRv){ txt = '↻ ' + dueRv + ' konu tekrar bekliyor'; sub = 'Tekrar sekmesi · defter kapalı, boş kağıda dök'; const r0 = reviews.find(r=>r.due<=isoToday()); stag = r0 ? (codeOf(r0.course) || r0.course || '') : ''; }
+  const dueRv = dueReviews().length;
+  if(!txt && dueRv){ txt = '↻ ' + dueRv + ' konu tekrar bekliyor'; sub = 'Tekrar sekmesi · defter kapalı, boş kağıda dök'; const r0 = dueReviews()[0]; stag = r0 ? (codeOf(r0.course) || r0.course || '') : ''; }
   if(!txt){
     const near = deadlines.filter(d=>!d.done && daysLeft(d.date)>=0).sort((a,b)=>a.date.localeCompare(b.date))[0];
     if(near){ const n = daysLeft(near.date); txt = '→ ' + esc(near.title); sub = (n===0 ? 'bugün' : n+' gün kaldı'); stag = codeOf(near.title); }
@@ -2200,7 +2539,7 @@ function renderWeekChart(){
   const bars = vals.map((v,i)=>{
     const h = Math.round(v/max*46), isT = i===6;
     return `<div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:4px;">
-      <div style="font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--muted);">${v||''}</div>
+      <div style="font-family:'Geist Mono',ui-monospace,monospace; font-size:10px; color:var(--muted);">${v||''}</div>
       <div style="width:100%; height:48px; display:flex; align-items:flex-end;"><div style="width:100%; height:${Math.max(2,h)}px; border-radius:3px 3px 0 0; background:${isT?'var(--accent)':'var(--teal)'}; opacity:${v?1:.25};"></div></div>
       <div style="font-size:10px; color:${isT?'var(--accent)':'var(--muted)'};">${days[i]}</div></div>`;
   }).join('');
@@ -2274,7 +2613,7 @@ function demandToday(){
     const left = Math.max(0, d.plan.perDay - planTotals(d.plan).today);
     if(left) items.push({kind:'plan', title:d.title, n:left, min:left*settings.dkSoru, slack:daysLeft(d.date)});
   });
-  const due = reviews.filter(r=>r.due<=isoToday()).length;
+  const due = dueReviews().length;
   if(due) items.push({kind:'rv', title:'tekrar', n:due, min:due*settings.dkTekrar, slack:0});
   return {items, total: items.reduce((a,x)=>a+x.min, 0)};
 }
@@ -2331,18 +2670,18 @@ function renderWindow(){
   el.innerHTML = `<div class="card" style="border-color:${vcol};">
     ${head}
     <div class="row" style="gap:16px; margin-top:2px; align-items:baseline;">
-      <span>Boş <b style="color:var(--teal); font-family:'JetBrains Mono',monospace;">${hhmm(w.free)}</b></span>
-      <span>İş <b style="color:${barCol}; font-family:'JetBrains Mono',monospace;">${hhmm(dem.total)}</b></span>
-      <span class="muted" style="font-size:13px;">7g ort. <b style="font-family:'JetBrains Mono',monospace;">${hhmm(avg)}</b></span>
+      <span>Boş <b style="color:var(--teal); font-family:'Geist Mono',ui-monospace,monospace;">${hhmm(w.free)}</b></span>
+      <span>İş <b style="color:${barCol}; font-family:'Geist Mono',ui-monospace,monospace;">${hhmm(dem.total)}</b></span>
+      <span class="muted" style="font-size:13px;">7g ort. <b style="font-family:'Geist Mono',ui-monospace,monospace;">${hhmm(avg)}</b></span>
       <span class="spacer"></span>
-      <span class="muted" style="font-size:12px; font-family:'JetBrains Mono',monospace;">${pad(Math.floor(w.cur/60)%24)}:${pad(w.cur%60)} → ${esc(settings.bed)}</span>
+      <span class="muted" style="font-size:12px; font-family:'Geist Mono',ui-monospace,monospace;">${pad(Math.floor(w.cur/60)%24)}:${pad(w.cur%60)} → ${esc(settings.bed)}</span>
     </div>
     <div style="position:relative; height:24px; background:var(--surface2); border-radius:6px; overflow:hidden; margin:10px 0 4px;">
       <div style="position:absolute; left:0; top:0; bottom:0; width:${pct(w.free)}%; background:rgba(69,184,174,.14); border-right:2px solid var(--teal);"></div>
       <div style="position:absolute; left:0; top:6px; bottom:6px; width:${pct(dem.total)}%; background:${barCol}; border-radius:4px; min-width:2px;"></div>
       ${avg ? `<div style="position:absolute; left:${pct(avg)}%; top:0; bottom:0; border-left:2px dashed var(--muted);"></div>` : ''}
     </div>
-    <details class="muted" style="font-size:12px;"><summary style="cursor:pointer;">${done ? 'bugün '+done+' dk işlendi · ' : ''}hesap</summary><div style="font-family:'JetBrains Mono',monospace; margin-top:4px;">${breakdown}</div></details>
+    <details class="muted" style="font-size:12px;"><summary style="cursor:pointer;">${done ? 'bugün '+done+' dk işlendi · ' : ''}hesap</summary><div style="font-family:'Geist Mono',ui-monospace,monospace; margin-top:4px;">${breakdown}</div></details>
     ${dlist ? `<div class="muted" style="font-size:12px; margin-top:6px;">İş: ${dlist}</div>` : ''}
     <div style="font-size:13px; margin-top:8px; color:${vcol};">${verdict}</div>
   </div>`;
@@ -2758,9 +3097,10 @@ function upsertCourse(o){
 }
 
 // ---------- Claude'dan yapıştır ----------
-// Sabit, dar bir şema: dört eylem tipi, her biri var olan add-fonksiyonlarının
-// aynı veri şeklini üretir. Hiçbir alan doğrudan HTML'e basılmaz (esc() ile geçer),
-// hiçbir eylem var olan veriyi silmez veya değiştirmez — sadece ekler.
+// Sabit, dar bir şema. Hiçbir alan doğrudan HTML'e basılmaz (esc() ile geçer).
+// add_* eylemleri yalnızca ekler. v2'deki temizlik eylemleri (archive_review, archive_mistakes,
+// rename_course) kayıt silmez — arşiv bayrağı koyar ya da ders adını birleştirir;
+// tek istisna remove_triage: yalnızca id'si açıkça verilen triyaj konularını kaldırır.
 function claudeApplyStatus(msg, ok){
   const el = document.getElementById('claudeApplyStatus');
   if(!el) return;
@@ -2832,6 +3172,43 @@ function applyClaudeAction(){
           if(!crs) throw new Error('ders bulunamadı: '+(c.course||'?'));
           if(!(c.letter in LETTER)) throw new Error('geçersiz harf: '+(c.letter||'?'));
           crs.expect = c.letter; applied++;
+          break;
+        }
+        case 'archive_review': {
+          const ids = Array.isArray(c.ids) ? c.ids.map(Number) : [];
+          if(!ids.length) throw new Error('ids eksik');
+          let n = 0; reviews.forEach(r=>{ if(ids.includes(r.id) && !r.archived){ r.archived = true; n++; } });
+          if(!n) throw new Error('arşivlenecek tekrar bulunamadı');
+          sset('reviews', reviews); applied++;
+          break;
+        }
+        case 'archive_mistakes': {
+          const k = (c.course||'').trim(); if(!k) throw new Error('course eksik');
+          let n = 0; mistakes.forEach(m=>{ if((m.course||'').trim().toLowerCase() === k.toLowerCase() && !m.archived){ m.archived = true; n++; } });
+          if(!n) throw new Error('bu derste hata kaydı yok: '+k);
+          sset('mistakes', mistakes); applied++;
+          break;
+        }
+        case 'rename_course': {
+          const from = (c.from||'').trim(), to = (c.to||'').trim();
+          if(!from || !to) throw new Error('from/to eksik');
+          let n = 0;
+          reviews.forEach(r=>{ if(r.course === from){ r.course = to; n++; } });
+          mistakes.forEach(m=>{ if(m.course === from){ m.course = to; n++; } });
+          if(!n) throw new Error('bu adla kayıt yok: '+from);
+          sset('reviews', reviews); sset('mistakes', mistakes); applied++;
+          break;
+        }
+        case 'remove_triage': {
+          // Yanlışlıkla iki kez içe aktarılan konular için: yalnızca açıkça verilen id'ler silinir
+          const dl = findDeadlineByTitle(c.deadline_title);
+          if(!dl) throw new Error('deadline bulunamadı: '+(c.deadline_title||'?'));
+          const ids = Array.isArray(c.ids) ? c.ids.map(Number) : [];
+          if(!ids.length) throw new Error('ids eksik');
+          const before = (triage[dl.id]||[]).length;
+          triage[dl.id] = (triage[dl.id]||[]).filter(t=>!ids.includes(t.id));
+          if(triage[dl.id].length === before) throw new Error('silinecek konu bulunamadı');
+          sset('triage', triage); applied++;
           break;
         }
         default:
@@ -3068,6 +3445,178 @@ if('serviceWorker' in navigator && location.protocol === 'https:'){
   const el = document.getElementById(id);
   if(el) el.addEventListener('keydown', ev => { if(ev.key === 'Enter'){ ev.preventDefault(); fn(); } });
 });
+
+// ---------- v2: sınav odaklı görünüm ----------
+// Sınav dönemi başlayınca panelin tek sorusu kaldı: "sıradaki sınava bugün ne çalışıyorum?"
+// Bu bölüm var olan veriyi (deadlines, triage, mistakes, courses, reviews) okur; yeni anahtar eklemez.
+const RV_CAP = 5;    // Bugün'de en fazla bu kadar tekrar — 75'lik liste hiç açılmıyordu
+const RV_WAKE = 14;  // tekrar kalemi dersinin sınavına bu kadar gün kala uyanır
+const DSHORT = ['Paz','Pzt','Sal','Çar','Per','Cum','Cmt'];
+function fmtShort(ds){ return new Date(ds+'T00:00').toLocaleDateString('tr-TR',{day:'numeric', month:'short'}); }
+function ymdOff(ds, n){ const d = new Date(ds+'T00:00'); d.setDate(d.getDate()+n); return ymd(d); }
+function examCode(d){ return normCode(codeOf(d.title)); }
+function upcomingExams(){ return deadlines.filter(d=>d.type==='exam' && !d.done && daysLeft(d.date)>=0).sort((a,b)=>a.date.localeCompare(b.date)); }
+function nextExamFor(course){ const k = normCode(course); if(!k) return null; return upcomingExams().find(d=>examCode(d)===k) || null; }
+function courseFor(d){ const k = examCode(d); return (courses||[]).find(c=>normCode(c.code)===k) || null; }
+function rvState(r){
+  if(r.archived) return {s:'arsiv'};
+  const ex = nextExamFor(r.course);
+  if(!ex) return {s:'aktif'};                       // sınavı bilinmeyen ders: eskisi gibi her gün
+  if(daysLeft(ex.date) > RV_WAKE) return {s:'uyku', exam:ex, wake:ymdOff(ex.date, -RV_WAKE)};
+  return {s:'aktif', exam:ex};
+}
+// Sırası: sınavı en yakın ders önce, sonra en eski vade
+function dueReviews(date){
+  const t = date || isoToday();
+  return reviews.map(r=>({r, st:rvState(r)})).filter(x=>x.st.s==='aktif' && x.r.due<=t)
+    .sort((a,b)=>(a.st.exam?a.st.exam.date:'9999').localeCompare(b.st.exam?b.st.exam.date:'9999') || a.r.due.localeCompare(b.r.due))
+    .map(x=>x.r);
+}
+function triOrder(arr){ const o = {r:0, y:1, g:2}; return arr.map((t,i)=>({t,i})).sort((a,b)=>o[a.t.color]-o[b.t.color] || a.i-b.i).map(x=>x.t); }
+function shortTopic(x, n){ n = n || 24; let v = String(x||'').split(/:|—|\(| - /)[0].trim(); if(v.length > n) v = v.slice(0, n-1).trim()+'…'; return v; }
+function topicRest(x){ const m = String(x||'').match(/(?::|—|\()\s*(.+)$/); return m ? m[1].replace(/\)\s*$/,'').trim() : ''; }
+function courseMistakes(code){ const k = normCode(code); return k ? mistakes.filter(m=>!m.archived && normCode(m.course)===k) : []; }
+
+function examHeroHtml(e, o){
+  const n = daysLeft(e.date), arr = triage[e.id] || [], crs = courseFor(e);
+  const comp = crs && (crs.comps||[]).find(c=>c.date===e.date);
+  const cnt = c => arr.filter(t=>t.color===c).length;
+  const queue = triOrder(arr).filter(t=>t.color!=='g');
+  const ms = courseMistakes(codeOf(e.title));
+  const meta = [new Date(e.date+'T00:00').toLocaleDateString('tr-TR',{weekday:'short', day:'numeric', month:'long'}),
+    comp && comp.w ? `notun %${comp.w}'i` : '', crs && crs.target ? 'hedef '+esc(crs.target) : ''].filter(Boolean).join(' · ');
+  const sum = `${arr.length} konu · ${cnt('g')} hazır · ${cnt('y')} yarım`;
+  let mid = '';
+  if(o.strip && n > 0){
+    // Plan şeridi: hazır olmayan konular sırayla günlere düşer; sınavdan önceki gün genel tekrar
+    const days = Math.min(7, n); let cells = '';
+    for(let i=0; i<days; i++){
+      const d = new Date(); d.setDate(d.getDate()+i);
+      const last = (i === n-1 && n >= 2);
+      const q = queue[i];
+      const tp = last ? 'Genel tekrar' : (q ? shortTopic(q.topic, 16) : 'Eski sınav');
+      cells += `<div class="v2-day${i===0?' on':''}" title="${esc(last ? 'Sınavdan önceki gün' : (q ? q.topic : 'Konular bitti: eski sınav çöz'))}"><b>${i===0?'Bugün':DSHORT[d.getDay()]}</b><span>${esc(tp)}</span></div>`;
+    }
+    mid = `<div class="v2-hmeta"><span>${n > 7 ? 'Önümüzdeki 7 gün' : 'Sınava kadar plan'}</span><span>${sum}</span></div><div class="v2-days">${cells}</div>`;
+  } else if(arr.length){
+    const g = cnt('g'), y = cnt('y'), r = cnt('r');
+    mid = `<div class="v2-hmeta"><span>Hazırlık</span><span>${sum}</span></div>
+      <div class="v2-ready" role="img" aria-label="${arr.length} konudan ${g} hazır, ${y} yarım, ${r} yok"><i class="g" style="flex:${g}"></i><i class="y" style="flex:${y}"></i><i class="r" style="flex:${r}"></i></div>`;
+  }
+  const top = queue[0], running = ch && ch.phase !== 'idle';
+  const ctaTopic = top ? shortTopic(top.topic, 52) : (arr.length ? 'Tüm konular hazır' : 'Konu listesi boş');
+  const ctaSub = top ? [topicRest(top.topic), ms.length ? `bu derste ${ms.length} hata kaydı` : ''].filter(Boolean).join(' · ')
+    : (arr.length ? 'Eski sınav çöz, hatalarına bak' : (o.eyebrow ? 'Sınavlar sekmesinden konuları ekle' : 'Aşağıdan konuları ekle'));
+  const btn = running
+    ? `<button type="button" class="btn v2-cta" onclick="quickStart()">${ch.phase==='break' ? 'Moladan dön' : 'Sayaca git'}</button>`
+    : `<button type="button" class="btn v2-cta" onclick="heroStart(${e.id})">Başlat</button>`;
+  const H = o.h || 'h2';
+  return `<section class="v2-hero" aria-label="${o.eyebrow ? 'Sıradaki sınav' : 'Seçili sınav'}">
+    <div class="v2-hh"><div style="min-width:0;">${o.eyebrow ? '<div class="v2-eb">Sıradaki sınav</div>' : ''}<${H} class="v2-ht">${esc(e.title)}</${H}><div class="v2-hm">${meta}</div></div>
+      <div class="v2-cd"><b>${n===0 ? 'Bugün' : n}</b>${n===0 ? '' : '<span>gün kaldı</span>'}</div></div>
+    ${mid}
+    <div class="v2-block"><div style="min-width:0; flex:1 1 220px;"><div class="v2-bl">${running ? 'Sayaç çalışıyor' : (o.eyebrow ? 'Bugünün bloğu' : 'Şimdi çalış')}</div>
+      <div class="v2-bt">${esc(ctaTopic)}</div>${ctaSub ? `<div class="v2-bs">${esc(ctaSub)}</div>` : ''}</div>${btn}</div>
+  </section>`;
+}
+function heroStart(id){
+  const e = deadlines.find(d=>d.id===id);
+  if(e && ch.phase === 'idle'){ const c = codeOf(e.title); if(c){ ch.tag = c; chSave(); } }
+  quickStart();
+}
+function renderExamHero(){
+  const el = document.getElementById('examHero'); if(!el) return;
+  const ex = upcomingExams();
+  el.innerHTML = ex.length ? examHeroHtml(ex[0], {strip:true, eyebrow:true, h:'h2'})
+    : `<section class="v2-hero"><div class="v2-eb">Sıradaki sınav</div><h2 class="v2-ht">Yaklaşan sınav yok</h2><div class="v2-hm">Sınavlar sekmesinden tarih ekle.</div></section>`;
+}
+
+let selExamId = null;
+function pickExam(id){ selExamId = id; renderExamView(); }
+function showMistakesFor(code){
+  activateTab(document.getElementById('tab-hatadefteri'));
+  const sel = document.getElementById('mFilter'); renderMistakes();
+  const opt = [...sel.options].find(x=>x.value && normCode(x.value)===normCode(code));
+  if(opt){ sel.value = opt.value; renderMistakes(); }
+}
+function renderExamView(){
+  const el = document.getElementById('examView'); if(!el) return;
+  const ex = upcomingExams();
+  if(!ex.length){ el.innerHTML = '<div class="card muted">Yaklaşan sınav yok. Aşağıdan türü "Sınav" seçerek ekle.</div>'; return; }
+  const e = ex.find(d=>d.id===selExamId) || ex[0]; selExamId = e.id;
+  const list = ex.map(d=>{ const n = daysLeft(d.date), on = d.id===e.id;
+    return `<button type="button" class="v2-exi${on?' on':''}"${on?' aria-current="true"':''} onclick="pickExam(${d.id})"><span><b>${esc(d.title)}</b><small>${fmtShort(d.date)}</small></span><span class="v2-exn">${n===0?'bugün':n+'g'}</span></button>`; }).join('');
+  const PILL = {r:'Yok', y:'Yarım', g:'Hazır'};
+  // Liste sırası sabit: dokununca satır yer değiştirmesin. Sıralama yalnızca plan/CTA için.
+  const arr = triage[e.id] || [];
+  const rows = arr.map(t=>{ const rest = topicRest(t.topic);
+    return `<div class="v2-trow"><div class="v2-tt"><b>${esc(shortTopic(t.topic, 64))}</b>${rest ? `<span>${esc(rest)}</span>` : ''}</div>
+      <button type="button" class="v2-pill ${t.color}" onclick="cycleTri(${e.id},${t.id})" aria-label="${esc(t.topic)}: ${PILL[t.color]}. Değiştirmek için dokun.">${PILL[t.color]}</button>
+      <button type="button" class="del" onclick="delTri(${e.id},${t.id})" title="Sil" aria-label="${esc(t.topic)} konusunu sil">✕</button></div>`; }).join('');
+  const code = codeOf(e.title);
+  const ms = courseMistakes(code).slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
+  const mh = ms.slice(0,3).map(m=>`<div class="v2-mi"><div>${esc(mText(m))}</div>${m.se ? `<span>${esc(m.se)}</span>` : ''}</div>`).join('');
+  el.innerHTML = `<nav class="v2-exlist" aria-label="Yaklaşan sınavlar">${list}</nav>
+    <div class="v2-exmain">${examHeroHtml(e, {strip:false, h:'h2'})}
+      <div class="v2-excols">
+        <div class="card v2-topics"><h3 class="v2-h3">Konular <span class="muted">· ${arr.length}</span></h3>
+          ${rows || '<div class="muted">Konu listesini gir; hepsi "Yok" başlar. Hedef: her gün birini "Yarım"a çevirmek.</div>'}
+          <div class="row" style="margin-top:12px;"><input id="tri-inp-${e.id}" placeholder="Konu ekle" aria-label="${esc(e.title)} için konu ekle" style="flex:1;" onkeydown="if(event.key==='Enter')addTriTopic(${e.id})"><button class="btn ghost" onclick="addTriTopic(${e.id})">Ekle</button></div>
+        </div>
+        <aside class="card v2-mist" aria-label="Sınav öncesi bak"><h3 class="v2-h3">Sınav öncesi bak <span class="muted">· son ${Math.min(3, ms.length)}</span></h3>
+          ${mh || '<div class="muted">Bu dersten hata kaydı yok.</div>'}
+          ${ms.length > 3 ? `<button type="button" class="linkish v2-more" onclick="showMistakesFor('${esc(code)}')">Tüm ${ms.length} hata</button>` : ''}
+        </aside>
+      </div>
+    </div>`;
+}
+
+function renderTodayReviews(){
+  const el = document.getElementById('todayReviews'); if(!el) return;
+  const due = dueReviews(), show = due.slice(0, RV_CAP);
+  const sl = reviews.map(r=>({r, st:rvState(r)})).filter(x=>x.st.s==='uyku').sort((a,b)=>a.st.wake.localeCompare(b.st.wake));
+  let wake = '';
+  if(sl.length){ const f = sl[0], n = sl.filter(x=>x.st.wake===f.st.wake && x.r.course===f.r.course).length;
+    wake = `${f.r.course||'—'}: ${n} tekrar ${fmtShort(f.st.wake)}'da açılır`; }
+  el.innerHTML = `<h2>Tekrar <span class="muted">· ${due.length > RV_CAP ? RV_CAP+' / '+due.length : due.length}</span></h2>`
+    + (show.length ? show.map(r=>`<div class="v2-rvrow"><div class="v2-rvt"><span class="tag">${esc(r.course||'—')}</span> ${esc(r.topic)}</div>
+        <div class="v2-rvb" role="group" aria-label="${esc(r.topic)}: nasıl geçti?"><button class="btn ghost" onclick="rateReview(${r.id},-1)">Zor</button><button class="btn ghost" onclick="rateReview(${r.id},0)">Orta</button><button class="btn ghost" onclick="rateReview(${r.id},1)">Kolay</button></div></div>`).join('')
+      : '<div class="muted" style="padding:8px 0;">Bugün tekrar yok.</div>')
+    + (due.length > RV_CAP ? `<div class="v2-foot muted">Kalan ${due.length - RV_CAP} tekrar yarına kalır.</div>` : '')
+    + (wake ? `<div class="v2-foot muted">${esc(wake)}</div>` : '');
+}
+
+// Dönem şeridi: Günün Akışı'nın aynısı, ölçek gün yerine sınav dönemi
+function termExams(){
+  const seen = new Set(), out = [];
+  deadlines.filter(d=>d.type==='exam').forEach(d=>{ const k = examCode(d)+'|'+d.date; if(seen.has(k)) return; seen.add(k); out.push({date:d.date, title:d.title}); });
+  (courses||[]).forEach(c=>(c.comps||[]).forEach(p=>{
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(p.date||'')) return;
+    const k = normCode(c.code)+'|'+p.date; if(seen.has(k)) return; seen.add(k); out.push({date:p.date, title:c.code+' '+p.n}); }));
+  return out.sort((a,b)=>a.date.localeCompare(b.date));
+}
+function renderTermGauge(){
+  const row = document.getElementById('termRow'), tr = document.getElementById('termTrack'), tk = document.getElementById('termTicks');
+  const sum = document.getElementById('flowSum');
+  if(!row) return;
+  const t = isoToday(), all = termExams().filter(x=>daysLeft(x.date) >= -90), fut = all.filter(x=>x.date >= t);
+  if(!fut.length){ row.hidden = true; if(sum) sum.textContent = ''; return; }
+  row.hidden = false;
+  const s0 = all[0].date < t ? all[0].date : t, s1 = all[all.length-1].date;
+  const D = ds => new Date(ds+'T00:00').getTime(), span = Math.max(1, D(s1)-D(s0));
+  const pos = ds => (2 + (D(ds)-D(s0))/span*96).toFixed(2);
+  const nx = fut[0];
+  tr.innerHTML = `<div class="v2-tfill" style="width:${pos(t)}%"></div><div class="v2-tline"></div><div class="gauge-now" style="left:${pos(t)}%"></div>`
+    + all.map(x=>`<i class="v2-mk${x.date<t?' past':''}${x===nx?' next':''}" style="left:${pos(x.date)}%" title="${esc(x.title)} · ${fmtShort(x.date)}"></i>`).join('');
+  let ticks = ''; const d = new Date(s0+'T00:00'); d.setDate(1); d.setMonth(d.getMonth()+1);
+  while(ymd(d) <= s1){ ticks += `<span class="v2-mo" style="left:${pos(ymd(d))}%">${d.toLocaleDateString('tr-TR',{month:'short'})}</span>`; d.setMonth(d.getMonth()+1); }
+  const nn = daysLeft(nx.date), nl = (codeOf(nx.title) || nx.title).split(' ')[0];
+  ticks += `<span class="v2-nx" style="left:${pos(nx.date)}%">${esc(nl)} · ${nn===0 ? 'bugün' : nn+'g'}</span>`;
+  tk.innerHTML = ticks;
+  const past = all.filter(x=>x.date < t).length;
+  tr.setAttribute('aria-label', `Sınav dönemi ${fmtShort(s0)} – ${fmtShort(s1)}. ${past} sınav geride, ${fut.length} kaldı. Sıradaki ${nx.title}, ${fmtShort(nx.date)}.`);
+  if(sum) sum.textContent = `${past} sınav geride · ${fut.length} kaldı`;
+}
 
 // ---------- Init ----------
 normalizePlans();
