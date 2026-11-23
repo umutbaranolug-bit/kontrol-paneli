@@ -568,6 +568,19 @@ button.btn.v2-cta:focus-visible{outline:2px solid #FFFFFF; outline-offset:2px;}
   .v2-setnav a{white-space:nowrap;}
   .v2-sc{padding:18px 16px;}
 }
+/* Sınav haftası */
+.v2-wrs{display:flex; flex-direction:column; gap:2px; margin-top:-4px;}
+.v2-wr{display:grid; grid-template-columns:minmax(0,1.4fr) auto minmax(0,1fr) 44px; gap:12px; align-items:center; width:100%; text-align:left; padding:9px 12px; border:0; border-radius:8px; background:#23242B; color:#FFFFFF; font:inherit; cursor:pointer;}
+.v2-wr:hover{background:#2C2D35;}
+.v2-wr:focus-visible{outline:2px solid #FFFFFF; outline-offset:1px;}
+.v2-wrn{font-size:14px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.v2-wrm{font-size:12.5px; color:#B9B8B3; white-space:nowrap;}
+.v2-wrp{font-size:12.5px; color:#C9C8C3; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.v2-wrp.none{color:#F2B8A2;}
+.v2-wrd{font-size:14px; text-align:right;}
+.v2-day i{display:block; font-style:normal; font-size:11px; font-weight:600; color:#A9B6FF; margin-top:3px;}
+.v2-day.on i{color:#FFFFFF;}
+@media (max-width:600px){ .v2-wr{grid-template-columns:minmax(0,1fr) 40px; row-gap:2px;} .v2-wrm, .v2-wrp{grid-column:1;} .v2-wrd{grid-row:1; grid-column:2;} }
 </style>
 </head>
 <body class="tab-today">
@@ -3526,7 +3539,8 @@ function heroStart(id){
 }
 function renderExamHero(){
   const el = document.getElementById('examHero'); if(!el) return;
-  const ex = upcomingExams();
+  const ex = upcomingExams(), wk = weekCluster();
+  if(wk.length >= 2){ el.innerHTML = weekHeroHtml(wk); return; }
   el.innerHTML = ex.length ? examHeroHtml(ex[0], {strip:true, eyebrow:true, h:'h2'})
     : `<section class="v2-hero"><div class="v2-eb">Sıradaki sınav</div><h2 class="v2-ht">Yaklaşan sınav yok</h2><div class="v2-hm">Sınavlar sekmesinden tarih ekle.</div></section>`;
 }
@@ -3616,6 +3630,80 @@ function renderTermGauge(){
   const past = all.filter(x=>x.date < t).length;
   tr.setAttribute('aria-label', `Sınav dönemi ${fmtShort(s0)} – ${fmtShort(s1)}. ${past} sınav geride, ${fut.length} kaldı. Sıradaki ${nx.title}, ${fmtShort(nx.date)}.`);
   if(sum) sum.textContent = `${past} sınav geride · ${fut.length} kaldı`;
+}
+
+// ---------- Sınav haftası ----------
+// 14 gün içinde birden fazla sınav varken tek sınava bakmak yanlış ders çalıştırır: en yakın sınav
+// bitene kadar ötekilere hiç başlanmaz. Burada günler sınavlar arasında paylaştırılır.
+// Kural koda gömülü bir takvim değil — sınav tarihi, not ağırlığı ve konu listesinden her açılışta hesaplanır.
+const WEEK_WINDOW = 14;      // bu kadar gün içindeki sınavlar birlikte planlanır
+const WEEK_DEF_UNITS = 4;    // konu listesi boş sınav için varsayılan "iş miktarı"
+const WEEK_DEF_W = 15;       // ağırlığı bilinmeyen sınav için varsayılan yüzde
+function examWeight(e){ const c = courseFor(e), p = c && (c.comps||[]).find(x=>x.date===e.date); return p && +p.w ? +p.w : WEEK_DEF_W; }
+function weekCluster(){ return upcomingExams().filter(d=>daysLeft(d.date) <= WEEK_WINDOW); }
+function weekPlan(exams, nDays){
+  // Her sınav için kalan iş: Yok = 1, Yarım = 0,5 konu; liste boşsa varsayılan.
+  const st = exams.map(e=>{
+    const arr = triage[e.id] || [], q = triOrder(arr).filter(t=>t.color!=='g');
+    const units = arr.length ? q.reduce((s,t)=>s + (t.color==='y' ? 0.5 : 1), 0) : WEEK_DEF_UNITS;
+    return {e, w:examWeight(e), dl:daysLeft(e.date), units:Math.max(units, 0.5), q, qi:0, code:codeOf(e.title) || e.title};
+  });
+  const days = []; let prev = null, streak = 0;
+  for(let i=0; i<nDays; i++){
+    const live = st.filter(x=>x.dl - i >= 1);          // o gün sınavı henüz olmamış olanlar
+    if(!live.length) break;
+    let best = null, bestS = -1;
+    live.forEach(x=>{
+      const left = x.dl - i;                           // o günden sınava kalan gün
+      // üs 1 değil 0,7: uzak ama ağır sınavlar da ilk haftada gün alsın, yakın sınav her günü yutmasın
+      let sc = x.w * x.units / Math.pow(left, 0.7);
+      if(left === 1) sc *= 4;                          // sınavdan önceki gün o derse ayrılır
+      if(prev === x && streak >= 2) sc *= 0.5;         // aynı ders üst üste ikiden fazla gelmesin
+      if(sc > bestS){ bestS = sc; best = x; }
+    });
+    const last = best.dl - i === 1;
+    const t = last ? null : best.q[best.qi];
+    if(t) best.qi++;
+    best.units = Math.max(0.5, best.units - 1);
+    days.push({i, x:best, topic: last ? 'Genel tekrar' : (t ? shortTopic(t.topic, 16) : (best.q.length ? 'Eski sınav' : 'Konu belirle')), full: t ? t.topic : ''});
+    streak = (prev === best) ? streak + 1 : 1; prev = best;
+  }
+  return {st, days};
+}
+function weekHeroHtml(exams){
+  const last = exams[exams.length-1], first = exams[0];
+  const nDays = Math.min(7, daysLeft(last.date));
+  const {st, days} = weekPlan(exams, nDays);
+  const running = ch && ch.phase !== 'idle';
+  const rows = st.map(x=>{
+    const arr = triage[x.e.id] || [], g = arr.filter(t=>t.color==='g').length, y = arr.filter(t=>t.color==='y').length;
+    const prep = arr.length ? `${g}/${arr.length} hazır` + (y ? ` · ${y} yarım` : '') : 'konu listesi yok';
+    return `<button type="button" class="v2-wr" onclick="pickExam(${x.e.id}); activateTab(document.getElementById('tab-deadlines'));">
+      <span class="v2-wrn">${esc(x.e.title)}</span><span class="v2-wrm">${fmtShort(x.e.date)} · %${x.w}</span>
+      <span class="v2-wrp${arr.length ? '' : ' none'}">${prep}</span><b class="v2-wrd">${x.dl===0 ? 'bugün' : x.dl+'g'}</b></button>`; }).join('');
+  const DS = ['Paz','Pzt','Sal','Çar','Per','Cum','Cmt'];
+  const cells = days.map(d=>{ const dt = new Date(); dt.setDate(dt.getDate()+d.i);
+    return `<div class="v2-day${d.i===0?' on':''}" title="${esc(d.x.e.title + (d.full ? ' — ' + d.full : ''))}"><b>${d.i===0 ? 'Bugün' : DS[dt.getDay()]}</b><i>${esc(d.x.code.split(' ')[0])}</i><span>${esc(d.topic)}</span></div>`; }).join('');
+  const t0 = days[0];
+  const ex0 = t0 ? t0.x : st[0];
+  const ms = courseMistakes(ex0.code);
+  const ctaTopic = t0 ? (t0.full ? shortTopic(t0.full, 52) : t0.topic) : '';
+  const noList = !(triage[ex0.e.id] || []).length;
+  const ctaSub = [ex0.e.title, t0 && t0.full ? topicRest(t0.full) : '', noList ? 'konu listesi yok: Sınavlar sekmesinden ekle' : '', ms.length ? `bu derste ${ms.length} hata kaydı` : ''].filter(Boolean).join(' · ');
+  const btn = running
+    ? `<button type="button" class="btn v2-cta" onclick="quickStart()">${ch.phase==='break' ? 'Moladan dön' : 'Sayaca git'}</button>`
+    : `<button type="button" class="btn v2-cta" onclick="heroStart(${ex0.e.id})">Başlat</button>`;
+  const span = first.date === last.date ? fmtShort(first.date) : `${fmtShort(first.date)} – ${fmtShort(last.date)}`;
+  return `<section class="v2-hero" aria-label="Sınav haftası">
+    <div class="v2-hh"><div style="min-width:0;"><div class="v2-eb">Sınav haftası</div>
+      <h2 class="v2-ht">${exams.length} sınav, ${span}</h2><div class="v2-hm">Günler sınav tarihine, not ağırlığına ve hazır olmayan konu sayısına göre paylaştırıldı</div></div>
+      <div class="v2-cd"><b>${daysLeft(first.date)===0 ? 'Bugün' : daysLeft(first.date)}</b>${daysLeft(first.date)===0 ? '' : '<span>gün · ilk sınav</span>'}</div></div>
+    <div class="v2-wrs">${rows}</div>
+    <div class="v2-hmeta"><span>${nDays >= 7 ? 'Önümüzdeki 7 gün' : 'Son sınava kadar'}</span><span>dokununca konu adı</span></div>
+    <div class="v2-days">${cells}</div>
+    <div class="v2-block"><div style="min-width:0; flex:1 1 220px;"><div class="v2-bl">${running ? 'Sayaç çalışıyor' : 'Bugünün bloğu · ' + esc(ex0.code)}</div>
+      <div class="v2-bt">${esc(ctaTopic)}</div>${ctaSub ? `<div class="v2-bs">${esc(ctaSub)}</div>` : ''}</div>${btn}</div>
+  </section>`;
 }
 
 // ---------- Init ----------
