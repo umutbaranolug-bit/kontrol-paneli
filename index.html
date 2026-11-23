@@ -581,6 +581,22 @@ button.btn.v2-cta:focus-visible{outline:2px solid #FFFFFF; outline-offset:2px;}
 .v2-day i{display:block; font-style:normal; font-size:11px; font-weight:600; color:#A9B6FF; margin-top:3px;}
 .v2-day.on i{color:#FFFFFF;}
 @media (max-width:600px){ .v2-wr{grid-template-columns:minmax(0,1fr) 40px; row-gap:2px;} .v2-wrm, .v2-wrp{grid-column:1;} .v2-wrd{grid-row:1; grid-column:2;} }
+/* Sınav haftası: elle seçim + öncelik */
+button.v2-day{border:0; font:inherit; color:#FFFFFF; cursor:pointer; position:relative;}
+button.v2-day:hover:not(.on){background:#2C2D35;}
+button.v2-day:focus-visible{outline:2px solid #FFFFFF; outline-offset:1px;}
+.v2-day.pick{box-shadow:inset 0 0 0 2px #A9B6FF;}
+.v2-day.ov::after{content:""; position:absolute; top:6px; right:6px; width:6px; height:6px; border-radius:50%; background:#F2B8A2;}
+.v2-pick{display:flex; flex-wrap:wrap; align-items:center; gap:6px; background:#23242B; border-radius:10px; padding:10px 12px; margin-top:-8px;}
+.v2-pick span{font-size:13px; color:#B9B8B3; margin-right:4px;}
+.v2-pick button{min-height:38px; padding:0 12px; border-radius:8px; border:1px solid #3A3B42; background:transparent; color:#FFFFFF; font:inherit; font-size:13px; font-weight:600; cursor:pointer;}
+.v2-pick button.on{background:var(--teal); border-color:var(--teal);}
+.v2-pick button.auto{font-weight:500; color:#C9C8C3;}
+.v2-pick button.auto.on{color:#FFFFFF;}
+.v2-pick button:focus-visible{outline:2px solid #FFFFFF;}
+.v2-pri{display:flex; align-items:center; gap:12px; padding:6px 0;}
+.v2-pri b{width:84px; flex:none; font-size:14px;}
+.v2-pri .v2-seg{flex:1; margin:0;}
 </style>
 </head>
 <body class="tab-today">
@@ -907,7 +923,10 @@ button.btn.v2-cta:focus-visible{outline:2px solid #FFFFFF; outline-offset:2px;}
   </div>
   <div class="v2-setcol">
     <div role="region" class="card v2-sc" id="set-calisma" aria-labelledby="h-calisma"><h2 id="h-calisma">Çalışma</h2>
-      <h3 class="v2-h3">Günlük minimum (zincir)</h3>
+      <h3 class="v2-h3">Sınav haftası önceliği</h3>
+      <div class="muted" style="font-size:13px; margin-bottom:8px;">Birden fazla sınav yakınken hangi derse daha çok gün verileceği. Plan şeridinde bir güne dokunarak tek günü de elle değiştirebilirsin.</div>
+      <div id="priBox"></div>
+      <h3 class="v2-h3" style="margin-top:18px;">Günlük minimum (zincir)</h3>
       <div class="row">
       <span class="muted" style="font-size:12px;">Her gün en az</span><input type="number" id="stMin" min="5" max="240" step="5" onchange="saveSettings()" style="width:70px;" aria-label="Günlük minimum çalışma (dakika)"><span class="muted" style="font-size:12px;">dk odak</span>
     </div>
@@ -3018,6 +3037,7 @@ function weekMinutesFor(code){
 }
 const fmt2 = v => v===null || !isFinite(v) ? '—' : v.toFixed(2);
 function renderCourses(){
+  try{ renderPriBox(); }catch(e){ console.error(e); }
   const card = document.getElementById('gpaCard'), list = document.getElementById('crsList');
   if(!card || !list) return;
   const pr = gpaProjection(), B = gpaBase, base = B.credits ? B.points/B.credits : 0;
@@ -3646,17 +3666,20 @@ function weekPlan(exams, nDays){
   const st = exams.map(e=>{
     const arr = triage[e.id] || [], q = triOrder(arr).filter(t=>t.color!=='g');
     const units = arr.length ? q.reduce((s,t)=>s + (t.color==='y' ? 0.5 : 1), 0) : WEEK_DEF_UNITS;
-    return {e, w:examWeight(e), dl:daysLeft(e.date), units:Math.max(units, 0.5), q, qi:0, code:codeOf(e.title) || e.title};
+    const crs = courseFor(e), pri = crs && +crs.pri > 0 ? +crs.pri : 1;
+    return {e, w:examWeight(e), pri, dl:daysLeft(e.date), units:Math.max(units, 0.5), q, qi:0, code:codeOf(e.title) || e.title};
   });
   const days = []; let prev = null, streak = 0;
   for(let i=0; i<nDays; i++){
     const live = st.filter(x=>x.dl - i >= 1);          // o gün sınavı henüz olmamış olanlar
     if(!live.length) break;
     let best = null, bestS = -1;
-    live.forEach(x=>{
+    const ds = ymdOff(isoToday(), i), ovId = (settings.planOv || {})[ds], ov = ovId ? live.find(x=>x.e.id===ovId) : null;
+    if(ov) best = ov;                                   // Umut o günü elle seçtiyse hesap yapılmaz
+    else live.forEach(x=>{
       const left = x.dl - i;                           // o günden sınava kalan gün
       // üs 1 değil 0,7: uzak ama ağır sınavlar da ilk haftada gün alsın, yakın sınav her günü yutmasın
-      let sc = x.w * x.units / Math.pow(left, 0.7);
+      let sc = x.w * x.pri * x.units / Math.pow(left, 0.7);
       if(left === 1) sc *= 4;                          // sınavdan önceki gün o derse ayrılır
       if(prev === x && streak >= 2) sc *= 0.5;         // aynı ders üst üste ikiden fazla gelmesin
       if(sc > bestS){ bestS = sc; best = x; }
@@ -3665,10 +3688,35 @@ function weekPlan(exams, nDays){
     const t = last ? null : best.q[best.qi];
     if(t) best.qi++;
     best.units = Math.max(0.5, best.units - 1);
-    days.push({i, x:best, topic: last ? 'Genel tekrar' : (t ? shortTopic(t.topic, 16) : (best.q.length ? 'Eski sınav' : 'Konu belirle')), full: t ? t.topic : ''});
+    days.push({i, ds, ov:!!ov, x:best, topic: last ? 'Genel tekrar' : (t ? shortTopic(t.topic, 16) : (best.q.length ? 'Eski sınav' : 'Konu belirle')), full: t ? t.topic : ''});
     streak = (prev === best) ? streak + 1 : 1; prev = best;
   }
   return {st, days};
+}
+let weekPickDay = null;
+function pickWeekDay(i){ weekPickDay = (weekPickDay === i) ? null : i; renderExamHero(); }
+// Elle seçim settings.planOv = {tarih: deadlineId}; geçmiş günler yazarken budanır (yalnızca bu alt alan)
+function setPlanOv(ds, id){
+  const t = isoToday(), ov = Object.assign({}, settings.planOv || {});
+  Object.keys(ov).forEach(k=>{ if(k < t) delete ov[k]; });
+  if(id) ov[ds] = id; else delete ov[ds];
+  settings.planOv = ov; sset('settings', settings);
+  weekPickDay = null; renderExamHero();
+}
+// Ders önceliği: courses[i].pri (yoksa 1). Plan puanını çarpar; sınav haftası dışında etkisi yok.
+const PRI = [[0.6,'Az'],[1,'Normal'],[1.6,'Çok']];
+function setCoursePri(code, v){
+  const c = (courses||[]).find(x=>normCode(x.code)===normCode(code)); if(!c) return;
+  if(v === 1) delete c.pri; else c.pri = v;
+  sset('courses', courses); renderPriBox(); renderExamHero();
+}
+function renderPriBox(){
+  const el = document.getElementById('priBox'); if(!el) return;
+  const cs = (courses||[]).filter(c=>c.code);
+  el.innerHTML = cs.length ? cs.map(c=>{ const p = +c.pri > 0 ? +c.pri : 1;
+    return `<div class="v2-pri"><b>${esc(c.code)}</b><div class="v2-seg" role="group" aria-label="${esc(c.code)} önceliği">${PRI.map(([v,l])=>
+      `<button type="button" aria-pressed="${p===v}" class="${p===v?'on':''}" onclick="setCoursePri('${esc(c.code)}',${v})">${l}</button>`).join('')}</div></div>`; }).join('')
+    : '<div class="muted">Önce Dersler bölümünden ders ekle.</div>';
 }
 function weekHeroHtml(exams){
   const last = exams[exams.length-1], first = exams[0];
@@ -3682,8 +3730,14 @@ function weekHeroHtml(exams){
       <span class="v2-wrn">${esc(x.e.title)}</span><span class="v2-wrm">${fmtShort(x.e.date)} · %${x.w}</span>
       <span class="v2-wrp${arr.length ? '' : ' none'}">${prep}</span><b class="v2-wrd">${x.dl===0 ? 'bugün' : x.dl+'g'}</b></button>`; }).join('');
   const DS = ['Paz','Pzt','Sal','Çar','Per','Cum','Cmt'];
-  const cells = days.map(d=>{ const dt = new Date(); dt.setDate(dt.getDate()+d.i);
-    return `<div class="v2-day${d.i===0?' on':''}" title="${esc(d.x.e.title + (d.full ? ' — ' + d.full : ''))}"><b>${d.i===0 ? 'Bugün' : DS[dt.getDay()]}</b><i>${esc(d.x.code.split(' ')[0])}</i><span>${esc(d.topic)}</span></div>`; }).join('');
+  const dname = i => { const dt = new Date(); dt.setDate(dt.getDate()+i); return i===0 ? 'Bugün' : DS[dt.getDay()]; };
+  const cells = days.map(d=>`<button type="button" class="v2-day${d.i===0?' on':''}${d.ov?' ov':''}${weekPickDay===d.i?' pick':''}" aria-expanded="${weekPickDay===d.i}" aria-controls="weekPick"
+      title="${esc(d.x.e.title + (d.full ? ' — ' + d.full : ''))}" aria-label="${dname(d.i)}: ${esc(d.x.e.title)}, ${esc(d.topic)}${d.ov?' (elle seçildi)':''}. Değiştirmek için dokun."
+      onclick="pickWeekDay(${d.i})"><b>${dname(d.i)}</b><i>${esc(d.x.code.split(' ')[0])}</i><span>${esc(d.topic)}</span></button>`).join('');
+  const pd = days.find(d=>d.i===weekPickDay);
+  const picker = pd ? `<div class="v2-pick" id="weekPick" role="group" aria-label="${dname(pd.i)} için ders"><span>${dname(pd.i)} hangi ders?</span>`
+      + st.filter(x=>x.dl - pd.i >= 1).map(x=>`<button type="button" aria-pressed="${pd.ov && pd.x===x}" class="${pd.x===x?'on':''}" onclick="setPlanOv('${pd.ds}',${x.e.id})">${esc(x.code)}</button>`).join('')
+      + `<button type="button" aria-pressed="${!pd.ov}" class="auto${pd.ov?'':' on'}" onclick="setPlanOv('${pd.ds}',null)">Otomatik</button></div>` : '';
   const t0 = days[0];
   const ex0 = t0 ? t0.x : st[0];
   const ms = courseMistakes(ex0.code);
@@ -3699,8 +3753,8 @@ function weekHeroHtml(exams){
       <h2 class="v2-ht">${exams.length} sınav, ${span}</h2><div class="v2-hm">Günler sınav tarihine, not ağırlığına ve hazır olmayan konu sayısına göre paylaştırıldı</div></div>
       <div class="v2-cd"><b>${daysLeft(first.date)===0 ? 'Bugün' : daysLeft(first.date)}</b>${daysLeft(first.date)===0 ? '' : '<span>gün · ilk sınav</span>'}</div></div>
     <div class="v2-wrs">${rows}</div>
-    <div class="v2-hmeta"><span>${nDays >= 7 ? 'Önümüzdeki 7 gün' : 'Son sınava kadar'}</span><span>dokununca konu adı</span></div>
-    <div class="v2-days">${cells}</div>
+    <div class="v2-hmeta"><span>${nDays >= 7 ? 'Önümüzdeki 7 gün' : 'Son sınava kadar'}</span><span>güne dokun: dersi değiştir</span></div>
+    <div class="v2-days">${cells}</div>${picker}
     <div class="v2-block"><div style="min-width:0; flex:1 1 220px;"><div class="v2-bl">${running ? 'Sayaç çalışıyor' : 'Bugünün bloğu · ' + esc(ex0.code)}</div>
       <div class="v2-bt">${esc(ctaTopic)}</div>${ctaSub ? `<div class="v2-bs">${esc(ctaSub)}</div>` : ''}</div>${btn}</div>
   </section>`;

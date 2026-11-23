@@ -11,7 +11,7 @@
 // kalırdı — panelde bir şey değiştirdiğinde neden görünmediğini aramak zorunda
 // kalmazsın diye böyle.
 
-const CACHE = 'kp-v6';
+const CACHE = 'kp-v7';
 const SHELL = ['./', './index.html', './analiz.html', './manifest.json', './icon-192.png'];
 
 self.addEventListener('install', e => {

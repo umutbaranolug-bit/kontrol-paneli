@@ -110,6 +110,8 @@ Bu akışa dokunan her değişiklikte "hiçbir şey sessizce ezilmez" garantisin
 
 **Tekrar kapısı (`rvState`):** kart dersinin sıradaki sınavına `RV_WAKE` (14) günden fazla varsa "uyur", kalınca açılır; sınavı bilinmeyen ders her zaman aktif. Durum her seferinde `deadlines`'tan hesaplanır, saklanmaz. Kartta yalnızca kullanıcı arşivlerse `archived:true` olur (mistakes için de aynı alan).
 
+**Sınav haftası (`weekCluster` / `weekPlan`):** 14 gün içinde 2+ sınav varsa Bugün kartı günleri sınavlar arasında paylaştırır. Puan = not ağırlığı × ders önceliği × hazır olmayan konu ÷ kalan gün^0,7; sınavdan önceki gün o derse ayrılır, aynı ders üst üste ikiden fazla gelmez. Elle ayar iki yeni opsiyonel alanda durur (eksikse varsayılan): `courses[i].pri` (0,6 / 1 / 1,6 — Ayarlar → Çalışma) ve `settings.planOv = {tarih: deadlineId}` (plan şeridinde güne dokunarak; geçmiş tarihler yazarken budanır).
+
 Aşağıdaki tablo v2 öncesi sekme düzenidir; veri şekilleri hâlâ geçerli.
 
 Klavye: `1`–`8` sekme, `S` başlat/mola/devam, `D` dürtü kaydı (çalışırken), `N` yeni hata kaydı. `index.html#review` gibi hash ile doğrudan sekme açılır.
