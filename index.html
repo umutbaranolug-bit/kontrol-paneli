@@ -597,6 +597,37 @@ button.v2-day:focus-visible{outline:2px solid #FFFFFF; outline-offset:1px;}
 .v2-pri{display:flex; align-items:center; gap:12px; padding:6px 0;}
 .v2-pri b{width:84px; flex:none; font-size:14px;}
 .v2-pri .v2-seg{flex:1; margin:0;}
+/* Çalışma / mola kartı */
+.v2-sess{display:flex; flex-direction:column; gap:14px; padding-bottom:14px; border-bottom:1px solid var(--border-soft);}
+.v2-sh{display:flex; justify-content:space-between; align-items:baseline; gap:10px; flex-wrap:wrap; font-size:13px; color:var(--muted);}
+.v2-sh b{color:var(--text); font-weight:600;} .v2-sh b.p{color:#B4410E;}
+.v2-live{font-size:13px; font-weight:600; padding:3px 10px; border-radius:999px;}
+.v2-live.s{background:var(--soft); color:var(--soft-ink);} .v2-live.p{background:#FBE7DC; color:#9A3412;}
+.v2-sn{display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:8px;}
+.v2-sn b{display:block; white-space:nowrap; font-size:clamp(18px, 2vw, 26px); font-weight:600; letter-spacing:-0.02em; line-height:1.1;}
+.v2-sn span{font-size:12.5px; color:var(--muted);}
+.v2-sn .p b{color:#B4410E;}
+.v2-sbtn{display:flex; gap:8px; align-items:center; flex-wrap:wrap;}
+.v2-sbtn .btn{min-height:44px; padding:0 18px;}
+.v2-sbtn .linkish{margin-left:auto; font-size:13px;}
+.v2-sweek{display:flex; flex-direction:column; gap:8px;}
+.v2-sbars{display:grid; grid-template-columns:repeat(7, minmax(0,1fr)); gap:6px; height:110px; align-items:end;}
+.v2-sb{display:flex; flex-direction:column; align-items:stretch; height:100%; min-width:0;}
+.v2-sbs{flex:1; display:flex; flex-direction:column-reverse; gap:2px;}
+.v2-sbs i{display:block; border-radius:3px; min-height:0;}
+.v2-sbs i.s{background:var(--teal);} .v2-sbs i.p{background:#E8743B;}
+.v2-sbs i.p.est{background:repeating-linear-gradient(45deg,#E8743B 0 3px,#F7C9AE 3px 6px);}
+.v2-sb span{font-size:11px; color:var(--muted); text-align:center; margin-top:4px;}
+.v2-sb:last-child span{color:var(--text); font-weight:600;}
+.v2-snote{font-size:11.5px; color:var(--muted);}
+.v2-stat #weekChart{display:none;}
+.v2-live.over{background:#C0352B; color:#FFFFFF;}
+.v2-sess.over{box-shadow:inset 4px 0 0 #C0352B; padding-left:12px; margin-left:-12px;}
+.v2-sess.over .v2-sn .p b{color:#C0352B;}
+.v2-ask{background:#FBE7DC; border-radius:10px; padding:12px 14px; display:flex; flex-direction:column; gap:10px; font-size:14px;}
+.v2-askr{display:flex; flex-wrap:wrap; gap:8px; align-items:center;}
+.v2-askr label{font-size:13.5px; display:flex; align-items:center; gap:6px;}
+.v2-askr input{width:72px; min-height:40px;}
 </style>
 </head>
 <body class="tab-today">
@@ -619,7 +650,7 @@ button.v2-day:focus-visible{outline:2px solid #FFFFFF; outline-offset:1px;}
   <button hidden data-tab="dersler" id="tab-dersler" role="tab" aria-controls="dersler" aria-selected="false" tabindex="-1" class="ovf"><svg class="ti" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/></svg><span class="tl">Dersler</span></button>
   <button hidden data-tab="tekrar" id="tab-tekrar" role="tab" aria-controls="tekrar" aria-selected="false" tabindex="-1"><svg class="ti" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg><span class="tl">Tekrar</span><span class="tab-badge" id="bdgRv"></span></button>
   <button data-tab="hatadefteri" id="tab-hatadefteri" data-k="3" aria-keyshortcuts="3" role="tab" aria-controls="hatadefteri" aria-selected="false" tabindex="-1"><svg class="ti" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h11a2 2 0 0 1 2 2v16H8a2 2 0 0 1-2-2z"/><path d="M10.5 9.5l4 4M14.5 9.5l-4 4"/></svg><span class="tl">Notlar</span><span class="tab-badge" id="bdgNt"></span></button>
-  <button hidden data-tab="kronometre" id="tab-kronometre" role="tab" aria-controls="kronometre" aria-selected="false" tabindex="-1" class="ovf"><svg class="ti" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9.5 2h5M12 2v3"/></svg><span class="tl">Kronometre</span></button>
+  <button data-tab="kronometre" id="tab-kronometre" role="tab" aria-controls="kronometre" aria-selected="false" tabindex="-1" data-k="5" aria-keyshortcuts="5"><svg class="ti" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9.5 2h5M12 2v3"/></svg><span class="tl">Sayaç</span></button>
   <button hidden data-tab="review" id="tab-review" role="tab" aria-controls="review" aria-selected="false" tabindex="-1" class="ovf"><svg class="ti" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span class="tl">Review</span></button>
   <button data-tab="kurulum" id="tab-kurulum" data-k="4" aria-keyshortcuts="4" role="tab" aria-controls="kurulum" aria-selected="false" tabindex="-1"><svg class="ti" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span class="tl">Ayarlar</span></button>
 </nav>
@@ -631,7 +662,7 @@ button.v2-day:focus-visible{outline:2px solid #FFFFFF; outline-offset:1px;}
   <button type="button" role="menuitem" data-goto="review">🗓 Haftalık Review</button>
   <button type="button" role="menuitem" data-goto="kurulum">⚙ Kurulum</button>
 </div>
-<div class="kbd-hint" aria-hidden="true"><kbd>1</kbd>–<kbd>4</kbd> sekme · <kbd>S</kbd> başlat / mola<br><kbd>D</kbd> dürtü · <kbd>N</kbd> yeni hata kaydı</div>
+<div class="kbd-hint" aria-hidden="true"><kbd>1</kbd>–<kbd>5</kbd> sekme · <kbd>S</kbd> başlat / mola<br><kbd>D</kbd> dürtü · <kbd>N</kbd> yeni hata kaydı</div>
 </aside>
 
 <div id="mainCol">
@@ -657,6 +688,7 @@ button.v2-day:focus-visible{outline:2px solid #FFFFFF; outline-offset:1px;}
   </div>
   <div id="examHero" class="v2-hero-wrap"></div>
   <div class="card v2-stat">
+    <div id="sessCard"></div>
     <div class="chain" id="chainCard" role="status" aria-live="polite"></div>
     <div id="todayStats"></div>
     <div id="weekChart"></div>
@@ -1038,6 +1070,8 @@ let focusLog = sget('focusLog', {}); // {yyyy-mm-dd: minutes}
 let tagLog = sget('tagLog', {});     // {yyyy-mm-dd: {ders: minutes}}
 let urgeLog = sget('urgeLog', {});   // [ÖZELLİK 1] {yyyy-mm-dd: [{r:sebep, g:ders, t:zaman}]}
 let breakLog = sget('breakLog', {}); // [ÖZELLİK 3] {yyyy-mm-dd: [{o:aşım dk, r:sebep}]}
+// v2 (Kas 2026): günlük toplam mola, saniye. breakLog yalnızca limiti aşan molaları tutuyordu; çalışma/mola oranı için hepsi lazım.
+let pauseLog = sget('pauseLog', {}); // {yyyy-mm-dd: saniye}
 let sleepLog = sget('sleepLog', {}); // [ÖZELLİK 4] {yyyy-mm-dd: {h:saat, bed:'23:30', wake:'07:00'}}
 let phoneLog = sget('phoneLog', {}); // {yyyy-mm-dd: {uzak|sessiz|yanimda: {n:blok, min:dk, u:dürtü}}}
 let modeLog = sget('modeLog', {});   // [ÖZELLİK 5] {yyyy-mm-dd: {aktif:dk, pasif:dk}} — retrieval practice oranı
@@ -1880,6 +1914,7 @@ function renderToday(){
   try{ renderExamHero(); }catch(e){ console.error(e); }
   try{ renderTodayReviews(); }catch(e){ console.error(e); }
   try{ renderTermGauge(); }catch(e){ console.error(e); }
+  try{ renderSessCard(); }catch(e){ console.error(e); }
 }
 function daysAgo(dateStr){ return Math.round((new Date().setHours(0,0,0,0) - new Date(dateStr+'T00:00'))/86400000); }
 
@@ -1977,6 +2012,7 @@ function chLog(type, dur, tag){
   ch.count++;
   ch.log.unshift({t:type, d:dur, n:ch.count, ur:(type==='study'?ch.su:0), g:(type==='study'?(tag||ch.tag||''):''), md:(type==='study'?ch.mode:'')});
   ch.log = ch.log.slice(0,40);
+  if(type === 'break'){ const k = ymd(); pauseLog[k] = (pauseLog[k]||0) + Math.round(dur); sset('pauseLog', pauseLog); }
 }
 // [ÖZELLİK 1] Dürtü: tek dokunuşla sayılır, ikinci dokunuşla sebebi etiketlenir
 const URGE_LBL = {kacis:'kaçış', yorgun:'yorgunluk', anlamadim:'anlamıyorum', rastgele:'rastgele', '?':'sebepsiz'};
@@ -2043,7 +2079,7 @@ function chMain(){
   // Boştan çalışmaya geçişte önce telefon taahhüdü; seçim yapılınca aynı fonksiyon kaldığı yerden devam eder
   if(ch.phase === 'idle' && !phoneOk){ phoneAsk(() => { phoneOk = true; try{ chMain(); } finally { phoneOk = false; } }); return; }
   const e = chElapsed();
-  if(ch.phase === 'idle'){ ch.phase='study'; ch.su=0; ch.start=Date.now(); }
+  if(ch.phase === 'idle'){ ch.phase='study'; ch.su=0; ch.start=Date.now(); ch.ack=0; }
   else if(ch.phase === 'study'){
     ch.s += e; chLog('study', e, ch.tag); creditFocus(e, ch.tag);
     ch.ls = e;
@@ -2053,7 +2089,7 @@ function chMain(){
     if(ch.kind === 'yemek'){ ch.m += e; chLog('meal', e); }
     else { ch.b += e; chLog('break', e); }
     chCloseBreak(e, ch.kind === 'yemek');   // [ÖZELLİK 3]
-    ch.phase='study'; ch.su=0; ch.lam=-1; ch.start=Date.now();
+    ch.phase='study'; ch.su=0; ch.lam=-1; ch.start=Date.now(); ch.ack=0;
   }
   chSave(); chRender(); chLoop();
 }
@@ -2140,11 +2176,25 @@ function chLoop(){ if(chTimer) clearInterval(chTimer); if(ch.phase !== 'idle') c
 // anda (telefona geçtiğinde) susuyordu. Onun yerine mola başlarken limit anına
 // tek bir setTimeout kurulur — throttled olsa bile hedefi ıskalamaz, en fazla
 // bir dakika gecikir. Sayfa tamamen dondurulursa web'de yapılabilecek bir şey yok.
-let breakAlarmTimer = null;
-function cancelBreakAlarm(){ if(breakAlarmTimer){ clearTimeout(breakAlarmTimer); breakAlarmTimer = null; } }
+let breakAlarmTimer = null, breakAlarm2Timer = null, studyCheckTimer = null;
+const BREAK_NAG = 10;          // limit aşıldıktan bu kadar dk sonra ikinci uyarı (25 Kas'ta 80+ dk'lık molalar fark edilmeden uzadı)
+const STUDY_CHECK = 180;       // sayaç bu kadar dk kesintisiz "çalışma"da kalırsa sorulur (8 ve 13 Kas: 19 saatlik açık unutulmuş sayaç)
+function cancelBreakAlarm(){ if(breakAlarmTimer){ clearTimeout(breakAlarmTimer); breakAlarmTimer = null; }
+  if(breakAlarm2Timer){ clearTimeout(breakAlarm2Timer); breakAlarm2Timer = null; }
+  if(studyCheckTimer){ clearTimeout(studyCheckTimer); studyCheckTimer = null; } }
 function scheduleBreakAlarm(){
   cancelBreakAlarm();
+  if(ch.phase === 'study' && ch.start){
+    const at = ch.start + ((ch.ack||0) + STUDY_CHECK*60)*1000 - Date.now();
+    if(at > 0) studyCheckTimer = setTimeout(()=>{ studyCheckTimer = null; if(ch.phase !== 'study') return;
+      beep(2); notify('Sayaç '+Math.round(STUDY_CHECK/60)+' saattir açık', 'Hâlâ çalışıyor musun? Değilsen panelden bitir, yoksa bu süre çalışma sayılır.'); renderSessCard(); }, at);
+    return;
+  }
   if(ch.phase !== 'break' || ch.kind === 'yemek' || !ch.start) return;
+  const nagAt = ch.start + ((ch.bl||10) + BREAK_NAG)*60000 - Date.now();
+  if(nagAt > 0) breakAlarm2Timer = setTimeout(()=>{ breakAlarm2Timer = null;
+    if(ch.phase !== 'break' || ch.kind === 'yemek') return;
+    beep(3); notify('Mola '+BREAK_NAG+' dk aştı', 'Limit '+ch.bl+' dk idi, şu an '+Math.round(chElapsed()/60)+' dk. Masaya dön.'); }, nagAt);
   const left = ch.start + (ch.bl||10)*60000 - Date.now();
   if(left <= 0) return;   // limit zaten aşılmış, chRender'ın tick mantığı devrede
   breakAlarmTimer = setTimeout(()=>{
@@ -2156,6 +2206,7 @@ function scheduleBreakAlarm(){
 }
 
 function chRender(){
+  try{ renderSessCard(); }catch(e){ console.error(e); }
   try{ syncStartUi(); }catch(err){}
   const e = chElapsed();
   const isMeal = ch.phase === 'break' && ch.kind === 'yemek';
@@ -2283,7 +2334,7 @@ document.addEventListener('keydown', e => {
   if(t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
   if(document.querySelector('dialog[open]')) return;
   const k = e.key;
-  if(/^[1-4]$/.test(k)){ const b = tabButtons()[+k - 1]; if(b){ e.preventDefault(); activateTab(b); } return; }
+  if(/^[1-5]$/.test(k)){ const b = tabButtons()[+k - 1]; if(b){ e.preventDefault(); activateTab(b); } return; }
   const kl = k.toLowerCase();
   if(kl === 's'){ e.preventDefault(); if(ch.phase === 'idle') quickStart(); else chMain(); }
   else if(kl === 'd'){ if(ch.phase === 'study'){ e.preventDefault(); chUrge(); } }
@@ -3261,7 +3312,7 @@ function applyClaudeAction(){
 }
 
 function exportData(){
-  const keys=['deadlines','schedule','prio','focusLog','reviews','mistakes','triage','chrono','tagLog','urgeLog','breakLog','sleepLog','modeLog','calibLog','tierLog','settings','term','terms','courses','gpaBase','phoneLog','planLog'];
+  const keys=['deadlines','schedule','prio','focusLog','reviews','mistakes','triage','chrono','tagLog','urgeLog','breakLog','pauseLog','sleepLog','modeLog','calibLog','tierLog','settings','term','terms','courses','gpaBase','phoneLog','planLog'];
   const dump={};
   keys.forEach(k=>dump[k]=sget(k,null));
   try{ for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(k.startsWith('review-')) dump[k]=sget(k,null); } }catch(e){}
@@ -3276,7 +3327,7 @@ function importData(ev){
   r.onload=()=>{ try{
     const dump=JSON.parse(r.result);
     Object.entries(dump).forEach(([k,v])=>{ if(v!==null) sset(k,v); });
-    deadlines=sget('deadlines',[]); schedule=sget('schedule',[]); focusLog=sget('focusLog',{}); tagLog=sget('tagLog',{}); urgeLog=sget('urgeLog',{}); breakLog=sget('breakLog',{}); sleepLog=sget('sleepLog',{}); modeLog=sget('modeLog',{}); phoneLog=sget('phoneLog',{}); calibLog=sget('calibLog',[]); tierLog=sget('tierLog',{}); reviews=sget('reviews',[]); mistakes=sget('mistakes',[]); triage=sget('triage',{}); planLog=sget('planLog',{}); courses=sget('courses',[]); gpaBase=Object.assign(GB0(),sget('gpaBase',{})||{}); settings=Object.assign({},SET0,sget('settings',{})||{}); renderSettings(); renderCourses();
+    deadlines=sget('deadlines',[]); schedule=sget('schedule',[]); focusLog=sget('focusLog',{}); tagLog=sget('tagLog',{}); urgeLog=sget('urgeLog',{}); breakLog=sget('breakLog',{}); pauseLog=sget('pauseLog',{}); sleepLog=sget('sleepLog',{}); modeLog=sget('modeLog',{}); phoneLog=sget('phoneLog',{}); calibLog=sget('calibLog',[]); tierLog=sget('tierLog',{}); reviews=sget('reviews',[]); mistakes=sget('mistakes',[]); triage=sget('triage',{}); planLog=sget('planLog',{}); courses=sget('courses',[]); gpaBase=Object.assign(GB0(),sget('gpaBase',{})||{}); settings=Object.assign({},SET0,sget('settings',{})||{}); renderSettings(); renderCourses();
     prio=sget('prio',null)||PRIO0(); if(!Array.isArray(prio.items)||prio.items.length!==3) prio=PRIO0(); prio.items.forEach(x=>{if(typeof x.w!=='string')x.w='';}); prioRoll();
     ch=sget('chrono',null)||CH0(); if(ch.day!==ymd()) ch=CH0(); chLoop(); chRender();
     normalizePlans();
@@ -3293,7 +3344,7 @@ function importData(ev){
 // birbirinin üstüne hangi sürümden geldiğini taşıyor, gerçek bir çatal
 // (fork) varsa otomatik seçmek yerine soruyor ve kaybeden tarafı önce
 // dosyaya yedekliyor.
-const SYNC_KEYS = ['deadlines','schedule','prio','focusLog','reviews','mistakes','triage','chrono','tagLog','urgeLog','breakLog','sleepLog','modeLog','calibLog','tierLog','settings','lastExport','term','terms','courses','gpaBase','phoneLog','planLog'];
+const SYNC_KEYS = ['deadlines','schedule','prio','focusLog','reviews','mistakes','triage','chrono','tagLog','urgeLog','breakLog','pauseLog','sleepLog','modeLog','calibLog','tierLog','settings','lastExport','term','terms','courses','gpaBase','phoneLog','planLog'];
 let syncPushTimer = null, syncDirty = false;
 
 function syncUrl(){ try{ return localStorage.getItem('syncUrl')||''; }catch(e){ return ''; } }
@@ -3343,7 +3394,7 @@ function collectData(){
 function applyRemote(d){
   Object.entries(d).forEach(([k,v]) => { if(v!==null && v!==undefined) ssetRaw(k, v); });
   deadlines=sget('deadlines',[]); schedule=sget('schedule',[]);
-  focusLog=sget('focusLog',{}); tagLog=sget('tagLog',{}); urgeLog=sget('urgeLog',{}); breakLog=sget('breakLog',{}); sleepLog=sget('sleepLog',{}); modeLog=sget('modeLog',{}); phoneLog=sget('phoneLog',{}); calibLog=sget('calibLog',[]); tierLog=sget('tierLog',{}); reviews=sget('reviews',[]); mistakes=sget('mistakes',[]); triage=sget('triage',{}); planLog=sget('planLog',{}); courses=sget('courses',[]); gpaBase=Object.assign(GB0(),sget('gpaBase',{})||{}); settings=Object.assign({},SET0,sget('settings',{})||{}); renderSettings(); renderCourses();
+  focusLog=sget('focusLog',{}); tagLog=sget('tagLog',{}); urgeLog=sget('urgeLog',{}); breakLog=sget('breakLog',{}); pauseLog=sget('pauseLog',{}); sleepLog=sget('sleepLog',{}); modeLog=sget('modeLog',{}); phoneLog=sget('phoneLog',{}); calibLog=sget('calibLog',[]); tierLog=sget('tierLog',{}); reviews=sget('reviews',[]); mistakes=sget('mistakes',[]); triage=sget('triage',{}); planLog=sget('planLog',{}); courses=sget('courses',[]); gpaBase=Object.assign(GB0(),sget('gpaBase',{})||{}); settings=Object.assign({},SET0,sget('settings',{})||{}); renderSettings(); renderCourses();
   prio=sget('prio',null)||PRIO0(); if(!Array.isArray(prio.items)||prio.items.length!==3) prio=PRIO0(); prio.items.forEach(x=>{if(typeof x.w!=='string')x.w='';}); prioRoll();
   ch=sget('chrono',null)||CH0(); if(ch.day!==ymd()) ch=CH0(); ch.u=ch.u||0; ch.su=ch.su||0; ch.bl=ch.bl||10; if(typeof ch.lam!=='number') ch.lam=-1; if(typeof ch.tag!=='string') ch.tag=''; if(typeof ch.auto!=='boolean') ch.auto=true; ch.ls=ch.ls||0; if(ch.mode!=='aktif'&&ch.mode!=='pasif') ch.mode='aktif';
   normalizePlans();
@@ -3394,67 +3445,127 @@ function resolveConflict(pick){
   clearConflictCard();
   window.__pendingRemote = null;
 }
+// ----- v3 (26 Kas 2026): üç yönlü birleştirme -----
+// Eski akış bütün veriyi tek parça sayıyordu: iki cihaz da "değişmiş" görünürse biri seçiliyor, öbürü
+// gidiyordu. Sorun şu ki bir cihaz hiçbir şey eklemeden de "değişmiş" sayılabiliyordu (açılışta kronometre
+// gün sıfırlaması, otomatik kayıtlar) ve sekme kapanırken pull beklemeden push ediyordu. 18–22 Kasım
+// verisi böyle gitti: eski kopyalı telefon "daha yeni" diye buluta yazdı.
+// Şimdi her cihaz son eşitlediği hali (syncBase, yalnızca bu cihazda) saklar. Uzakta başka bir sürüm varsa
+// alan alan karşılaştırılır: yalnızca bir tarafın değiştirdiği alan o taraftan alınır; iki taraf da
+// değiştirdiyse sözlükler anahtar anahtar, id'li listeler kayıt kayıt birleşir, sayılarda büyük olan kalır.
+// Push her seferinde önce buluta bakar, kör yazmaz. Taban yoksa (ilk eşitleme) hiçbir şey silinmez, birleşir.
+const isPlainObj = x => x !== null && typeof x === 'object' && !Array.isArray(x);
+const jeq = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+const recId = x => isPlainObj(x) ? (x.id !== undefined ? x.id : x.t) : undefined;
+function merge3(b, l, r){
+  if(jeq(l, r)) return l;
+  if(l === undefined) return (b !== undefined && jeq(r, b)) ? undefined : r;   // bu cihaz sildi, öteki dokunmadı → silinmiş kalır
+  if(r === undefined) return (b !== undefined && jeq(l, b)) ? undefined : l;
+  if(b !== undefined && jeq(l, b)) return r;    // yalnızca uzak değiştirmiş
+  if(b !== undefined && jeq(r, b)) return l;    // yalnızca bu cihaz değiştirmiş
+  // ikisi de değiştirmiş
+  if(isPlainObj(l) && isPlainObj(r)){
+    const bb = isPlainObj(b) ? b : {}, o = {};
+    new Set([...Object.keys(l), ...Object.keys(r)]).forEach(k => { const v = merge3(bb[k], l[k], r[k]); if(v !== undefined) o[k] = v; });
+    return o;
+  }
+  if(Array.isArray(l) && Array.isArray(r) && [...l, ...r].every(x => recId(x) !== undefined)){
+    const bm = new Map((Array.isArray(b) ? b : []).filter(x => recId(x) !== undefined).map(x => [recId(x), x]));
+    const lm = new Map(l.map(x => [recId(x), x])), rm = new Map(r.map(x => [recId(x), x]));
+    const order = l.map(recId);
+    r.forEach((x, i) => { const id = recId(x); if(lm.has(id)) return;
+      const at = i > 0 ? order.indexOf(recId(r[i-1])) + 1 : 0; order.splice(Math.max(0, at), 0, id); });
+    const out = [];
+    order.forEach(id => { const v = merge3(bm.get(id), lm.get(id), rm.get(id)); if(v !== undefined) out.push(v); });
+    return out;
+  }
+  if(typeof l === 'number' && typeof r === 'number') return Math.max(l, r);
+  if(Array.isArray(l) && Array.isArray(r)){
+    const seen = new Set();
+    return [...l, ...r].filter(x => { const k = JSON.stringify(x); if(seen.has(k)) return false; seen.add(k); return true; });
+  }
+  return l;   // aynı alanı iki cihaz farklı değere çekmiş: bu cihazdaki kalır
+}
+function syncBaseData(){ const v = sget('syncBase', null); return isPlainObj(v) ? v : undefined; }
+function setSyncBase(d){ ssetRaw('syncBase', d); }
+async function fetchRemote(url){
+  const res = await fetch(url, {cache:'no-store'});
+  const body = (await res.text()).trim();
+  if(body.startsWith('<')) throw new Error('sunucu HTML döndü — Web App dağıtımı/erişim ayarını kontrol et');
+  const j = JSON.parse(body);
+  // Hata cevabında da data yok; bunu "bulut boş" sayarsak yerel veri kontrolsüz buluta yazılır.
+  if(j && j.error) throw new Error('sunucu: ' + j.error);
+  return j;
+}
+// Uzaktaki paket bu cihazın son gördüğü sürüm değilse birleştir; sonuç yerelde uygulanır (sync tetiklemeden).
+// Döner: {changedLocal: yerel veri değişti mi, needPush: birleşik veride bulutta olmayan bir şey var mı}
+function mergeRemote(j){
+  const local = collectData(), merged = merge3(syncBaseData(), local, j.data);
+  const changedLocal = !jeq(merged, local);
+  if(changedLocal) applyRemote(merged);
+  ssetRaw('lastSeenRemoteRev', j.rev || 0);
+  ssetRaw('dataUpdatedAt', Math.max(sget('dataUpdatedAt', 0), j.updatedAt || 0));
+  const needPush = !jeq(merged, j.data);
+  setSyncBase(needPush ? j.data : merged);   // bulutta olan hal taban; fark bir sonraki push ile gider
+  return {changedLocal, needPush};
+}
+let syncBusy = null;
 async function pushSync(force){
   const url = syncUrl(); if(!url) return;
-  try{
-    setSyncStatus('gönderiliyor…');
-    const rev = force ? localRev() : bumpRev();
-    const payload = JSON.stringify({
-      updatedAt: sget('dataUpdatedAt', Date.now()),
-      rev, baseRev: lastSeenRemoteRev(),
-      deviceId: deviceId(), deviceName: deviceName(),
-      data: collectData()
-    });
-    // Cevabı doğrulamadan "eşitlendi" demek en tehlikeli sessiz hata: lastSync
-    // işaretlenir, yedek uyarısı susar, veri aslında hiç gitmemiştir. Apps Script
-    // hata verdiğinde çoğu zaman 200 + HTML hata sayfası döner, o yüzden gövdeye de bakılır.
-    const res = await fetch(url, {method:'POST', headers:{'Content-Type':'text/plain'}, body: payload});
-    if(!res.ok) throw new Error('HTTP '+res.status);
-    const body = (await res.text()).trim();
-    if(body.startsWith('<')) throw new Error('sunucu HTML döndü — Web App dağıtımı/erişim ayarını kontrol et');
-    // Sunucu yazamadığında da HTTP 200 döner, hata gövdede: {"error":"..."}
-    let ans = null; try{ ans = JSON.parse(body); }catch(e){}
-    if(ans && ans.error) throw new Error('sunucu: '+ans.error);
-    syncDirty = false;
-    ssetRaw('lastSeenRemoteRev', rev);
-    ssetRaw('lastSync', todayKey()); checkBackup();
-    setSyncStatus('eşitlendi ✓ '+deviceName()+' · '+new Date().toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'}), true);
-  }catch(e){
-    syncDirty = true;   // denemeye devam: sekme gizlenince yeniden gönderilir
-    checkBackup();      // yedek uyarısı sahte "eşitlendi" yüzünden susmasın
-    setSyncStatus('EŞİTLENMEDİ — '+(e && e.message ? e.message : 'internet/URL kontrol et')+' · veri yalnızca bu cihazda', false);
-  }
+  if(syncBusy) return syncBusy.then(() => pushSync(force));
+  syncBusy = (async () => {
+    try{
+      setSyncStatus('gönderiliyor…');
+      // Kör yazma yok: önce bulutta başkasının yazdığı bir şey var mı bak, varsa önce birleştir
+      const j = await fetchRemote(url);
+      if(j && j.data && j.deviceId !== deviceId() && (j.rev || 0) !== lastSeenRemoteRev()){
+        const m = mergeRemote(j);
+        if(!m.needPush){ syncDirty = false; ssetRaw('lastSync', todayKey()); checkBackup();
+          setSyncStatus((j.deviceName || 'diğer cihaz') + ' ile birleştirildi ✓', true); return; }
+      }
+      const rev = Math.max(localRev(), lastSeenRemoteRev()) + 1; ssetRaw('localRev', rev);
+      const data = collectData();
+      const payload = JSON.stringify({
+        updatedAt: sget('dataUpdatedAt', Date.now()),
+        rev, baseRev: lastSeenRemoteRev(),
+        deviceId: deviceId(), deviceName: deviceName(), data
+      });
+      // Cevabı doğrulamadan "eşitlendi" demek en tehlikeli sessiz hata: Apps Script hata verdiğinde
+      // çoğu zaman 200 + HTML döner, o yüzden gövdeye de bakılır.
+      const res = await fetch(url, {method:'POST', headers:{'Content-Type':'text/plain'}, body: payload});
+      const body = (await res.text()).trim();
+      if(body.startsWith('<')) throw new Error('sunucu HTML döndü — Web App dağıtımı/erişim ayarını kontrol et');
+      let ans = null; try{ ans = JSON.parse(body); }catch(e){}
+      if(ans && ans.error) throw new Error('sunucu: ' + ans.error);
+      syncDirty = false;
+      ssetRaw('lastSeenRemoteRev', rev);
+      setSyncBase(data);
+      ssetRaw('lastSync', todayKey()); checkBackup();
+      setSyncStatus('eşitlendi ✓ ' + deviceName() + ' · ' + new Date().toLocaleTimeString('tr-TR', {hour:'2-digit', minute:'2-digit'}), true);
+    }catch(e){
+      syncDirty = true;   // denemeye devam: sekme gizlenince yeniden gönderilir
+      checkBackup();      // yedek uyarısı sahte "eşitlendi" yüzünden susmasın
+      setSyncStatus('EŞİTLENMEDİ — ' + (e && e.message ? e.message : 'internet/URL kontrol et') + ' · veri yalnızca bu cihazda', false);
+    }finally{ syncBusy = null; }
+  })();
+  return syncBusy;
 }
 async function pullSync(auto){
   const url = syncUrl(); if(!url){ setSyncStatus('senkronizasyon kapalı — URL girilmemiş'); return; }
+  if(syncBusy) return syncBusy.then(() => pullSync(auto));
   try{
     setSyncStatus('bulut kontrol ediliyor…');
-    const res = await fetch(url);
-    const j = await res.json();
-    // Hata cevabında da data yok; bunu "bulut boş" sayarsak yerel veri çakışma
-    // kontrolü olmadan bulutun üstüne yazılır. Boş bulut ile bozuk bulut ayrı şeyler.
-    if(j && j.error){ setSyncStatus('eşitleme hatası — sunucu: '+j.error, false); return; }
+    const j = await fetchRemote(url);
     if(!j || !j.data){ setSyncStatus('bulut boş — ilk gönderim yapılıyor'); pushSync(); return; }
-    const sameDevice = j.deviceId === deviceId();
-    const localT = sget('dataUpdatedAt', 0);
-    const remoteRev = j.rev || 0;
-    const seen = lastSeenRemoteRev();
-    if(sameDevice || remoteRev === seen){
-      if(j.updatedAt > localT){
-        applyRemote(j.data); ssetRaw('dataUpdatedAt', j.updatedAt); ssetRaw('lastSeenRemoteRev', remoteRev);
-        setSyncStatus((sameDevice?'':(j.deviceName||'diğer cihaz')+'\'dan ')+'güncellendi ✓', true);
-      } else setSyncStatus('eşitlendi ✓', true);
+    if(j.deviceId === deviceId() || (j.rev || 0) === lastSeenRemoteRev()){
+      if(!syncBaseData()) setSyncBase(j.data);   // v3'e geçişte tabanı bir kez kur
+      setSyncStatus(syncDirty ? 'değişiklik var — eşitlenecek…' : 'eşitlendi ✓', !syncDirty || undefined);
       return;
     }
-    if(!syncDirty && localRev() === seen){
-      applyRemote(j.data); ssetRaw('dataUpdatedAt', j.updatedAt); ssetRaw('lastSeenRemoteRev', remoteRev); ssetRaw('localRev', remoteRev);
-      setSyncStatus((j.deviceName||'diğer cihaz')+'\'dan güncellendi ✓', true);
-    } else {
-      window.__pendingRemote = j;
-      showConflict(j);
-      setSyncStatus('çakışma — aşağıdan seç', false);
-    }
-  }catch(e){ setSyncStatus(auto ? 'çevrimdışı — yerel modda' : 'eşitleme hatası — URL doğru mu?', false); }
+    const m = mergeRemote(j);
+    if(m.needPush){ syncDirty = true; await pushSync(); }
+    else setSyncStatus((j.deviceName || 'diğer cihaz') + (m.changedLocal ? '\'dan güncellendi ✓' : ' ile aynı ✓'), true);
+  }catch(e){ setSyncStatus(auto ? 'çevrimdışı — yerel modda' : 'eşitleme hatası — ' + (e && e.message ? e.message : 'URL doğru mu?'), false); }
 }
 function saveSyncUrl(){
   const v = document.getElementById('syncUrlInp').value.trim();
@@ -3758,6 +3869,65 @@ function weekHeroHtml(exams){
     <div class="v2-block"><div style="min-width:0; flex:1 1 220px;"><div class="v2-bl">${running ? 'Sayaç çalışıyor' : 'Bugünün bloğu · ' + esc(ex0.code)}</div>
       <div class="v2-bt">${esc(ctaTopic)}</div>${ctaSub ? `<div class="v2-bs">${esc(ctaSub)}</div>` : ''}</div>${btn}</div>
   </section>`;
+}
+
+
+// ---------- v2: Çalışma / mola kartı ----------
+// Umut'un isteği (26 Kas): kaç dk çalıştığını ve kaç dk mola verdiğini Bugün'de çıplak sayılarla görmek.
+// Bugün: chrono'dan canlı. Geçmiş: focusLog (dk) + pauseLog (sn); pauseLog'dan önceki günlerde yalnızca
+// limiti aşan molalar biliniyor (breakLog.tot), o günler "en az" diye işaretlenir.
+const PAUSE_START = '2026-11-26';
+function fmtMin(m){ m = Math.round(m); if(m < 60) return m + ' dk'; return Math.floor(m/60) + ' sa' + (m%60 ? ' ' + (m%60) + ' dk' : ''); }
+function dayPause(k){
+  if(pauseLog[k] != null) return {m: pauseLog[k]/60, est:false};
+  const arr = breakLog[k] || []; return {m: arr.reduce((a,b)=>a + (b.tot||0), 0), est: k < PAUSE_START};
+}
+function chLongOk(){ ch.ack = chElapsed(); chSave(); scheduleBreakAlarm(); renderSessCard(); }
+// Açık unutulan sayaç: yalnızca Umut'un söylediği kadar çalışma sayılır
+function chFinishAs(min){
+  if(ch.phase !== 'study') return;
+  const e = chElapsed(), keep = Math.max(0, Math.min(e, Math.round((min||0)*60)));
+  ch.start = Date.now() - keep*1000; ch.ack = 0;
+  chFinish();
+}
+function renderSessCard(){
+  const el = document.getElementById('sessCard'); if(!el) return;
+  const e = (typeof chElapsed === 'function' && ch.phase !== 'idle') ? chElapsed() : 0;
+  const isMeal = ch.phase === 'break' && ch.kind === 'yemek';
+  const S = (ch.s + (ch.phase==='study' ? e : 0))/60, B = (ch.b + (ch.phase==='break' && !isMeal ? e : 0))/60;
+  const tot = S + B, ver = tot >= 1 ? Math.round(S/tot*100) : null;
+  const t = ymd();
+  // son 7 gün (bugün dahil)
+  const days = []; for(let i=6;i>=0;i--){ const d = new Date(); d.setDate(d.getDate()-i); const k = ymd(d);
+    const st = k === t ? S : (focusLog[k]||0), pz = k === t ? {m:B, est:false} : dayPause(k);
+    days.push({k, lbl: i===0 ? 'Bugün' : ['Pz','Pt','Sa','Ça','Pe','Cu','Ct'][d.getDay()], st, pz:pz.m, est:pz.est}); }
+  const WS = days.reduce((a,d)=>a+d.st,0), WB = days.reduce((a,d)=>a+d.pz,0), anyEst = days.some(d=>d.est && d.pz>0);
+  const wv = WS+WB >= 1 ? Math.round(WS/(WS+WB)*100) : null;
+  const mx = Math.max(60, ...days.map(d=>d.st+d.pz));
+  const bars = days.map(d=>`<div class="v2-sb" title="${d.k}: ${fmtMin(d.st)} çalışma, ${d.est?'en az ':''}${fmtMin(d.pz)} mola">
+      <div class="v2-sbs"><i class="p${d.est?' est':''}" style="height:${(d.pz/mx*100).toFixed(1)}%"></i><i class="s" style="height:${(d.st/mx*100).toFixed(1)}%"></i></div>
+      <span>${d.lbl}</span></div>`).join('');
+  const lim = (ch.bl||10)*60, over = ch.phase === 'break' && !isMeal && e > lim;
+  const fe = x => x >= 3600 ? fmtMin(x/60) : fmt(x);
+  const state = ch.phase === 'study' ? `<span class="v2-live s">Çalışıyorsun · ${fe(e)}</span>`
+    : over ? `<span class="v2-live over">Limit aşıldı · +${Math.ceil((e-lim)/60)} dk</span>`
+    : ch.phase === 'break' ? `<span class="v2-live p">${isMeal ? 'Yemek' : 'Moladasın'} · ${fe(e)}${!isMeal && ch.bl ? ' / ' + ch.bl + ' dk' : ''}</span>` : '';
+  const longAsk = ch.phase === 'study' && e >= ((ch.ack||0) + STUDY_CHECK*60);
+  const askHtml = longAsk ? `<div class="v2-ask" role="alert"><b>Sayaç ${fmtMin(e/60)} kesintisiz çalışma diyor. Hâlâ çalışıyor musun?</b>
+      <div class="v2-askr"><button type="button" class="btn ghost" onclick="chLongOk()">Evet, devam</button>
+      <label>Hayır, gerçekte <input id="longMin" type="number" min="0" max="${Math.floor(e/60)}" value="${Math.min(Math.floor(e/60), settings.focus||90)}" inputmode="numeric" aria-label="Gerçekte çalışılan dakika"> dk çalıştım</label>
+      <button type="button" class="btn" onclick="chFinishAs(+document.getElementById('longMin').value)">Bitir</button></div></div>` : '';
+  const btn = ch.phase === 'idle' ? 'Başlat' : ch.phase === 'study' ? 'Mola ver' : 'Devam et';
+  el.innerHTML = `<div class="v2-sess${over ? ' over' : ''}">${askHtml}
+    <div class="v2-sh"><span class="v2-eb">Bugün çalışma / mola</span>${state}</div>
+    <div class="v2-sn"><div><b>${fmtMin(S)}</b><span>çalışma</span></div><div class="p"><b>${fmtMin(B)}</b><span>mola</span></div>
+      <div><b>${ver == null ? '—' : '%' + ver}</b><span>verim</span></div></div>
+    <div class="v2-sbtn"><button type="button" class="btn${ch.phase==='study'?' ghost':''}" onclick="chMain()">${btn}</button>${ch.phase !== 'idle' ? '<button type="button" class="btn ghost" onclick="chFinish()">Bitir</button>' : ''}
+      <button type="button" class="linkish" onclick="activateTab(document.getElementById('tab-kronometre'))">Sayaç</button></div>
+    <div class="v2-sweek"><div class="v2-sh"><span>Son 7 gün</span><span><b>${fmtMin(WS)}</b> çalışma · <b class="p">${anyEst?'en az ':''}${fmtMin(WB)}</b> mola${wv==null?'':' · %'+wv}</span></div>
+      <div class="v2-sbars" role="img" aria-label="Son 7 gün: ${fmtMin(WS)} çalışma, ${fmtMin(WB)} mola">${bars}</div>
+      ${anyEst ? '<div class="v2-snote">Taralı: 26 Kasım öncesi yalnızca limiti aşan molalar kayıtlı.</div>' : ''}</div>
+  </div>`;
 }
 
 // ---------- Init ----------

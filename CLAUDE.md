@@ -37,9 +37,9 @@ Her şey localStorage'da JSON olarak durur. Erişim üç fonksiyondan geçer:
 - `sset(k, v)` — yazar **ve** `scheduleSync()` çağırır. Kullanıcı verisi için bunu kullan.
 - `ssetRaw(k, v)` — sync tetiklemeden yazar. Sync'in kendi defter tutması ve uzaktan gelen veriyi uygulamak için.
 
-Eşitlenen anahtarlar (`SYNC_KEYS`): `deadlines`, `schedule`, `prio`, `focusLog`, `reviews`, `mistakes`, `triage`, `chrono`, `tagLog`, `urgeLog`, `breakLog`, `sleepLog`, `modeLog`, `calibLog`, `tierLog`, `settings`, `lastExport`, `term`, `terms`, `courses`, `gpaBase`, `phoneLog`, `planLog` + dinamik `review-YYYY-Wnn` anahtarları.
+Eşitlenen anahtarlar (`SYNC_KEYS`): `deadlines`, `schedule`, `prio`, `focusLog`, `reviews`, `mistakes`, `triage`, `chrono`, `tagLog`, `urgeLog`, `breakLog`, `pauseLog` (v2: günlük toplam mola, saniye), `sleepLog`, `modeLog`, `calibLog`, `tierLog`, `settings`, `lastExport`, `term`, `terms`, `courses`, `gpaBase`, `phoneLog`, `planLog` + dinamik `review-YYYY-Wnn` anahtarları.
 
-Yalnızca cihazda kalanlar: `syncUrl`, `deviceId`, `deviceName`, `localRev`, `lastSeenRemoteRev`, `dataUpdatedAt`, `lastSync`.
+Yalnızca cihazda kalanlar: `syncUrl`, `deviceId`, `deviceName`, `localRev`, `lastSeenRemoteRev`, `dataUpdatedAt`, `lastSync`, `syncBase` (v3: son eşitlenen veri, birleştirme tabanı).
 
 **Yeni bir veri anahtarı eklerken dört yeri birlikte güncelle**, yoksa veri sessizce eşitlenmez/yedeklenmez:
 1. `SYNC_KEYS`
@@ -88,10 +88,12 @@ Tetikleyiciler: her `sset` → 8 sn debounce ile push; sekme gizlenince bekleyen
 - `deviceId`: `d-` + 8 rastgele karakter, tarayıcı başına bir kez üretilir. `deviceName` kullanıcı tarafından değiştirilebilir (varsayılan Telefon/Masaüstü).
 - `localRev`: her push'ta bir artar (`bumpRev`; zorla push'ta artmaz). `lastSeenRemoteRev`: bu cihazın bulutta en son gördüğü/yazdığı sürüm.
 
-**Çakışma tespiti** (tamamen istemcide, `pullSync`):
-1. Uzak paket bu cihazdan geliyorsa **ya da** `remote.rev === lastSeenRemoteRev` ise çatal yok: yalnızca `updatedAt` yereldekinden yeniyse uygulanır.
-2. Uzak sürüm farklı ama yerelde gönderilmemiş değişiklik yoksa (`!syncDirty && localRev === lastSeenRemoteRev`): uzak sürüm doğrudan alınır.
-3. Aksi halde gerçek çatal: `showConflict` kartı çıkar, kullanıcı seçer. `resolveConflict` **kaybeden tarafı önce JSON dosyası olarak indirir**, sonra ya uzaktakini uygular ya da `pushSync(true)` ile yereli zorla yazar.
+**Birleştirme (v3, 26 Kas 2026)** — eski "iki taraftan birini seç" çakışma kartının yerine. Eski akışta açılışta otomatik bir `sset` (kronometre gün sıfırlaması vb.) cihazı "değişmiş" yapıyordu ve sekme kapanırken pull beklemeden push ediliyordu; 18–22 Kasım verisi eski kopyalı telefonun buluta yazmasıyla gitti.
+1. Her cihaz son eşitlediği hali `syncBase`'de (yalnızca cihazda) tutar.
+2. `pushSync` kör yazmaz: önce GET; uzak paket başka cihazdan ve `rev` farklıysa önce `mergeRemote`, sonra POST. Aynı anda tek eşitleme çalışır (`syncBusy`).
+3. `merge3(taban, yerel, uzak)`: yalnızca bir tarafın değiştirdiği alan o taraftan alınır; ikisi de değiştirdiyse sözlükler anahtar anahtar, `id`/`t` alanlı listeler kayıt kayıt birleşir (tabanda olup bir tarafta silinen, öteki dokunmadıysa silinmiş kalır), sayılarda büyük olan, diğer değerlerde bu cihazdaki kalır.
+4. Taban yoksa (v3'e ilk geçiş) birleştirme birleşim yapar: hiçbir şey silinmez, en kötü ihtimalle silinmiş bir kayıt geri gelir.
+`showConflict`/`resolveConflict` kodda duruyor ama artık çağrılmıyor. Test: `merge3` senaryoları iki tarayıcı bağlamı + sahte Apps Script ile denendi (eski kopyalı telefonun push'u, eşzamanlı ekleme, silmenin yayılması).
 
 Bu akışa dokunan her değişiklikte "hiçbir şey sessizce ezilmez" garantisini koru.
 
@@ -99,7 +101,7 @@ Bu akışa dokunan her değişiklikte "hiçbir şey sessizce ezilmez" garantisin
 
 ## Sekmeler
 
-**v2 (Kasım 2026):** arayüz 4 sekmeye indi, açık temaya geçti. 8 `<section>` DOM'da duruyor ama `dersler`, `tekrar`, `review` sekmelerinin butonları `hidden`; `TAB_ALIAS` eski bağlantıları yeni yere yönlendirir (`tekrar` → Notlar, `dersler` → Ayarlar, `review` → Bugün). Kronometre butonu da gizli; Bugün'deki "Başlat" ve `S` tuşu açar. Klavye `1`–`4`.
+**v2 (Kasım 2026):** arayüz 4 sekmeye indi, açık temaya geçti. 8 `<section>` DOM'da duruyor ama `dersler`, `tekrar`, `review` sekmelerinin butonları `hidden`; `TAB_ALIAS` eski bağlantıları yeni yere yönlendirir (`tekrar` → Notlar, `dersler` → Ayarlar, `review` → Bugün). Kronometre 26 Kas'tan beri yine görünür ("Sayaç"). Klavye `1`–`5`.
 
 | Buton | `section` id | İçerik |
 |---|---|---|
@@ -107,6 +109,8 @@ Bu akışa dokunan her değişiklikte "hiçbir şey sessizce ezilmez" garantisin
 | Sınavlar | `deadlines` | `#examView`: yaklaşan sınav listesi + seçili sınavın triyajı (tek buton Yok/Yarım/Hazır = `cycleTri`) + o dersin son 3 hatası. Altında tüm deadline'lar; tamamlananlar kapalı `<details>` içinde. |
 | Notlar | `hatadefteri` | Hata defteri (ilk 30, "Tümünü göster") + tekrar (Aktif / Uyuyor / Arşiv). |
 | Ayarlar | `kurulum` | Ders programı ızgarası, dersler + GPA, çalışma, senkron, Claude, veri; yoğun dönem ve akşam penceresi "Diğer" altında. |
+
+**Sayaç:** Mola limiti aşılınca kart kırmızıya döner, limit + `BREAK_NAG` (10) dk'da ikinci bildirim gelir. Kesintisiz `STUDY_CHECK` (180) dk çalışmada "hâlâ çalışıyor musun?" sorulur (`ch.ack`, `chFinishAs`). Kronometre v2'de yine görünür sekme (`5`, "Sayaç"). Bugün'deki çalışma/mola kartı (`renderSessCard`) bugünü `chrono`'dan canlı, son 7 günü `focusLog` + `pauseLog`'dan çizer; `pauseLog` öncesi günlerde yalnızca limiti aşan molalar (`breakLog.tot`) bilindiği için taralı gösterilir.
 
 **Tekrar kapısı (`rvState`):** kart dersinin sıradaki sınavına `RV_WAKE` (14) günden fazla varsa "uyur", kalınca açılır; sınavı bilinmeyen ders her zaman aktif. Durum her seferinde `deadlines`'tan hesaplanır, saklanmaz. Kartta yalnızca kullanıcı arşivlerse `archived:true` olur (mistakes için de aynı alan).
 
