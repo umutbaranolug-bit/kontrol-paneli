@@ -112,6 +112,10 @@ Bu akışa dokunan her değişiklikte "hiçbir şey sessizce ezilmez" garantisin
 
 **Sayaç:** Mola limiti aşılınca kart kırmızıya döner, limit + `BREAK_NAG` (10) dk'da ikinci bildirim gelir. Kesintisiz `STUDY_CHECK` (180) dk çalışmada "hâlâ çalışıyor musun?" sorulur (`ch.ack`, `chFinishAs`). Kronometre v2'de yine görünür sekme (`5`, "Sayaç"). Bugün'deki çalışma/mola kartı (`renderSessCard`) bugünü `chrono`'dan canlı, son 7 günü `focusLog` + `pauseLog`'dan çizer; `pauseLog` öncesi günlerde yalnızca limiti aşan molalar (`breakLog.tot`) bilindiği için taralı gösterilir.
 
+**Yüzen sayaç (27 Kas):** `openFloat`/`closeFloat`/`renderFloat`. Masaüstü Chrome/Edge'de Document Picture-in-Picture (her uygulamanın üstünde duran küçük pencere, Mola/Devam düğmeli); desteklemeyen tarayıcıda (Android Chrome) canvas → video PiP (düğmesiz, yalnızca süre). İkisi de yalnızca dokunuşla açılır: Başlat'a basınca kendiliğinden (`settings.floatAuto`, varsayılan açık) ya da çalışma kartı/Sayaç'taki "Yüzen sayaç". `chRender` her saniye günceller.
+
+**Claude'dan yapıştır her yerde:** üst çubukta ve Sayaç'ta düğme → `#pasteDlg`. "Panodan uygula" panoyu okur; uygulama yine `applyClaudeAction()` (Ayarlar'daki kutuya yazıp çağırır).
+
 **Tekrar kapısı (`rvState`):** kart dersinin sıradaki sınavına `RV_WAKE` (14) günden fazla varsa "uyur", kalınca açılır; sınavı bilinmeyen ders her zaman aktif. Durum her seferinde `deadlines`'tan hesaplanır, saklanmaz. Kartta yalnızca kullanıcı arşivlerse `archived:true` olur (mistakes için de aynı alan).
 
 **Sınav haftası (`weekCluster` / `weekPlan`):** 14 gün içinde 2+ sınav varsa Bugün kartı günleri sınavlar arasında paylaştırır. Puan = not ağırlığı × ders önceliği × hazır olmayan konu ÷ kalan gün^0,7; sınavdan önceki gün o derse ayrılır, aynı ders üst üste ikiden fazla gelmez. Elle ayar iki yeni opsiyonel alanda durur (eksikse varsayılan): `courses[i].pri` (0,6 / 1 / 1,6 — Ayarlar → Çalışma) ve `settings.planOv = {tarih: deadlineId}` (plan şeridinde güne dokunarak; geçmiş tarihler yazarken budanır).

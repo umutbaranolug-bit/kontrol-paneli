@@ -628,6 +628,14 @@ button.v2-day:focus-visible{outline:2px solid #FFFFFF; outline-offset:1px;}
 .v2-askr{display:flex; flex-wrap:wrap; gap:8px; align-items:center;}
 .v2-askr label{font-size:13.5px; display:flex; align-items:center; gap:6px;}
 .v2-askr input{width:72px; min-height:40px;}
+/* Yüzen sayaç + yapıştır */
+.v2-chbar{display:flex; flex-wrap:wrap; gap:8px 14px; align-items:center; margin-bottom:14px;}
+.v2-chk{display:flex; gap:6px; align-items:center; font-size:13.5px; color:var(--muted);}
+.v2-pastebtn{margin-left:auto; min-height:36px; padding:0 14px; border-radius:8px; border:1px solid #D6D3CB; background:#FFFFFF; color:var(--text); font:inherit; font-size:13px; font-weight:500; cursor:pointer;}
+.v2-pastebtn:hover{border-color:var(--text);}
+.v2-dlg{position:fixed; inset:0; margin:auto; height:fit-content; max-height:90vh; border:0; border-radius:14px; padding:22px; width:min(480px, 92vw); box-shadow:var(--shadow-md);}
+.v2-dlg::backdrop{background:rgba(21,22,26,.35);}
+@media (max-width:600px){ .v2-pastebtn{min-height:32px; padding:0 10px; font-size:12px;} }
 </style>
 </head>
 <body class="tab-today">
@@ -637,6 +645,7 @@ button.v2-day:focus-visible{outline:2px solid #FFFFFF; outline-offset:1px;}
 <header>
   <h1>Kontrol Paneli <span>/ Umut<span id="termBadge"></span></span></h1>
   <div id="clock">--:--</div>
+  <button type="button" class="v2-pastebtn" onclick="openPaste()" aria-haspopup="dialog">Claude'dan yapıştır</button>
 </header>
 <div id="dateline"></div>
 
@@ -817,6 +826,9 @@ button.v2-day:focus-visible{outline:2px solid #FFFFFF; outline-offset:1px;}
 
 <!-- KRONOMETRE (serbest sayaç) -->
 <section id="kronometre" role="tabpanel" aria-labelledby="tab-kronometre" tabindex="0">
+  <div class="v2-chbar"><button type="button" class="btn ghost" onclick="toggleFloat()">Yüzen sayaç</button>
+    <label class="v2-chk"><input type="checkbox" id="floatAuto" onchange="settings.floatAuto=this.checked; sset('settings', settings);"> Başlatınca kendiliğinden aç</label>
+    <button type="button" class="btn ghost" onclick="openPaste()">Claude'dan yapıştır</button></div>
   <div class="card timer-box" style="padding:22px 16px;">
     <div id="chBadge" class="tag" style="font-size:12px; margin-bottom:10px; display:inline-block;">Hazır</div>
     <div id="chClock" style="font-family:'Geist Mono',ui-monospace,monospace; font-size:56px; font-weight:700; letter-spacing:-0.03em;">00:00</div>
@@ -2079,7 +2091,7 @@ function chMain(){
   // Boştan çalışmaya geçişte önce telefon taahhüdü; seçim yapılınca aynı fonksiyon kaldığı yerden devam eder
   if(ch.phase === 'idle' && !phoneOk){ phoneAsk(() => { phoneOk = true; try{ chMain(); } finally { phoneOk = false; } }); return; }
   const e = chElapsed();
-  if(ch.phase === 'idle'){ ch.phase='study'; ch.su=0; ch.start=Date.now(); ch.ack=0; }
+  if(ch.phase === 'idle'){ ch.phase='study'; ch.su=0; ch.start=Date.now(); ch.ack=0; if(settings.floatAuto !== false && !floatOpen()) openFloat(); }
   else if(ch.phase === 'study'){
     ch.s += e; chLog('study', e, ch.tag); creditFocus(e, ch.tag);
     ch.ls = e;
@@ -2207,6 +2219,7 @@ function scheduleBreakAlarm(){
 
 function chRender(){
   try{ renderSessCard(); }catch(e){ console.error(e); }
+  try{ renderFloat(); }catch(e){}
   try{ syncStartUi(); }catch(err){}
   const e = chElapsed();
   const isMeal = ch.phase === 'break' && ch.kind === 'yemek';
@@ -3923,6 +3936,7 @@ function renderSessCard(){
     <div class="v2-sn"><div><b>${fmtMin(S)}</b><span>çalışma</span></div><div class="p"><b>${fmtMin(B)}</b><span>mola</span></div>
       <div><b>${ver == null ? '—' : '%' + ver}</b><span>verim</span></div></div>
     <div class="v2-sbtn"><button type="button" class="btn${ch.phase==='study'?' ghost':''}" onclick="chMain()">${btn}</button>${ch.phase !== 'idle' ? '<button type="button" class="btn ghost" onclick="chFinish()">Bitir</button>' : ''}
+      <button type="button" class="btn ghost" onclick="toggleFloat()" aria-pressed="${floatOpen()}">${floatOpen() ? 'Yüzen sayacı kapat' : 'Yüzen sayaç'}</button>
       <button type="button" class="linkish" onclick="activateTab(document.getElementById('tab-kronometre'))">Sayaç</button></div>
     <div class="v2-sweek"><div class="v2-sh"><span>Son 7 gün</span><span><b>${fmtMin(WS)}</b> çalışma · <b class="p">${anyEst?'en az ':''}${fmtMin(WB)}</b> mola${wv==null?'':' · %'+wv}</span></div>
       <div class="v2-sbars" role="img" aria-label="Son 7 gün: ${fmtMin(WS)} çalışma, ${fmtMin(WB)} mola">${bars}</div>
@@ -3930,7 +3944,128 @@ function renderSessCard(){
   </div>`;
 }
 
+// ---------- Yüzen sayaç (Picture-in-Picture) ----------
+// Umut'un isteği (27 Kas): sayaç hep gözünün önünde dursun. Sekme içi kart yetmiyor, çünkü verim
+// tam da başka pencereye/uygulamaya geçtiği anda kaçıyor. İki yol:
+//  1) Masaüstü Chrome/Edge: Document Picture-in-Picture — diğer uygulamaların üstünde duran, düğmeli
+//     küçük pencere. Panel sekmesi kapanınca o da kapanır.
+//  2) Telefon (Android Chrome) ve diğerleri: süre bir canvas'a çizilip video olarak PiP'e verilir —
+//     düğme yok, ama başka uygulamadayken de görünür. Dokununca panele döner.
+// Her ikisi de tarayıcı kuralı gereği yalnızca bir dokunuşla açılabilir (Başlat ya da "Yüzen sayaç").
+let pipWin = null, pipVid = null, pipCanvas = null;
+const docPipOk = () => 'documentPictureInPicture' in window;
+const vidPipOk = () => !!(document.pictureInPictureEnabled && HTMLCanvasElement.prototype.captureStream);
+function floatOpen(){ return !!(pipWin || (pipVid && document.pictureInPictureElement === pipVid)); }
+function floatState(){
+  const e = ch.phase !== 'idle' ? chElapsed() : 0, isMeal = ch.phase === 'break' && ch.kind === 'yemek';
+  const lim = (ch.bl||10)*60, over = ch.phase === 'break' && !isMeal && e > lim;
+  const S = (ch.s + (ch.phase==='study' ? e : 0))/60, B = (ch.b + (ch.phase==='break' && !isMeal ? e : 0))/60;
+  const label = ch.phase === 'study' ? 'Çalışıyorsun' + (ch.tag ? ' · ' + ch.tag : '')
+    : ch.phase === 'break' ? (isMeal ? 'Yemek' : over ? 'Limit aşıldı +' + Math.ceil((e-lim)/60) + ' dk' : 'Mola · limit ' + ch.bl + ' dk') : 'Sayaç kapalı';
+  const clock = ch.phase === 'idle' ? '--:--' : (e >= 3600 ? Math.floor(e/3600) + ':' + pad(Math.floor(e%3600/60)) + ':' + pad(e%60) : pad(Math.floor(e/60)) + ':' + pad(e%60));
+  return {e, over, S, B, label, clock, bg: over ? '#C0352B' : ch.phase === 'study' ? '#15161A' : ch.phase === 'break' ? '#8A3A12' : '#3A3B42'};
+}
+const FLOAT_CSS = `*{box-sizing:border-box}body{margin:0;font-family:Geist,system-ui,sans-serif;font-variant-numeric:tabular-nums;color:#fff;transition:background .3s}
+.w{display:flex;flex-direction:column;gap:6px;padding:12px 14px;height:100vh}
+.l{font-size:13px;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.c{font-size:44px;font-weight:600;letter-spacing:-.03em;line-height:1}
+.t{font-size:12.5px;opacity:.8}
+.b{display:flex;gap:6px;margin-top:auto}
+button{flex:1;min-height:36px;border:0;border-radius:8px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;background:#fff;color:#15161A}
+button.g{background:rgba(255,255,255,.16);color:#fff}
+button[hidden],.b[hidden]{display:none}
+button:focus-visible{outline:2px solid #A9B6FF;outline-offset:1px}`;
+async function openFloat(){
+  if(floatOpen()) return;
+  try{
+    if(docPipOk()){
+      pipWin = await documentPictureInPicture.requestWindow({width: 260, height: 150});
+      const d = pipWin.document;
+      d.title = 'Sayaç';
+      const st = d.createElement('style'); st.textContent = FLOAT_CSS; d.head.appendChild(st);
+      d.body.innerHTML = `<div class="w"><div class="l" id="fl"></div><div class="c" id="fc" role="timer" aria-live="off"></div><div class="t" id="ft"></div>
+        <div class="b" id="fb"><button id="fm"></button><button class="g" id="fd" title="Dürtüyü kaydet (D)">Dürtü</button></div>
+        <div class="b" id="fr" hidden><button class="g" data-r="kacis">Kaçış</button><button class="g" data-r="yorgun">Yorgun</button><button class="g" data-r="anlamadim">Anlamadım</button></div></div>`;
+      d.getElementById('fm').onclick = () => chMain();
+      // Dürtü: kaydı hemen at, sebebi pencerede sor (8 sn içinde seçilmezse '?' kalır, ana ekrandaki gibi)
+      d.getElementById('fd').onclick = () => floatUrge();
+      d.querySelectorAll('#fr button').forEach(b => b.onclick = () => { chUrgeReason(b.dataset.r); floatReasons(false); });
+      d.addEventListener('keydown', ev => { const k = ev.key.toLowerCase(); if(k === 'd') floatUrge(); else if(k === 's') chMain(); });
+      pipWin.addEventListener('pagehide', () => { pipWin = null; renderSessCard(); });
+    } else if(vidPipOk()){
+      pipCanvas = pipCanvas || Object.assign(document.createElement('canvas'), {width: 480, height: 270});
+      pipVid = pipVid || Object.assign(document.createElement('video'), {muted: true, playsInline: true});
+      drawFloatCanvas();
+      if(!pipVid.srcObject) pipVid.srcObject = pipCanvas.captureStream(4);
+      await pipVid.play();
+      await pipVid.requestPictureInPicture();
+      pipVid.addEventListener('leavepictureinpicture', () => { renderSessCard(); }, {once: true});
+    } else { alert('Bu tarayıcı yüzen pencereyi desteklemiyor. Masaüstünde Chrome ya da Edge, telefonda Chrome kullan.'); return; }
+    renderFloat(); renderSessCard();
+  }catch(e){ console.error(e); pipWin = null; }
+}
+let floatRTimer = null;
+function floatReasons(on){
+  if(!pipWin) return;
+  const d = pipWin.document; d.getElementById('fb').hidden = on; d.getElementById('fr').hidden = !on;
+  clearTimeout(floatRTimer); if(on) floatRTimer = setTimeout(() => floatReasons(false), 8000);
+}
+function floatUrge(){ if(ch.phase !== 'study') return; chUrge(); floatReasons(true); renderFloat(); }
+function closeFloat(){
+  try{ if(pipWin) pipWin.close(); }catch(e){}
+  try{ if(document.pictureInPictureElement) document.exitPictureInPicture(); }catch(e){}
+  pipWin = null; renderSessCard();
+}
+function toggleFloat(){ floatOpen() ? closeFloat() : openFloat(); }
+function drawFloatCanvas(){
+  if(!pipCanvas) return;
+  const f = floatState(), c = pipCanvas.getContext('2d'), W = pipCanvas.width, H = pipCanvas.height;
+  c.fillStyle = f.bg; c.fillRect(0, 0, W, H);
+  c.fillStyle = 'rgba(255,255,255,.85)'; c.font = '500 26px system-ui, sans-serif'; c.fillText(f.label.slice(0, 30), 24, 50);
+  c.fillStyle = '#fff'; c.font = '600 104px system-ui, sans-serif'; c.fillText(f.clock, 22, 162);
+  c.fillStyle = 'rgba(255,255,255,.8)'; c.font = '500 24px system-ui, sans-serif';
+  c.fillText('Bugün ' + fmtMin(f.S) + ' çalışma · ' + fmtMin(f.B) + ' mola', 24, 230);
+}
+function renderFloat(){
+  if(pipWin){
+    const f = floatState(), d = pipWin.document, $ = id => d.getElementById(id);
+    if(!$('fc')) return;
+    d.body.style.background = f.bg;
+    $('fl').textContent = f.label; $('fc').textContent = f.clock;
+    $('ft').textContent = 'Bugün ' + fmtMin(f.S) + ' çalışma · ' + fmtMin(f.B) + ' mola';
+    $('fm').textContent = ch.phase === 'idle' ? 'Başlat' : ch.phase === 'study' ? 'Mola ver' : 'Devam et';
+    $('fd').hidden = ch.phase !== 'study';
+    const nu = (urgeLog[ymd()] || []).length; $('fd').textContent = nu ? 'Dürtü · ' + nu : 'Dürtü';
+  }
+  if(pipVid && document.pictureInPictureElement === pipVid) drawFloatCanvas();
+}
+
+// ---------- Her yerden "Claude'dan yapıştır" ----------
+// Umut her seferinde Ayarlar'da kutuyu arıyordu (27 Kas). Üst çubukta ve Sayaç'ta bir düğme, küçük bir
+// pencere açar; "Panodan uygula" panodaki JSON'u tek dokunuşta okur (tarayıcı bir kez izin sorar).
+// Uygulama yine applyClaudeAction() ile — şema ve doğrulama tek yerde.
+function openPaste(){
+  const dlg = document.getElementById('pasteDlg'); if(!dlg) return;
+  document.getElementById('pasteInp').value = ''; document.getElementById('pasteStatus').textContent = '';
+  dlg.showModal(); document.getElementById('pasteClip').focus();
+}
+function runPaste(raw){
+  document.getElementById('claudeApplyInp').value = raw;
+  applyClaudeAction();
+  const st = document.getElementById('claudeApplyStatus'), out = document.getElementById('pasteStatus');
+  out.textContent = st.textContent; out.style.color = st.style.color;
+}
+async function pasteFromClipboard(){
+  const out = document.getElementById('pasteStatus');
+  try{
+    const t = (await navigator.clipboard.readText() || '').trim();
+    if(!t){ out.textContent = 'Pano boş. Claude\'un verdiği bloğu kopyala ya da aşağıya yapıştır.'; return; }
+    document.getElementById('pasteInp').value = t; runPaste(t);
+  }catch(e){ out.textContent = 'Panoya erişilemedi; bloğu aşağıdaki kutuya yapıştırıp Uygula\'ya bas.'; out.style.color = 'var(--muted)'; }
+}
+
 // ---------- Init ----------
+try{ const fa = document.getElementById('floatAuto'); if(fa) fa.checked = settings.floatAuto !== false; }catch(e){}
 normalizePlans();
 prioRoll(); renderPrio(); renderSettings(); renderCourses();
 renderDeadlines(); renderSchedule(); renderReviews(); renderMistakes(); renderTierBox(); renderToday(); renderReview(); chRender(); chLoop(); checkBackup();
@@ -3940,5 +4075,17 @@ try{ const h = (location.hash||'').slice(1); if(h){ const b = document.querySele
 renderDeviceInfo();
 try{ const su = localStorage.getItem('syncUrl'); if(su){ document.getElementById('syncUrlInp').value = su; pullSync(true); } }catch(e){}
 </script>
+<dialog id="pasteDlg" class="v2-dlg" aria-labelledby="pasteH">
+  <h2 id="pasteH" style="margin:0 0 4px;">Claude'dan yapıştır</h2>
+  <div class="muted" style="font-size:13px; margin-bottom:12px;">Claude'un verdiği JSON bloğunu kopyaladıysan tek dokunuş yeter.</div>
+  <button type="button" class="btn v2-cta" id="pasteClip" onclick="pasteFromClipboard()" style="width:100%;">Panodan uygula</button>
+  <label for="pasteInp" class="muted" style="display:block; font-size:13px; margin:14px 0 6px;">ya da buraya yapıştır</label>
+  <textarea id="pasteInp" rows="4" style="width:100%; font-family:ui-monospace,monospace; font-size:12.5px;"></textarea>
+  <div id="pasteStatus" role="status" aria-live="polite" style="font-size:13px; margin-top:8px; min-height:18px;"></div>
+  <div class="row" style="margin-top:12px; gap:8px; justify-content:flex-end;">
+    <button type="button" class="btn ghost" onclick="document.getElementById('pasteDlg').close()">Kapat</button>
+    <button type="button" class="btn" onclick="runPaste(document.getElementById('pasteInp').value)">Uygula</button>
+  </div>
+</dialog>
 </body>
 </html>
