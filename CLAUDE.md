@@ -37,7 +37,7 @@ Her şey localStorage'da JSON olarak durur. Erişim üç fonksiyondan geçer:
 - `sset(k, v)` — yazar **ve** `scheduleSync()` çağırır. Kullanıcı verisi için bunu kullan.
 - `ssetRaw(k, v)` — sync tetiklemeden yazar. Sync'in kendi defter tutması ve uzaktan gelen veriyi uygulamak için.
 
-Eşitlenen anahtarlar (`SYNC_KEYS`): `deadlines`, `schedule`, `prio`, `focusLog`, `reviews`, `mistakes`, `triage`, `chrono`, `tagLog`, `urgeLog`, `breakLog`, `pauseLog` (v2: günlük toplam mola, saniye), `sleepLog`, `modeLog`, `calibLog`, `tierLog`, `settings`, `lastExport`, `term`, `terms`, `courses`, `gpaBase`, `phoneLog`, `planLog` + dinamik `review-YYYY-Wnn` anahtarları.
+Eşitlenen anahtarlar (`SYNC_KEYS`): `deadlines`, `schedule`, `prio`, `focusLog`, `reviews`, `mistakes`, `triage`, `chrono`, `tagLog`, `urgeLog`, `breakLog`, `pauseLog` (v2: günlük toplam mola, saniye), `telLog` (27 Kas: "Telefona baktım" molaları, saniye; pauseLog'a da dahil), `sleepLog`, `modeLog`, `calibLog`, `tierLog`, `settings`, `lastExport`, `term`, `terms`, `courses`, `gpaBase`, `phoneLog`, `planLog` + dinamik `review-YYYY-Wnn` anahtarları.
 
 Yalnızca cihazda kalanlar: `syncUrl`, `deviceId`, `deviceName`, `localRev`, `lastSeenRemoteRev`, `dataUpdatedAt`, `lastSync`, `syncBase` (v3: son eşitlenen veri, birleştirme tabanı).
 
@@ -111,6 +111,10 @@ Bu akışa dokunan her değişiklikte "hiçbir şey sessizce ezilmez" garantisin
 | Ayarlar | `kurulum` | Ders programı ızgarası, dersler + GPA, çalışma, senkron, Claude, veri; yoğun dönem ve akşam penceresi "Diğer" altında. |
 
 **Sayaç:** Mola limiti aşılınca kart kırmızıya döner, limit + `BREAK_NAG` (10) dk'da ikinci bildirim gelir. Kesintisiz `STUDY_CHECK` (180) dk çalışmada "hâlâ çalışıyor musun?" sorulur (`ch.ack`, `chFinishAs`). Kronometre v2'de yine görünür sekme (`5`, "Sayaç"). Bugün'deki çalışma/mola kartı (`renderSessCard`) bugünü `chrono`'dan canlı, son 7 günü `focusLog` + `pauseLog`'dan çizer; `pauseLog` öncesi günlerde yalnızca limiti aşan molalar (`breakLog.tot`) bilindiği için taralı gösterilir.
+
+**Mola önerisi:** `recBreak(ch.run)`. `ch.run` son gerçek moladan beri toplam çalışmadır; `MICRO_BREAK` (180 sn) veya daha kısa mola bloğu bölmez (40 dk + 2 dk telefon + 20 dk → 60 dk'lık blok, 15 dk mola). `ch.nb` gerçek mola sayısı ("4. blok" bonusu). İkisi de opsiyonel, eksikse 0.
+
+**Telefona baktım (`chPhone`, `T`):** çalışırken kısa telefon molası; `ch.kind='tel'`, sınır `MICRO_BREAK` (3 dk; asıl limit `ch.blSave`'de bekler, `chEndTel` geri koyar). Mola gibi sayılır, ayrıca `ch.tm` + `telLog`'a yazılır; 3 dk'yı aşmazsa blok bölünmez.
 
 **Yüzen sayaç (27 Kas):** `openFloat`/`closeFloat`/`renderFloat`. Masaüstü Chrome/Edge'de Document Picture-in-Picture (her uygulamanın üstünde duran küçük pencere, Mola/Devam düğmeli); desteklemeyen tarayıcıda (Android Chrome) canvas → video PiP (düğmesiz, yalnızca süre). İkisi de yalnızca dokunuşla açılır: Başlat'a basınca kendiliğinden (`settings.floatAuto`, varsayılan açık) ya da çalışma kartı/Sayaç'taki "Yüzen sayaç". `chRender` her saniye günceller.
 

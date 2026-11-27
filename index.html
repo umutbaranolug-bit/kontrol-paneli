@@ -838,6 +838,7 @@ button.v2-day:focus-visible{outline:2px solid #FFFFFF; outline-offset:1px;}
       <button class="btn ghost" id="chFinishBtn" onclick="chFinish()" style="display:none;">■ Bitir</button>
       <button class="btn ghost" id="chMealBtn" onclick="chMeal()" style="display:none;">🍽 Yemek</button>
       <button class="btn ghost" id="chUrgeBtn" onclick="chUrge()" style="display:none;">📱 Dürtü geldi</button>
+      <button class="btn ghost" id="chTelBtn" onclick="chPhone()" style="display:none;" title="Kısa telefon molası (T)">📵 Telefona baktım</button>
     </div>
 
     <!-- [ÖZELLİK 1] Dürtü sebebi chip'leri -->
@@ -1084,6 +1085,7 @@ let urgeLog = sget('urgeLog', {});   // [ÖZELLİK 1] {yyyy-mm-dd: [{r:sebep, g:
 let breakLog = sget('breakLog', {}); // [ÖZELLİK 3] {yyyy-mm-dd: [{o:aşım dk, r:sebep}]}
 // v2 (Kas 2026): günlük toplam mola, saniye. breakLog yalnızca limiti aşan molaları tutuyordu; çalışma/mola oranı için hepsi lazım.
 let pauseLog = sget('pauseLog', {}); // {yyyy-mm-dd: saniye}
+let telLog = sget('telLog', {});     // {yyyy-mm-dd: saniye} — "Telefona baktım" molaları (pauseLog'un içinde de sayılır)
 let sleepLog = sget('sleepLog', {}); // [ÖZELLİK 4] {yyyy-mm-dd: {h:saat, bed:'23:30', wake:'07:00'}}
 let phoneLog = sget('phoneLog', {}); // {yyyy-mm-dd: {uzak|sessiz|yanimda: {n:blok, min:dk, u:dürtü}}}
 let modeLog = sget('modeLog', {});   // [ÖZELLİK 5] {yyyy-mm-dd: {aktif:dk, pasif:dk}} — retrieval practice oranı
@@ -1956,7 +1958,10 @@ function beep(n){
 }
 
 // ---------- Kronometre (serbest sayaç) ----------
-const CH0 = () => ({phase:'idle', kind:'mola', start:null, day:ymd(), s:0, b:0, m:0, log:[], count:0, u:0, su:0, tag:'', bl:10, lam:-1, auto:true, ls:0, mode:'aktif'});
+const CH0 = () => ({phase:'idle', kind:'mola', start:null, day:ymd(), s:0, b:0, m:0, log:[], count:0, u:0, su:0, tag:'', bl:10, lam:-1, auto:true, ls:0, run:0, nb:0, mode:'aktif'});
+// Kısa göz atma molası (≤ MICRO_BREAK sn) çalışma bloğunu bölmez: önerilen mola bloğun toplamına göre hesaplanır.
+// Umut (27 Kas): 40 dk + 2 dk telefon + 20 dk sonra 5 değil 15 dk mola önerilmeli. ch.run = son gerçek moladan beri çalışma.
+const MICRO_BREAK = 180;
 let ch = sget('chrono', null) || CH0();
 if(ch.day !== ymd()) ch = CH0();
 ['u','su'].forEach(k => { if(typeof ch[k] !== 'number') ch[k] = 0; });
@@ -1976,7 +1981,8 @@ function recBreak(studySec){
   let b = m < 20 ? 4 : m < 35 ? 7 : m < 55 ? 10 : m < 80 ? 15 : m < 110 ? 20 : 28;
   let why = m < 20 ? 'kısa blok' : m < 55 ? 'standart blok' : m < 110 ? 'uzun blok' : 'çok uzun blok';
   if(ch.s/60 > 180){ b += 3; why += ' + 3sa üstü gün'; }
-  if(ch.log.filter(x=>x.t==='study').length >= 4){ b += 2; why += ' + 4. blok'; }
+  const blocks = typeof ch.nb === 'number' ? ch.nb + 1 : ch.log.filter(x=>x.t==='study').length;
+  if(blocks >= 4){ b += 2; why += ' + 4. blok'; }
   return {min: Math.min(30, Math.round(b)), why};
 }
 function chElapsed(){ return ch.start ? Math.floor((Date.now()-ch.start)/1000) : 0; }
@@ -2094,13 +2100,15 @@ function chMain(){
   if(ch.phase === 'idle'){ ch.phase='study'; ch.su=0; ch.start=Date.now(); ch.ack=0; if(settings.floatAuto !== false && !floatOpen()) openFloat(); }
   else if(ch.phase === 'study'){
     ch.s += e; chLog('study', e, ch.tag); creditFocus(e, ch.tag);
-    ch.ls = e;
-    if(ch.auto) ch.bl = recBreak(e).min;
+    ch.run = (ch.run || 0) + e; ch.ls = ch.run;
+    if(ch.auto) ch.bl = recBreak(ch.run).min;
     ch.phase='break'; ch.kind='mola'; ch.lam=-1; ch.start=Date.now(); askNotify();
   } else {
     if(ch.kind === 'yemek'){ ch.m += e; chLog('meal', e); }
     else { ch.b += e; chLog('break', e); }
     chCloseBreak(e, ch.kind === 'yemek');   // [ÖZELLİK 3]
+    chEndTel(e);
+    if(ch.kind === 'yemek' || e > MICRO_BREAK){ ch.run = 0; ch.nb = (ch.nb || 0) + 1; }   // gerçek mola: yeni blok
     ch.phase='study'; ch.su=0; ch.lam=-1; ch.start=Date.now(); ch.ack=0;
   }
   chSave(); chRender(); chLoop();
@@ -2111,13 +2119,33 @@ function chFinish(){
   else if(ch.phase === 'break'){
     if(ch.kind === 'yemek'){ ch.m += e; chLog('meal', e); } else { ch.b += e; chLog('break', e); }
     chCloseBreak(e, ch.kind === 'yemek');   // [ÖZELLİK 3]
+    chEndTel(e);
   }
-  ch.phase='idle'; ch.kind='mola'; ch.start=null; ch.su=0; ch.lam=-1;
+  ch.phase='idle'; ch.kind='mola'; ch.start=null; ch.su=0; ch.lam=-1; ch.run=0;
   chSave(); chLoop(); chRender();
 }
+// ---------- Telefona baktım ----------
+// Umut (27 Kas): kısa telefon bakışları ayrı görünsün. Mola gibi işler (ch.b, pauseLog), ayrıca telLog'a yazılır.
+// Sınır MICRO_BREAK (3 dk): aşınca normal mola aşımı gibi kırmızı + bildirim. Önerilen mola, sınır süresince ch.blSave'de bekler.
+function chPhone(){
+  if(ch.phase !== 'study') return;
+  chMain();
+  if(ch.phase !== 'break') return;
+  ch.blSave = ch.bl; ch.bl = MICRO_BREAK/60; ch.kind = 'tel';
+  chSave(); chRender(); scheduleBreakAlarm();
+}
+function chEndTel(e){
+  if(ch.kind !== 'tel') return;
+  const k = ymd();
+  ch.tm = (ch.tm||0) + e; telLog[k] = (telLog[k]||0) + Math.round(e); sset('telLog', telLog);
+  if(typeof ch.blSave === 'number') ch.bl = ch.blSave;
+  delete ch.blSave; ch.kind = 'mola';
+}
+const chKeepBl = () => ch.kind === 'tel' && typeof ch.blSave === 'number' ? ch.blSave : ch.bl;
 function chMeal(){
   if(ch.phase !== 'break' || ch.kind === 'yemek') return;
   const e = chElapsed();
+  chEndTel(e);
   if(e > 0){ ch.b += e; chLog('break', e); }
   ch.kind='yemek'; ch.lam=-1; ch.start=Date.now();
   chSave(); chRender(); scheduleBreakAlarm();
@@ -2136,7 +2164,7 @@ function chReset(){
   chResetArm = 0;
   if(btn) btn.textContent = 'Sayacı sıfırla';
   if(ch.phase === 'study'){ const e = chElapsed(); if(e >= 60) creditFocus(e, ch.tag); }
-  const keepTag = ch.tag, keepBl = ch.bl, keepAuto = ch.auto;
+  const keepTag = ch.tag, keepBl = chKeepBl(), keepAuto = ch.auto;
   ch = CH0(); ch.tag = keepTag; ch.bl = keepBl; ch.auto = keepAuto;
   chSave(); chLoop(); chRender();
 }
@@ -2176,7 +2204,7 @@ function overWeek(){
 function chRollDay(prevKey){
   const e = chElapsed();
   if(ch.phase === 'study' && e >= 60) creditFocus(e, ch.tag, prevKey);
-  const keepTag = ch.tag, keepBl = ch.bl, keepAuto = ch.auto, ph = ch.phase, kind = ch.kind;
+  const keepTag = ch.tag, keepBl = chKeepBl(), keepAuto = ch.auto, ph = ch.phase, kind = ch.kind === 'tel' ? 'mola' : ch.kind;
   ch = CH0(); ch.tag = keepTag; ch.bl = keepBl; ch.auto = keepAuto;
   if(ph !== 'idle'){ ch.phase = ph; ch.kind = kind; ch.start = Date.now(); }
   chSave(); chLoop(); chRender();
@@ -2213,7 +2241,7 @@ function scheduleBreakAlarm(){
     breakAlarmTimer = null;
     if(ch.phase !== 'break' || ch.kind === 'yemek') return;
     beep(2);
-    notify('Mola bitti ⏰', 'Limit '+ch.bl+' dk doldu. Telefonu bırak, çalışmaya dön.');
+    notify(ch.kind === 'tel' ? 'Telefon 3 dk oldu 📵' : 'Mola bitti ⏰', ch.kind === 'tel' ? 'Kısa bakış uzadı. Telefonu bırak, çalışmaya dön.' : 'Limit '+ch.bl+' dk doldu. Telefonu bırak, çalışmaya dön.');
   }, left);
 }
 
@@ -2243,6 +2271,7 @@ function chRender(){
 
   clock.textContent = ch.phase === 'idle' ? '00:00' : fmt(e);
   fin.style.display = ch.phase === 'idle' ? 'none' : 'inline-block';
+  if(ch.phase === 'idle') document.getElementById('chTelBtn').style.display='none';
 
   if(ch.phase === 'study'){
     badge.textContent = '▤ Çalışıyorum' + (ch.tag ? ' · '+ch.tag : '');
@@ -2252,17 +2281,19 @@ function chRender(){
     label.textContent = e > 5400 ? '90 dakikayı geçtin — mola şart · önerilen: '+pv.min+' dk'
       : (e > 1200 ? 'Şimdi mola verirsen önerilen süre: '+pv.min+' dk' : 'Mola için "Mola Ver", günü kapatmak için "Bitir"');
     main.textContent='❙❙ Mola Ver'; meal.style.display='none';
-    urge.style.display='inline-block';
+    urge.style.display='inline-block'; document.getElementById('chTelBtn').style.display='inline-block';
     urge.textContent = Date.now() < urgeAckUntil ? '✔ yakalandı — devam' : ('📱 Dürtü geldi'+(ch.su>0?' ('+ch.su+')':''));
   } else if(ch.phase === 'break'){
-    badge.textContent = isMeal ? '🍽 Yemekteyim' : (over ? '⏰ Mola aşıldı' : '☕ Moladayım');
+    const isTel = ch.kind === 'tel';
+    document.getElementById('chTelBtn').style.display='none';
+    badge.textContent = isMeal ? '🍽 Yemekteyim' : isTel ? (over ? '📵 Telefon 3 dk\'yı geçti' : '📵 Telefondasın') : (over ? '⏰ Mola aşıldı' : '☕ Moladayım');
     badge.style.color = over ? 'var(--danger)' : 'var(--accent)';
     badge.style.borderColor = over ? 'var(--danger)' : 'var(--accent)';
     clock.style.color = over ? 'var(--danger)' : 'var(--accent)';
-    const recTxt = (ch.auto && ch.ls) ? Math.round(ch.ls/60)+' dk çalışma → önerilen mola '+ch.bl+' dk' : 'Mola limiti '+ch.bl+' dk';
-    label.textContent = isMeal ? 'Yemek bitince çalışmaya dön'
+    const recTxt = (ch.auto && ch.ls) ? Math.round(ch.ls/60)+' dk çalışma (kısa göz atmalar dahil) → önerilen mola '+ch.bl+' dk' : 'Mola limiti '+ch.bl+' dk';
+    label.textContent = isMeal ? 'Yemek bitince çalışmaya dön' : isTel ? (over ? 'Telefonda '+Math.floor(e/60)+' dk oldun — kısa bakış sınırı 3 dk.' : 'Kısa bakış · 3 dk içinde dönersen çalışma bloğun bölünmez')
       : (over ? 'Molan '+Math.floor(e/60)+' dk sürdü — limit '+ch.bl+' dk. Telefonu bırak, çalışmaya dön.' : recTxt);
-    main.textContent='▶ Çalışmaya Dön'; meal.style.display = isMeal ? 'none' : 'inline-block';
+    main.textContent='▶ Çalışmaya Dön'; meal.style.display = (isMeal || isTel) ? 'none' : 'inline-block';
     urge.style.display='none';
     if(over){
       const overSec = e - lim;
@@ -2326,9 +2357,9 @@ function renderMini(){
   if(key === miniKey){ const c = document.getElementById('miniClock'); if(c) c.textContent = fmt(e); return; }
   miniKey = key;
   const lbl = st === 'study' ? 'Çalışıyorum' + (ch.tag ? ' · ' + esc(ch.tag) : '')
-    : isMeal ? 'Yemekte' : over ? 'Mola aşıldı — limit ' + (ch.bl||10) + ' dk' : 'Mola · limit ' + (ch.bl||10) + ' dk';
+    : isMeal ? 'Yemekte' : ch.kind === 'tel' ? (over ? 'Telefon 3 dk\'yı geçti' : 'Telefondasın · 3 dk') : over ? 'Mola aşıldı — limit ' + (ch.bl||10) + ' dk' : 'Mola · limit ' + (ch.bl||10) + ' dk';
   const btns = st === 'study'
-    ? `<button class="btn" onclick="chMain()">❙❙ Mola <kbd>S</kbd></button><button class="btn ghost" onclick="chUrge()">${ack ? '✔ yakalandı' : '📱 Dürtü' + (ch.su ? ' (' + ch.su + ')' : '')} <kbd>D</kbd></button>`
+    ? `<button class="btn" onclick="chMain()">❙❙ Mola <kbd>S</kbd></button><button class="btn ghost" onclick="chUrge()">${ack ? '✔ yakalandı' : '📱 Dürtü' + (ch.su ? ' (' + ch.su + ')' : '')} <kbd>D</kbd></button><button class="btn ghost" onclick="chPhone()">📵 <kbd>T</kbd></button>`
     : `<button class="btn" onclick="chMain()">▶ Devam <kbd>S</kbd></button>`;
   const chipRow = (title, col, items, fn) => `<div class="mini-chips"><div style="font-size:12px; color:${col};">${title}</div><div class="row">` +
     items.map(([k,t]) => `<button class="btn ghost" onclick="${fn}('${k}'); renderMini()">${t}</button>`).join('') + `</div></div>`;
@@ -2351,6 +2382,7 @@ document.addEventListener('keydown', e => {
   const kl = k.toLowerCase();
   if(kl === 's'){ e.preventDefault(); if(ch.phase === 'idle') quickStart(); else chMain(); }
   else if(kl === 'd'){ if(ch.phase === 'study'){ e.preventDefault(); chUrge(); } }
+  else if(kl === 't'){ if(ch.phase === 'study'){ e.preventDefault(); chPhone(); } }
   else if(kl === 'n'){ e.preventDefault(); activateTab(document.getElementById('tab-hatadefteri')); const f = document.getElementById('mCourse'); if(f) f.focus(); }
 });
 
@@ -3325,7 +3357,7 @@ function applyClaudeAction(){
 }
 
 function exportData(){
-  const keys=['deadlines','schedule','prio','focusLog','reviews','mistakes','triage','chrono','tagLog','urgeLog','breakLog','pauseLog','sleepLog','modeLog','calibLog','tierLog','settings','term','terms','courses','gpaBase','phoneLog','planLog'];
+  const keys=['deadlines','schedule','prio','focusLog','reviews','mistakes','triage','chrono','tagLog','urgeLog','breakLog','pauseLog','telLog','sleepLog','modeLog','calibLog','tierLog','settings','term','terms','courses','gpaBase','phoneLog','planLog'];
   const dump={};
   keys.forEach(k=>dump[k]=sget(k,null));
   try{ for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(k.startsWith('review-')) dump[k]=sget(k,null); } }catch(e){}
@@ -3340,7 +3372,7 @@ function importData(ev){
   r.onload=()=>{ try{
     const dump=JSON.parse(r.result);
     Object.entries(dump).forEach(([k,v])=>{ if(v!==null) sset(k,v); });
-    deadlines=sget('deadlines',[]); schedule=sget('schedule',[]); focusLog=sget('focusLog',{}); tagLog=sget('tagLog',{}); urgeLog=sget('urgeLog',{}); breakLog=sget('breakLog',{}); pauseLog=sget('pauseLog',{}); sleepLog=sget('sleepLog',{}); modeLog=sget('modeLog',{}); phoneLog=sget('phoneLog',{}); calibLog=sget('calibLog',[]); tierLog=sget('tierLog',{}); reviews=sget('reviews',[]); mistakes=sget('mistakes',[]); triage=sget('triage',{}); planLog=sget('planLog',{}); courses=sget('courses',[]); gpaBase=Object.assign(GB0(),sget('gpaBase',{})||{}); settings=Object.assign({},SET0,sget('settings',{})||{}); renderSettings(); renderCourses();
+    deadlines=sget('deadlines',[]); schedule=sget('schedule',[]); focusLog=sget('focusLog',{}); tagLog=sget('tagLog',{}); urgeLog=sget('urgeLog',{}); breakLog=sget('breakLog',{}); pauseLog=sget('pauseLog',{}); telLog=sget('telLog',{}); sleepLog=sget('sleepLog',{}); modeLog=sget('modeLog',{}); phoneLog=sget('phoneLog',{}); calibLog=sget('calibLog',[]); tierLog=sget('tierLog',{}); reviews=sget('reviews',[]); mistakes=sget('mistakes',[]); triage=sget('triage',{}); planLog=sget('planLog',{}); courses=sget('courses',[]); gpaBase=Object.assign(GB0(),sget('gpaBase',{})||{}); settings=Object.assign({},SET0,sget('settings',{})||{}); renderSettings(); renderCourses();
     prio=sget('prio',null)||PRIO0(); if(!Array.isArray(prio.items)||prio.items.length!==3) prio=PRIO0(); prio.items.forEach(x=>{if(typeof x.w!=='string')x.w='';}); prioRoll();
     ch=sget('chrono',null)||CH0(); if(ch.day!==ymd()) ch=CH0(); chLoop(); chRender();
     normalizePlans();
@@ -3357,7 +3389,7 @@ function importData(ev){
 // birbirinin üstüne hangi sürümden geldiğini taşıyor, gerçek bir çatal
 // (fork) varsa otomatik seçmek yerine soruyor ve kaybeden tarafı önce
 // dosyaya yedekliyor.
-const SYNC_KEYS = ['deadlines','schedule','prio','focusLog','reviews','mistakes','triage','chrono','tagLog','urgeLog','breakLog','pauseLog','sleepLog','modeLog','calibLog','tierLog','settings','lastExport','term','terms','courses','gpaBase','phoneLog','planLog'];
+const SYNC_KEYS = ['deadlines','schedule','prio','focusLog','reviews','mistakes','triage','chrono','tagLog','urgeLog','breakLog','pauseLog','telLog','sleepLog','modeLog','calibLog','tierLog','settings','lastExport','term','terms','courses','gpaBase','phoneLog','planLog'];
 let syncPushTimer = null, syncDirty = false;
 
 function syncUrl(){ try{ return localStorage.getItem('syncUrl')||''; }catch(e){ return ''; } }
@@ -3407,7 +3439,7 @@ function collectData(){
 function applyRemote(d){
   Object.entries(d).forEach(([k,v]) => { if(v!==null && v!==undefined) ssetRaw(k, v); });
   deadlines=sget('deadlines',[]); schedule=sget('schedule',[]);
-  focusLog=sget('focusLog',{}); tagLog=sget('tagLog',{}); urgeLog=sget('urgeLog',{}); breakLog=sget('breakLog',{}); pauseLog=sget('pauseLog',{}); sleepLog=sget('sleepLog',{}); modeLog=sget('modeLog',{}); phoneLog=sget('phoneLog',{}); calibLog=sget('calibLog',[]); tierLog=sget('tierLog',{}); reviews=sget('reviews',[]); mistakes=sget('mistakes',[]); triage=sget('triage',{}); planLog=sget('planLog',{}); courses=sget('courses',[]); gpaBase=Object.assign(GB0(),sget('gpaBase',{})||{}); settings=Object.assign({},SET0,sget('settings',{})||{}); renderSettings(); renderCourses();
+  focusLog=sget('focusLog',{}); tagLog=sget('tagLog',{}); urgeLog=sget('urgeLog',{}); breakLog=sget('breakLog',{}); pauseLog=sget('pauseLog',{}); telLog=sget('telLog',{}); sleepLog=sget('sleepLog',{}); modeLog=sget('modeLog',{}); phoneLog=sget('phoneLog',{}); calibLog=sget('calibLog',[]); tierLog=sget('tierLog',{}); reviews=sget('reviews',[]); mistakes=sget('mistakes',[]); triage=sget('triage',{}); planLog=sget('planLog',{}); courses=sget('courses',[]); gpaBase=Object.assign(GB0(),sget('gpaBase',{})||{}); settings=Object.assign({},SET0,sget('settings',{})||{}); renderSettings(); renderCourses();
   prio=sget('prio',null)||PRIO0(); if(!Array.isArray(prio.items)||prio.items.length!==3) prio=PRIO0(); prio.items.forEach(x=>{if(typeof x.w!=='string')x.w='';}); prioRoll();
   ch=sget('chrono',null)||CH0(); if(ch.day!==ymd()) ch=CH0(); ch.u=ch.u||0; ch.su=ch.su||0; ch.bl=ch.bl||10; if(typeof ch.lam!=='number') ch.lam=-1; if(typeof ch.tag!=='string') ch.tag=''; if(typeof ch.auto!=='boolean') ch.auto=true; ch.ls=ch.ls||0; if(ch.mode!=='aktif'&&ch.mode!=='pasif') ch.mode='aktif';
   normalizePlans();
@@ -3933,7 +3965,7 @@ function renderSessCard(){
   const btn = ch.phase === 'idle' ? 'Başlat' : ch.phase === 'study' ? 'Mola ver' : 'Devam et';
   el.innerHTML = `<div class="v2-sess${over ? ' over' : ''}">${askHtml}
     <div class="v2-sh"><span class="v2-eb">Bugün çalışma / mola</span>${state}</div>
-    <div class="v2-sn"><div><b>${fmtMin(S)}</b><span>çalışma</span></div><div class="p"><b>${fmtMin(B)}</b><span>mola</span></div>
+    <div class="v2-sn"><div><b>${fmtMin(S)}</b><span>çalışma</span></div><div class="p"><b>${fmtMin(B)}</b><span>mola${telToday() >= 1 ? ' · ' + fmtMin(telToday()) + ' telefon' : ''}</span></div>
       <div><b>${ver == null ? '—' : '%' + ver}</b><span>verim</span></div></div>
     <div class="v2-sbtn"><button type="button" class="btn${ch.phase==='study'?' ghost':''}" onclick="chMain()">${btn}</button>${ch.phase !== 'idle' ? '<button type="button" class="btn ghost" onclick="chFinish()">Bitir</button>' : ''}
       <button type="button" class="btn ghost" onclick="toggleFloat()" aria-pressed="${floatOpen()}">${floatOpen() ? 'Yüzen sayacı kapat' : 'Yüzen sayaç'}</button>
@@ -3956,12 +3988,13 @@ let pipWin = null, pipVid = null, pipCanvas = null;
 const docPipOk = () => 'documentPictureInPicture' in window;
 const vidPipOk = () => !!(document.pictureInPictureEnabled && HTMLCanvasElement.prototype.captureStream);
 function floatOpen(){ return !!(pipWin || (pipVid && document.pictureInPictureElement === pipVid)); }
+function telToday(){ return ((ch.tm||0) + (ch.phase==='break' && ch.kind==='tel' ? chElapsed() : 0))/60; }
 function floatState(){
   const e = ch.phase !== 'idle' ? chElapsed() : 0, isMeal = ch.phase === 'break' && ch.kind === 'yemek';
   const lim = (ch.bl||10)*60, over = ch.phase === 'break' && !isMeal && e > lim;
   const S = (ch.s + (ch.phase==='study' ? e : 0))/60, B = (ch.b + (ch.phase==='break' && !isMeal ? e : 0))/60;
   const label = ch.phase === 'study' ? 'Çalışıyorsun' + (ch.tag ? ' · ' + ch.tag : '')
-    : ch.phase === 'break' ? (isMeal ? 'Yemek' : over ? 'Limit aşıldı +' + Math.ceil((e-lim)/60) + ' dk' : 'Mola · limit ' + ch.bl + ' dk') : 'Sayaç kapalı';
+    : ch.phase === 'break' ? (isMeal ? 'Yemek' : ch.kind === 'tel' ? (over ? 'Telefon 3 dk\'yı geçti' : 'Telefondasın · 3 dk') : over ? 'Limit aşıldı +' + Math.ceil((e-lim)/60) + ' dk' : 'Mola · limit ' + ch.bl + ' dk') : 'Sayaç kapalı';
   const clock = ch.phase === 'idle' ? '--:--' : (e >= 3600 ? Math.floor(e/3600) + ':' + pad(Math.floor(e%3600/60)) + ':' + pad(e%60) : pad(Math.floor(e/60)) + ':' + pad(e%60));
   return {e, over, S, B, label, clock, bg: over ? '#C0352B' : ch.phase === 'study' ? '#15161A' : ch.phase === 'break' ? '#8A3A12' : '#3A3B42'};
 }
@@ -3984,13 +4017,14 @@ async function openFloat(){
       d.title = 'Sayaç';
       const st = d.createElement('style'); st.textContent = FLOAT_CSS; d.head.appendChild(st);
       d.body.innerHTML = `<div class="w"><div class="l" id="fl"></div><div class="c" id="fc" role="timer" aria-live="off"></div><div class="t" id="ft"></div>
-        <div class="b" id="fb"><button id="fm"></button><button class="g" id="fd" title="Dürtüyü kaydet (D)">Dürtü</button></div>
+        <div class="b" id="fb"><button id="fm"></button><button class="g" id="fd" title="Dürtüyü kaydet (D)">Dürtü</button><button class="g" id="ft2" title="Telefona baktım (T)">📵</button></div>
         <div class="b" id="fr" hidden><button class="g" data-r="kacis">Kaçış</button><button class="g" data-r="yorgun">Yorgun</button><button class="g" data-r="anlamadim">Anlamadım</button></div></div>`;
       d.getElementById('fm').onclick = () => chMain();
       // Dürtü: kaydı hemen at, sebebi pencerede sor (8 sn içinde seçilmezse '?' kalır, ana ekrandaki gibi)
       d.getElementById('fd').onclick = () => floatUrge();
+      d.getElementById('ft2').onclick = () => chPhone();
       d.querySelectorAll('#fr button').forEach(b => b.onclick = () => { chUrgeReason(b.dataset.r); floatReasons(false); });
-      d.addEventListener('keydown', ev => { const k = ev.key.toLowerCase(); if(k === 'd') floatUrge(); else if(k === 's') chMain(); });
+      d.addEventListener('keydown', ev => { const k = ev.key.toLowerCase(); if(k === 'd') floatUrge(); else if(k === 's') chMain(); else if(k === 't') chPhone(); });
       pipWin.addEventListener('pagehide', () => { pipWin = null; renderSessCard(); });
     } else if(vidPipOk()){
       pipCanvas = pipCanvas || Object.assign(document.createElement('canvas'), {width: 480, height: 270});
@@ -4024,7 +4058,7 @@ function drawFloatCanvas(){
   c.fillStyle = 'rgba(255,255,255,.85)'; c.font = '500 26px system-ui, sans-serif'; c.fillText(f.label.slice(0, 30), 24, 50);
   c.fillStyle = '#fff'; c.font = '600 104px system-ui, sans-serif'; c.fillText(f.clock, 22, 162);
   c.fillStyle = 'rgba(255,255,255,.8)'; c.font = '500 24px system-ui, sans-serif';
-  c.fillText('Bugün ' + fmtMin(f.S) + ' çalışma · ' + fmtMin(f.B) + ' mola', 24, 230);
+  c.fillText('Bugün ' + fmtMin(f.S) + ' çalışma · ' + fmtMin(f.B) + ' mola' + (telToday() >= 1 ? ' (' + fmtMin(telToday()) + ' tel)' : ''), 24, 230);
 }
 function renderFloat(){
   if(pipWin){
@@ -4032,9 +4066,9 @@ function renderFloat(){
     if(!$('fc')) return;
     d.body.style.background = f.bg;
     $('fl').textContent = f.label; $('fc').textContent = f.clock;
-    $('ft').textContent = 'Bugün ' + fmtMin(f.S) + ' çalışma · ' + fmtMin(f.B) + ' mola';
+    $('ft').textContent = 'Bugün ' + fmtMin(f.S) + ' çalışma · ' + fmtMin(f.B) + ' mola' + (telToday() >= 1 ? ' (' + fmtMin(telToday()) + ' tel)' : '');
     $('fm').textContent = ch.phase === 'idle' ? 'Başlat' : ch.phase === 'study' ? 'Mola ver' : 'Devam et';
-    $('fd').hidden = ch.phase !== 'study';
+    $('fd').hidden = ch.phase !== 'study'; $('ft2').hidden = ch.phase !== 'study';
     const nu = (urgeLog[ymd()] || []).length; $('fd').textContent = nu ? 'Dürtü · ' + nu : 'Dürtü';
   }
   if(pipVid && document.pictureInPictureElement === pipVid) drawFloatCanvas();
