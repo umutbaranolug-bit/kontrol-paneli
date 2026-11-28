@@ -838,7 +838,7 @@ button.v2-day:focus-visible{outline:2px solid #FFFFFF; outline-offset:1px;}
       <button class="btn ghost" id="chFinishBtn" onclick="chFinish()" style="display:none;">■ Bitir</button>
       <button class="btn ghost" id="chMealBtn" onclick="chMeal()" style="display:none;">🍽 Yemek</button>
       <button class="btn ghost" id="chUrgeBtn" onclick="chUrge()" style="display:none;">📱 Dürtü geldi</button>
-      <button class="btn ghost" id="chTelBtn" onclick="chPhone()" style="display:none;" title="Kısa telefon molası (T)">📵 Telefona baktım</button>
+      <button class="btn ghost" id="chTelBtn" onclick="chPhone()" style="display:none;" title="Dürtü kaydı + kısa telefon molası (T)">📵 Telefona baktım</button>
     </div>
 
     <!-- [ÖZELLİK 1] Dürtü sebebi chip'leri -->
@@ -2127,12 +2127,18 @@ function chFinish(){
 // ---------- Telefona baktım ----------
 // Umut (27 Kas): kısa telefon bakışları ayrı görünsün. Mola gibi işler (ch.b, pauseLog), ayrıca telLog'a yazılır.
 // Sınır MICRO_BREAK (3 dk): aşınca normal mola aşımı gibi kırmızı + bildirim. Önerilen mola, sınır süresince ch.blSave'de bekler.
+// Umut (28 Kas): telefona bakmak zaten dürtüye yenilmek demek — ayrı ayrı iki düğmeye basmasın.
+// Önce dürtü kaydı (y:1 = yenildi, direnilen dürtüden ayrılsın; sebep çipleri yine sorulur), sonra telefon molası.
 function chPhone(){
   if(ch.phase !== 'study') return;
+  chUrge();
+  const L = urgeLog[ymd()]; if(L && L.length){ L[L.length-1].y = 1; sset('urgeLog', urgeLog); }
+  urgeAckUntil = 0;
   chMain();
   if(ch.phase !== 'break') return;
   ch.blSave = ch.bl; ch.bl = MICRO_BREAK/60; ch.kind = 'tel';
   chSave(); chRender(); scheduleBreakAlarm();
+  if(pipWin) floatReasons(true);
 }
 function chEndTel(e){
   if(ch.kind !== 'tel') return;
@@ -3230,6 +3236,27 @@ function upsertCourse(o){
 // add_* eylemleri yalnızca ekler. v2'deki temizlik eylemleri (archive_review, archive_mistakes,
 // rename_course) kayıt silmez — arşiv bayrağı koyar ya da ders adını birleştirir;
 // tek istisna remove_triage: yalnızca id'si açıkça verilen triyaj konularını kaldırır.
+// Umut (28 Kas): "bazen ekliyorum ama ne eklediğimi bilmiyorum" — uygulanan eylemler okunur tek satıra çevrilir.
+// Aynı deadline'a giden triyaj konuları, tekrar kartları vb. gruplanır; uzun listeler ilk 4 öğe + "…" ile kısalır.
+function claudeSummary(list){
+  const lst = a => a.length <= 4 ? a.join(', ') : a.slice(0,4).join(', ') + ' +' + (a.length-4);
+  const tr = d => { const [y,m,g] = d.split('-').map(Number); return g + ' ' + ['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'][m-1]; };
+  const by = {}; list.forEach(c => (by[c.action] = by[c.action] || []).push(c));
+  const out = [];
+  (by.add_deadline||[]).forEach(c => out.push('Deadline: ' + c.title.trim() + ' (' + tr(c.date.trim()) + ')'));
+  const tg = {}; (by.add_triage||[]).forEach(c => (tg[c.deadline_title.trim()] = tg[c.deadline_title.trim()] || []).push(c.topic.trim()));
+  Object.entries(tg).forEach(([d, t]) => out.push(d + ' triyajı +' + t.length + ' konu: ' + lst(t)));
+  if(by.add_review) out.push(by.add_review.length + ' tekrar kartı: ' + lst(by.add_review.map(c => c.topic.trim())));
+  if(by.add_mistake){ const cs = [...new Set(by.add_mistake.map(c => (c.course||'').trim()).filter(Boolean))]; out.push(by.add_mistake.length + ' hata kaydı' + (cs.length ? ' (' + cs.join(', ') + ')' : '')); }
+  (by.add_course||[]).forEach(c => out.push('Ders: ' + c.code));
+  (by.set_grade||[]).forEach(c => out.push(c.course + ' ' + c.comp + ' notu ' + Math.max(0, Math.min(100, +c.score))));
+  (by.set_expect||[]).forEach(c => out.push(c.course + ' beklenen ' + c.letter));
+  (by.archive_review||[]).forEach(c => out.push((c.ids||[]).length + ' tekrar kartı arşivlendi'));
+  (by.archive_mistakes||[]).forEach(c => out.push(c.course + ' hataları arşivlendi'));
+  (by.rename_course||[]).forEach(c => out.push(c.from + ' → ' + c.to));
+  (by.remove_triage||[]).forEach(c => out.push(c.deadline_title + ' triyajı −' + (c.ids||[]).length + ' konu'));
+  return out.join(' · ');
+}
 function claudeApplyStatus(msg, ok){
   const el = document.getElementById('claudeApplyStatus');
   if(!el) return;
@@ -3248,14 +3275,20 @@ function applyClaudeAction(){
   try{ cmd = JSON.parse(raw); }
   catch(e){ claudeApplyStatus('Geçersiz JSON — Claude\'dan aldığın bloğu eksiksiz yapıştırdığından emin ol.', false); return; }
   const cmds = Array.isArray(cmd) ? cmd : [cmd];
-  let applied = 0, errors = [];
+  // Umut (28 Kas): aynı komut iki kez yapıştırılınca her şey çift ekleniyordu. Var olanı tekrar eklemiyoruz;
+  // "zaten vardı" listesine düşer. Karşılaştırma büyük/küçük harf ve fazla boşluk duyarsız. Aynı paket içindeki
+  // tekrarlar da yakalanır, çünkü her ekleme diziye hemen yazılıyor.
+  const nrm = v => String(v||'').toLocaleLowerCase('tr').replace(/\s+/g,' ').trim();
+  let applied = 0, errors = [], okList = [], dups = [];
   cmds.forEach(c=>{
     try{
+      const before = applied;
       switch(c.action){
         case 'add_deadline': {
           const title = (c.title||'').trim(), date = (c.date||'').trim();
           if(!title || !/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Error('title/date eksik veya date formatı YYYY-MM-DD değil');
           const type = ['exam','hw','lab','other'].includes(c.type) ? c.type : 'other';
+          if(deadlines.some(d => nrm(d.title) === nrm(title) && d.date === date)){ dups.push('deadline ' + title); break; }
           const item = {id:Date.now()+applied, title, date, type, done:false};
           deadlines.push(item); sset('deadlines', deadlines); applied++;
           break;
@@ -3265,6 +3298,7 @@ function applyClaudeAction(){
           if(!dl) throw new Error('deadline bulunamadı: '+(c.deadline_title||'?')+' — önce deadline\'ı ekle veya başlığı tam eşleştir');
           const topic = (c.topic||'').trim();
           if(!topic) throw new Error('topic eksik');
+          if((triage[dl.id]||[]).some(t => nrm(t.topic) === nrm(topic))){ dups.push(dl.title + ': ' + topic); break; }
           (triage[dl.id] = triage[dl.id] || []).push({id:Date.now()+applied, topic, color:'r'});
           sset('triage', triage); applied++;
           break;
@@ -3272,6 +3306,7 @@ function applyClaudeAction(){
         case 'add_mistake': {
           const note = (c.note||'').trim();
           if(!note) throw new Error('note eksik');
+          if(mistakes.some(m => nrm(m.note) === nrm(note) && nrm(m.course) === nrm(c.course))){ dups.push('hata kaydı ' + note.slice(0,30)); break; }
           mistakes.unshift({id:Date.now()+applied, course:(c.course||'').trim(), note, se:(c.why||'').trim(), date:ymd()});
           sset('mistakes', mistakes); applied++;
           break;
@@ -3279,6 +3314,7 @@ function applyClaudeAction(){
         case 'add_review': {
           const topic = (c.topic||'').trim();
           if(!topic) throw new Error('topic eksik');
+          if(reviews.some(r => nrm(r.topic) === nrm(topic) && nrm(r.course) === nrm(c.course))){ dups.push('tekrar kartı ' + topic); break; }
           reviews.push({id:Date.now()+applied, topic, course:(c.course||'').trim(), level:0, due:ymdPlus(1), count:0});
           sset('reviews', reviews); applied++;
           break;
@@ -3293,13 +3329,16 @@ function applyClaudeAction(){
           const comp = (crs.comps||[]).find(x => x.n.toLowerCase() === String(c.comp||'').trim().toLowerCase());
           if(!comp) throw new Error(crs.code+' içinde bileşen yok: '+(c.comp||'?'));
           if(c.score === undefined || isNaN(+c.score)) throw new Error('score eksik/sayı değil');
-          comp.s = Math.max(0, Math.min(100, +c.score)); applied++;
+          const sc = Math.max(0, Math.min(100, +c.score));
+          if(comp.s === sc){ dups.push(crs.code + ' ' + comp.n + ' notu ' + sc); break; }
+          comp.s = sc; applied++;
           break;
         }
         case 'set_expect': {
           const crs = findCourse(c.course);
           if(!crs) throw new Error('ders bulunamadı: '+(c.course||'?'));
           if(!(c.letter in LETTER)) throw new Error('geçersiz harf: '+(c.letter||'?'));
+          if(crs.expect === c.letter){ dups.push(crs.code + ' beklenen ' + c.letter); break; }
           crs.expect = c.letter; applied++;
           break;
         }
@@ -3343,14 +3382,18 @@ function applyClaudeAction(){
         default:
           throw new Error('bilinmeyen action: '+c.action);
       }
+      if(applied > before) okList.push(c);
     }catch(err){ errors.push(err.message); }
   });
   if(applied) { sset('courses', courses); renderDeadlines(); renderReviews(); renderMistakes(); renderToday(); renderCourses(); }
-  if(applied && !errors.length){
+  const dupTxt = dups.length ? (dups.length <= 4 ? dups.join(', ') : dups.slice(0,4).join(', ') + ' +' + (dups.length-4)) : '';
+  if(!errors.length && (applied || dups.length)){
     document.getElementById('claudeApplyInp').value = '';
-    claudeApplyStatus(applied+' eylem uygulandı ✓', true);
-  } else if(applied && errors.length){
-    claudeApplyStatus(applied+' uygulandı, '+errors.length+' hata: '+errors.join(' · '), false);
+    claudeApplyStatus(applied
+      ? applied+' eylem uygulandı ✓ — '+claudeSummary(okList)+(dups.length ? ' · zaten vardı, eklenmedi ('+dups.length+'): '+dupTxt : '')
+      : 'Yeni bir şey yok — hepsi zaten vardı ('+dups.length+'): '+dupTxt, true);
+  } else if(applied || dups.length){
+    claudeApplyStatus(applied+' uygulandı'+(applied ? ' ('+claudeSummary(okList)+')' : '')+(dups.length ? ', '+dups.length+' zaten vardı ('+dupTxt+')' : '')+', '+errors.length+' hata: '+errors.join(' · '), false);
   } else {
     claudeApplyStatus('Hiçbiri uygulanamadı: '+errors.join(' · '), false);
   }
@@ -3965,7 +4008,7 @@ function renderSessCard(){
   const btn = ch.phase === 'idle' ? 'Başlat' : ch.phase === 'study' ? 'Mola ver' : 'Devam et';
   el.innerHTML = `<div class="v2-sess${over ? ' over' : ''}">${askHtml}
     <div class="v2-sh"><span class="v2-eb">Bugün çalışma / mola</span>${state}</div>
-    <div class="v2-sn"><div><b>${fmtMin(S)}</b><span>çalışma</span></div><div class="p"><b>${fmtMin(B)}</b><span>mola${telToday() >= 1 ? ' · ' + fmtMin(telToday()) + ' telefon' : ''}</span></div>
+    <div class="v2-sn"><div><b>${fmtMin(S)}</b><span>çalışma</span></div><div class="p"><b>${fmtMin(B)}</b><span>mola${urgeToday().y ? ' · ' + fmtMin(telToday()) + ' telefon (' + urgeToday().y + ' kez)' : ''}</span></div>
       <div><b>${ver == null ? '—' : '%' + ver}</b><span>verim</span></div></div>
     <div class="v2-sbtn"><button type="button" class="btn${ch.phase==='study'?' ghost':''}" onclick="chMain()">${btn}</button>${ch.phase !== 'idle' ? '<button type="button" class="btn ghost" onclick="chFinish()">Bitir</button>' : ''}
       <button type="button" class="btn ghost" onclick="toggleFloat()" aria-pressed="${floatOpen()}">${floatOpen() ? 'Yüzen sayacı kapat' : 'Yüzen sayaç'}</button>
@@ -3988,6 +4031,7 @@ let pipWin = null, pipVid = null, pipCanvas = null;
 const docPipOk = () => 'documentPictureInPicture' in window;
 const vidPipOk = () => !!(document.pictureInPictureEnabled && HTMLCanvasElement.prototype.captureStream);
 function floatOpen(){ return !!(pipWin || (pipVid && document.pictureInPictureElement === pipVid)); }
+function urgeToday(){ const L = urgeLog[ymd()] || []; return {n: L.length, y: L.filter(x => x.y).length}; }
 function telToday(){ return ((ch.tm||0) + (ch.phase==='break' && ch.kind==='tel' ? chElapsed() : 0))/60; }
 function floatState(){
   const e = ch.phase !== 'idle' ? chElapsed() : 0, isMeal = ch.phase === 'break' && ch.kind === 'yemek';
@@ -4003,8 +4047,9 @@ const FLOAT_CSS = `*{box-sizing:border-box}body{margin:0;font-family:Geist,syste
 .l{font-size:13px;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .c{font-size:44px;font-weight:600;letter-spacing:-.03em;line-height:1}
 .t{font-size:12.5px;opacity:.8}
+#fps{opacity:1;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;line-height:1.3}
 .b{display:flex;gap:6px;margin-top:auto}
-button{flex:1;min-height:36px;border:0;border-radius:8px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;background:#fff;color:#15161A}
+button{flex:1 1 auto;min-width:0;white-space:nowrap;padding:0 8px;min-height:36px;border:0;border-radius:8px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;background:#fff;color:#15161A}
 button.g{background:rgba(255,255,255,.16);color:#fff}
 button[hidden],.b[hidden]{display:none}
 button:focus-visible{outline:2px solid #A9B6FF;outline-offset:1px}`;
@@ -4012,19 +4057,23 @@ async function openFloat(){
   if(floatOpen()) return;
   try{
     if(docPipOk()){
-      pipWin = await documentPictureInPicture.requestWindow({width: 260, height: 150});
+      pipWin = await documentPictureInPicture.requestWindow({width: 300, height: 170});
       const d = pipWin.document;
       d.title = 'Sayaç';
       const st = d.createElement('style'); st.textContent = FLOAT_CSS; d.head.appendChild(st);
       d.body.innerHTML = `<div class="w"><div class="l" id="fl"></div><div class="c" id="fc" role="timer" aria-live="off"></div><div class="t" id="ft"></div>
-        <div class="b" id="fb"><button id="fm"></button><button class="g" id="fd" title="Dürtüyü kaydet (D)">Dürtü</button><button class="g" id="ft2" title="Telefona baktım (T)">📵</button></div>
+        <div class="b" id="fb"><button id="fm"></button><button class="g" id="fd" title="Dürtüyü kaydet (D)">Dürtü</button><button class="g" id="ft2" title="Telefona baktım: dürtü + kısa mola (T)">📵 Baktım</button><button class="g" id="fp" title="Claude'un JSON'unu panele işle (V)" aria-label="Claude'dan yapıştır">📋</button></div>
+        <div class="t" id="fps" role="status" aria-live="polite" hidden></div>
         <div class="b" id="fr" hidden><button class="g" data-r="kacis">Kaçış</button><button class="g" data-r="yorgun">Yorgun</button><button class="g" data-r="anlamadim">Anlamadım</button></div></div>`;
       d.getElementById('fm').onclick = () => chMain();
       // Dürtü: kaydı hemen at, sebebi pencerede sor (8 sn içinde seçilmezse '?' kalır, ana ekrandaki gibi)
       d.getElementById('fd').onclick = () => floatUrge();
       d.getElementById('ft2').onclick = () => chPhone();
+      d.getElementById('fp').onclick = () => floatPaste();
       d.querySelectorAll('#fr button').forEach(b => b.onclick = () => { chUrgeReason(b.dataset.r); floatReasons(false); });
-      d.addEventListener('keydown', ev => { const k = ev.key.toLowerCase(); if(k === 'd') floatUrge(); else if(k === 's') chMain(); else if(k === 't') chPhone(); });
+      d.addEventListener('keydown', ev => { const k = ev.key.toLowerCase(); if(k === 'd') floatUrge(); else if(k === 's') chMain(); else if(k === 't') chPhone(); else if(k === 'v' && !ev.ctrlKey && !ev.metaKey) floatPaste(); });
+      // Ctrl+V pencere seçiliyken de çalışsın: yapıştırılan metin doğrudan uygulanır (pano izni gerekmez)
+      d.addEventListener('paste', ev => { const t = (ev.clipboardData && ev.clipboardData.getData('text') || '').trim(); if(t){ ev.preventDefault(); floatApply(t); } });
       pipWin.addEventListener('pagehide', () => { pipWin = null; renderSessCard(); });
     } else if(vidPipOk()){
       pipCanvas = pipCanvas || Object.assign(document.createElement('canvas'), {width: 480, height: 270});
@@ -4037,6 +4086,29 @@ async function openFloat(){
     } else { alert('Bu tarayıcı yüzen pencereyi desteklemiyor. Masaüstünde Chrome ya da Edge, telefonda Chrome kullan.'); return; }
     renderFloat(); renderSessCard();
   }catch(e){ console.error(e); pipWin = null; }
+}
+// Yüzen pencereden "Claude'dan yapıştır": panoyu okur, applyClaudeAction() ile işler, sonucu 5 sn gösterir.
+// Pano izni odaktaki belgeye bağlı; pencereye dokunulduğu için onun navigator'ı kullanılır.
+let floatPTimer = null;
+function floatMsg(txt, bad){
+  if(!pipWin) return;
+  const el = pipWin.document.getElementById('fps'); if(!el) return;
+  el.textContent = txt; el.title = txt; el.style.color = bad ? '#FFC9C2' : ''; el.hidden = false;
+  try{ pipWin.resizeTo(300, Math.min(260, 170 + Math.ceil(txt.length / 42) * 16)); }catch(e){}
+  clearTimeout(floatPTimer); floatPTimer = setTimeout(() => { el.hidden = true; try{ pipWin.resizeTo(300, 170); }catch(e){} }, 9000);
+}
+function floatApply(raw){
+  runPaste(raw);
+  const st = document.getElementById('claudeApplyStatus');
+  floatMsg(st.textContent || 'Uygulandı', /hata|geçersiz|bulunamadı|✗/i.test(st.textContent));
+}
+async function floatPaste(){
+  if(!pipWin) return;
+  try{
+    const t = ((await pipWin.navigator.clipboard.readText()) || '').trim();
+    if(!t){ floatMsg('Pano boş — önce Claude\'un bloğunu kopyala', true); return; }
+    floatApply(t);
+  }catch(e){ floatMsg('Panoya erişilemedi — pencereye tıklayıp Ctrl+V yap', true); }
 }
 let floatRTimer = null;
 function floatReasons(on){
@@ -4069,7 +4141,7 @@ function renderFloat(){
     $('ft').textContent = 'Bugün ' + fmtMin(f.S) + ' çalışma · ' + fmtMin(f.B) + ' mola' + (telToday() >= 1 ? ' (' + fmtMin(telToday()) + ' tel)' : '');
     $('fm').textContent = ch.phase === 'idle' ? 'Başlat' : ch.phase === 'study' ? 'Mola ver' : 'Devam et';
     $('fd').hidden = ch.phase !== 'study'; $('ft2').hidden = ch.phase !== 'study';
-    const nu = (urgeLog[ymd()] || []).length; $('fd').textContent = nu ? 'Dürtü · ' + nu : 'Dürtü';
+    const u = urgeToday(); $('fd').textContent = u.n ? 'Dürtü ' + u.n : 'Dürtü'; $('ft2').textContent = u.y ? '📵 ' + u.y : '📵 Baktım';
   }
   if(pipVid && document.pictureInPictureElement === pipVid) drawFloatCanvas();
 }

@@ -114,9 +114,9 @@ Bu akışa dokunan her değişiklikte "hiçbir şey sessizce ezilmez" garantisin
 
 **Mola önerisi:** `recBreak(ch.run)`. `ch.run` son gerçek moladan beri toplam çalışmadır; `MICRO_BREAK` (180 sn) veya daha kısa mola bloğu bölmez (40 dk + 2 dk telefon + 20 dk → 60 dk'lık blok, 15 dk mola). `ch.nb` gerçek mola sayısı ("4. blok" bonusu). İkisi de opsiyonel, eksikse 0.
 
-**Telefona baktım (`chPhone`, `T`):** çalışırken kısa telefon molası; `ch.kind='tel'`, sınır `MICRO_BREAK` (3 dk; asıl limit `ch.blSave`'de bekler, `chEndTel` geri koyar). Mola gibi sayılır, ayrıca `ch.tm` + `telLog`'a yazılır; 3 dk'yı aşmazsa blok bölünmez.
+**Telefona baktım (`chPhone`, `T`):** çalışırken kısa telefon molası; `ch.kind='tel'`, sınır `MICRO_BREAK` (3 dk; asıl limit `ch.blSave`'de bekler, `chEndTel` geri koyar). Mola gibi sayılır, ayrıca `ch.tm` + `telLog`'a yazılır; 3 dk'yı aşmazsa blok bölünmez. Aynı zamanda dürtü kaydıdır: `chUrge()` çağrılır, kayda `y:1` (yenildi) eklenir — `urgeLog` girdisinde `y` yoksa direnilmiş dürtüdür.
 
-**Yüzen sayaç (27 Kas):** `openFloat`/`closeFloat`/`renderFloat`. Masaüstü Chrome/Edge'de Document Picture-in-Picture (her uygulamanın üstünde duran küçük pencere, Mola/Devam düğmeli); desteklemeyen tarayıcıda (Android Chrome) canvas → video PiP (düğmesiz, yalnızca süre). İkisi de yalnızca dokunuşla açılır: Başlat'a basınca kendiliğinden (`settings.floatAuto`, varsayılan açık) ya da çalışma kartı/Sayaç'taki "Yüzen sayaç". `chRender` her saniye günceller.
+**Yüzen sayaç (27 Kas):** `openFloat`/`closeFloat`/`renderFloat`. Masaüstü Chrome/Edge'de Document Picture-in-Picture (her uygulamanın üstünde duran küçük pencere, Mola/Devam düğmeli); desteklemeyen tarayıcıda (Android Chrome) canvas → video PiP (düğmesiz, yalnızca süre). İkisi de yalnızca dokunuşla açılır: Başlat'a basınca kendiliğinden (`settings.floatAuto`, varsayılan açık) ya da çalışma kartı/Sayaç'taki "Yüzen sayaç". `chRender` her saniye günceller. Pencerede 📋 (`floatPaste`, `V` ya da Ctrl+V) Claude JSON'unu doğrudan panele işler, sonucu pencerede gösterir.
 
 **Claude'dan yapıştır her yerde:** üst çubukta ve Sayaç'ta düğme → `#pasteDlg`. "Panodan uygula" panoyu okur; uygulama yine `applyClaudeAction()` (Ayarlar'daki kutuya yazıp çağırır).
 
@@ -163,7 +163,7 @@ Klavye: `1`–`8` sekme, `S` başlat/mola/devam, `D` dürtü kaydı (çalışır
 | `rename_course` | `from`*, `to`* | Tekrar ve hata kayıtlarında ders adını birleştirir. |
 | `remove_triage` | `deadline_title`*, `ids`* | Yalnızca verilen id'li triyaj konularını siler (çift içe aktarma temizliği). |
 
-\* zorunlu. Bilinmeyen `action` hata verir.
+\* zorunlu. Bilinmeyen `action` hata verir. Uygulama sonrası durum satırı neyin eklendiğini okunur yazar (`claudeSummary`: "MATH 219 MT2 triyajı +3 konu: …"); yeni action eklenirse oraya da bir satır ekle. **Çift ekleme yok (28 Kas):** `add_deadline` (aynı başlık + tarih), `add_triage` (o deadline'da aynı konu), `add_review` (aynı konu + ders), `add_mistake` (aynı not + ders), `set_grade`/`set_expect` (aynı değer) atlanır ve "zaten vardı" diye listelenir; karşılaştırma harf/boşluk duyarsız (`nrm`).
 
 ```json
 [
